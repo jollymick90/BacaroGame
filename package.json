@@ -41,7 +41,10 @@
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.6",
-    "cookie": "^0.7.2"
+    "cookie": "^0.7.2",
+    "jwks-rsa": {
+      "jose": "^5.10.0"
+    }
   },
   "engines": {
     "node": "^22.17.0"
