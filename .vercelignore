@@ -1,0 +1,25 @@
+# Local configuration and emulator data must not be uploaded.
+.env
+.env.*
+.firebase/
+docker/
+compose.yaml
+*-debug.log
+*.log
+
+# Local/generated tools and test artifacts.
+node_modules/
+.svelte-kit/
+dist/
+.git/
+.agents/
+.codex/
+scripts/test-*-browser.mjs
+scripts/test-*-viewport.mjs
+scripts/test-*-lifecycle.mjs
+scripts/test-*-animation.mjs
+**/*.test.ts
+
+# Common downloaded service-account key names (keep keys outside the repo).
+**/*firebase-adminsdk*.json
+**/service-account*.json

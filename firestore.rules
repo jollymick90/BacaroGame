@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // This file only concerns Bacarodex: preserve other apps' rules when merging.
+    // Web clients never access these records; SvelteKit Admin SDK checks access.
+    match /bacaroGameConfigurations/{document=**} {
+      allow read, write: if false;
+    }
+    match /bacarodexMembers/{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

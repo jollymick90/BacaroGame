@@ -1,0 +1,53 @@
+import { env } from '$env/dynamic/private';
+import { error } from '@sveltejs/kit';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt } from 'node:crypto';
+import { similarity } from 'human-match';
+import { emulatorMode, firebaseConfigured } from '$lib/firebase/firebase-admin.server';
+import { membersCollection, PUBLIC_CONSENT_VERSION, canonicalPokemon } from './members';
+import { EMBEDDING_MODEL, type Pokemon } from '$lib/types';
+export const MIN_SIMILARITY = 0.60;
+export const MIN_MARGIN = 0.08;
+export function gameConfigured() { return firebaseConfigured() && Boolean(emulatorMode() || (env.BACARODEX_GAME_SECRET?.length ?? 0) >= 32); }
+export async function playableMembers() {
+  return (await membersCollection().where('consentVersion', '==', PUBLIC_CONSENT_VERSION).limit(200).get()).docs.filter(doc => doc.data().model === EMBEDDING_MODEL);
+}
+export function validEmbedding(value: unknown): value is number[] {
+  return Array.isArray(value) && value.length === 256 && value.every(v => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e6) && value.some(v => v !== 0);
+}
+export async function matchPublic(embedding: number[]) {
+  const candidates = await playableMembers();
+  const ranked = candidates.filter(doc => validEmbedding(doc.data().embedding)).map(doc => ({ doc, score: similarity(embedding, doc.data().embedding) })).filter(c => Number.isFinite(c.score)).sort((a,b) => b.score-a.score);
+  if (!ranked[0] || ranked[0].score < MIN_SIMILARITY) error(422, 'Nessun Bacaro sufficientemente simile. Rifai la foto con più luce.');
+  if (ranked[1] && ranked[0].score - ranked[1].score < MIN_MARGIN) error(422, 'Corrispondenza ambigua. Inquadra meglio il volto e rifai la foto.');
+  return ranked[0].doc;
+}
+interface Attempt { memberId: string; pokemonId: number; createdAt: number; expires: number; choices: number[] }
+function key() {
+  const secret = emulatorMode() ? 'bacarodex-local-emulator-only-secret-v2' : env.BACARODEX_GAME_SECRET;
+  if (!secret || secret.length < 32) error(503, 'Configura BACARODEX_GAME_SECRET (almeno 32 caratteri) sul server.');
+  return createHash('sha256').update(secret).digest();
+}
+export function sealAttempt(memberId: string, pokemonId: number, choices: number[], createdAt: number) {
+  const iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', key(), iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify({ memberId, pokemonId, choices, createdAt, expires: Date.now()+5*60*1000 } satisfies Attempt)), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString('base64url');
+}
+export function openAttempt(token: unknown): Attempt {
+  if (typeof token !== 'string' || token.length > 2000) error(400, 'Tentativo non valido. Scansiona di nuovo.');
+  const secret = key();
+  try {
+    const bytes = Buffer.from(token,'base64url');
+    const decipher = createDecipheriv('aes-256-gcm',secret,bytes.subarray(0,12));
+    decipher.setAuthTag(bytes.subarray(12,28));
+    const result = JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]).toString()) as Attempt;
+    if (!result.memberId || result.expires < Date.now() || !Array.isArray(result.choices)) throw new Error();
+    return result;
+  } catch { error(400, 'Tentativo scaduto o non valido. Scansiona di nuovo.'); }
+}
+export async function quizOptions(correct: Pokemon, fetcher: typeof fetch) {
+  const ids = new Set<number>();
+  while (ids.size < 3) { const id = randomInt(1,152); if(id !== correct.id) ids.add(id); }
+  const choices = [correct, ...await Promise.all([...ids].map(id => canonicalPokemon(id,fetcher)))];
+  for(let i=choices.length-1;i>0;i--) {const j=randomInt(i+1);[choices[i],choices[j]]=[choices[j],choices[i]];}
+  return choices;
+}

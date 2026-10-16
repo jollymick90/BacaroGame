@@ -1,0 +1,5 @@
+**
+!docker/
+!docker/firebase/
+!docker/firebase/**
+!firestore.rules

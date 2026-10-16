@@ -1,0 +1,24 @@
+services:
+  firebase:
+    build:
+      context: .
+      dockerfile: docker/firebase/Dockerfile
+    ports:
+      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9099:9099"
+      - "127.0.0.1:9150:9150"
+    volumes:
+      - ./.firebase/emulator-data:/data
+    init: true
+    stop_grace_period: 60s
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4400/emulators').then(r=>r.json()).then(e=>{if(!e.auth||!e.firestore||!e.ui)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      start_period: 40s
+      retries: 12

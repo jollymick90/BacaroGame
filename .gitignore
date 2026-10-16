@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+.svelte-kit/
+.vercel/
+.env
+.env.*
+!.env.example
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+!.env.emulator.example
+.firebase/

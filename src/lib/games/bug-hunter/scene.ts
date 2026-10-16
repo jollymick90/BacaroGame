@@ -1,0 +1,58 @@
+import * as T from 'three';
+import {Runner,LANE,type Phase} from './mechanics';
+import {hunter,insect,obstacle,sphere} from './models';
+import {createBox as box} from './primitives';
+import {bugs} from './content';
+export type Snapshot={phase:Phase;health:number;distance:number;caught:number;collection:number[];message:string;capture:number};
+// Scene/camera/hemisphere setup and scrolling-world architecture adapted from
+// gift-secret-santa/.../starship-run/game.ts. Lifecycle, pools and input scoped here.
+export function mountRunner(host:HTMLElement,output:(s:Snapshot)=>void,onError:()=>void){
+ const engine=new Runner();const scene=new T.Scene();scene.background=new T.Color(0x9fe5ed);scene.fog=new T.Fog(0x9fe5ed,35,130);
+ const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;host.appendChild(renderer.domElement);
+ const camera=new T.PerspectiveCamera(58,1,.1,180);camera.position.set(0,5.8,9);camera.lookAt(0,1,-14);
+ scene.add(new T.HemisphereLight(0xfff4d7,0x8e91ca,2.4));const sun=new T.DirectionalLight(0xffe7c2,2.5);sun.position.set(-8,14,8);sun.castShadow=true;sun.shadow.mapSize.set(512,512);sun.shadow.camera.left=-10;sun.shadow.camera.right=10;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-10;scene.add(sun);
+ const player=hunter();scene.add(player.root);
+ const tiles:T.Group[]=[];
+ for(let i=0;i<10;i++){const tile=new T.Group();tile.position.z=6-i*16;tile.add(box(8,.2,16,0xffd6b1,0,-.14,0));for(const x of [-1.25,1.25])tile.add(box(.055,.025,12,0xfff8de,x,0,0));for(const x of [-4.3,4.3])tile.add(box(.5,.4,16,0x8d80cf,x,0,0));scene.add(tile);tiles.push(tile);}
+ const buildings:T.Group[]=[];for(let i=0;i<18;i++){const b=new T.Group();const side=i%2?1:-1;b.position.set(side*(7+(i%3)*1.5),0,-i*8);const h=2+i%4;b.add(box(2,h,2,[0xa894df,0x6bc7c0,0xfca98c][i%3],0,h/2,0));for(let k=0;k<3;k++)b.add(box(1.4,.15,.05,0xe9ffd5,0,.7+k*.65,1.03));scene.add(b);buildings.push(b);}
+ const views=engine.rows.map(()=>{const insects=bugs.map((_,i)=>insect(i)),obstacles=[0,1,2].map(obstacle);for(const b of insects)scene.add(b.root);for(const o of obstacles)scene.add(o);return {insects,obstacles};});
+ const flyers=bugs.map((_,i)=>insect(i));flyers.forEach(f=>{f.root.visible=false;scene.add(f.root)});
+ const sparks=Array.from({length:12},(_,i)=>{const p=sphere(.07,i%2?0xffd64c:0xffffff);p.visible=false;scene.add(p);return p;});
+ const media=window.matchMedia('(prefers-reduced-motion: reduce)');let reduced=media.matches;
+ let raf=0,disposed=false,last=0,elapsed=0,lastUi=0,capture=0,flyKind=0,impact=0,message='',messageUntil=0;const origin=new T.Vector3(),destination=new T.Vector3(),netPosition=new T.Vector3();
+ function emit(){output({phase:engine.phase,health:engine.health,distance:Math.floor(engine.distance),caught:engine.caught,collection:[...engine.collection],message,capture});}
+ engine.onEvent=e=>{if(e.type==='capture'){capture=1;flyKind=e.kind;origin.set(e.row.lane*LANE,.9,e.row.z);message=`${bugs[e.kind].name} catturato! ${bugs[e.kind].quote}`;messageUntil=engine.time+2.5;}else{impact=.6;message=engine.health?'Ops. Quel caffè era portante.':'Tre incidenti. Serve una pausa vera.';messageUntil=engine.time+2.5;}emit();};
+ function resize(){if(disposed)return;const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w<h?68:58;camera.updateProjectionMatrix();}
+ const observer=new ResizeObserver(resize);observer.observe(host);window.addEventListener('resize',resize);resize();
+ function action(type:'left'|'right'|'jump'|'pause'){if(type==='pause'){if(engine.phase==='running')engine.pause();else if(engine.phase==='paused'&&!document.hidden)engine.resume();}else if(type==='jump')engine.jump();else engine.move(type==='left'?-1:1);emit();}
+ const key=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest('button,a,input,textarea,select')||e.repeat)return;const keys:Record<string,'left'|'right'|'jump'|'pause'>={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'jump',w:'jump',W:'jump',' ':'jump',ArrowDown:'pause',s:'pause',S:'pause',p:'pause',P:'pause',Escape:'pause'};const a=keys[e.key];if(a){e.preventDefault();action(a);}};
+ host.addEventListener('keydown',key);
+ let pointer:number|null=null,sx=0,sy=0;
+ const down=(e:PointerEvent)=>{if(engine.phase!=='running')return;if((e.target as HTMLElement).closest('button,a'))return;pointer=e.pointerId;sx=e.clientX;sy=e.clientY;host.setPointerCapture(e.pointerId);host.focus({preventScroll:true});};
+ const up=(e:PointerEvent)=>{if(pointer!==e.pointerId)return;pointer=null;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;if(Math.abs(dx)>Math.abs(dy))action(dx<0?'left':'right');else if(dy<0)action('jump');};
+ const cancel=()=>{pointer=null;};host.addEventListener('pointerdown',down);host.addEventListener('pointerup',up);host.addEventListener('pointercancel',cancel);
+ const visibility=()=>{if(document.hidden){engine.pause();cancelAnimationFrame(raf);raf=0;last=0;emit();}else if(!raf&&!disposed)raf=requestAnimationFrame(frame);};document.addEventListener('visibilitychange',visibility);
+ const motion=()=>{reduced=media.matches;};media.addEventListener('change',motion);
+ const lost=(e:Event)=>{e.preventDefault();engine.pause();cancelAnimationFrame(raf);raf=0;onError();};renderer.domElement.addEventListener('webglcontextlost',lost);
+ function frame(now:number){
+  if(disposed)return;raf=0;const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+  const running=engine.phase==='running';if(running){engine.update(dt);elapsed+=dt;capture=Math.max(0,capture-dt/1.1);impact=Math.max(0,impact-dt);if(engine.time>messageUntil)message='';}
+  else if(engine.phase==='intro'&&!reduced)elapsed+=dt*.3;
+  for(let i=0;i<tiles.length;i++)tiles[i].position.z=6-i*16+engine.distance%16;
+  for(let i=0;i<buildings.length;i++)buildings[i].position.z=8-((i*8-engine.distance%144+144)%144);
+  player.root.position.x=engine.x;player.animate(elapsed,engine.y,capture,impact>0,engine.phase==='over',reduced);player.root.visible=engine.invulnerable<=0||reduced||Math.floor(engine.time*8)%2===0;
+  for(let i=0;i<views.length;i++){const row=engine.rows[i],v=views[i];for(let k=0;k<4;k++){const b=v.insects[k];b.root.visible=k===row.kind&&!row.caught;if(b.root.visible){b.animate(elapsed+row.index,reduced);b.root.position.x=row.lane*LANE;b.root.position.z=row.z;}}
+   for(let k=0;k<3;k++){const mesh=v.obstacles[k],o=row.obstacles.find(o=>o.kind===k);mesh.visible=!!o;if(o){mesh.position.set(o.lane*LANE,0,row.z);mesh.rotation.z=o.hit?.12:0;}}
+  }
+  for(let k=0;k<4;k++)flyers[k].root.visible=k===flyKind&&capture>0;
+  if(capture>0){const t=1-capture,fly=flyers[flyKind].root;netPosition.set(engine.x+.7,engine.y+1.9,.1);destination.set(.76,.8,.5).unproject(camera).sub(camera.position).normalize().multiplyScalar(7).add(camera.position);if(t<.35)fly.position.lerpVectors(origin,netPosition,t/.35);else fly.position.lerpVectors(netPosition,destination,(t-.35)/.65);fly.scale.setScalar(1-t*.65);fly.rotation.z=t*Math.PI*3;
+   for(let i=0;i<sparks.length;i++){const p=sparks[i];p.visible=!reduced;const a=i*Math.PI/6;p.position.set(origin.x+Math.cos(a)*t*2,origin.y+Math.sin(a)*t*2,origin.z+t);p.scale.setScalar(capture);}
+  }else for(const p of sparks)p.visible=false;
+  camera.position.x=reduced?0:engine.x*.08;renderer.render(scene,camera);
+  if(now-lastUi>100){emit();lastUi=now;}
+  if(!document.hidden)raf=requestAnimationFrame(frame);
+ }
+ raf=requestAnimationFrame(frame);emit();
+ function dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(raf);observer.disconnect();window.removeEventListener('resize',resize);host.removeEventListener('keydown',key);host.removeEventListener('pointerdown',down);host.removeEventListener('pointerup',up);host.removeEventListener('pointercancel',cancel);document.removeEventListener('visibilitychange',visibility);media.removeEventListener('change',motion);renderer.domElement.removeEventListener('webglcontextlost',lost);const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();scene.traverse(o=>{if(o instanceof T.Mesh){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);for(const value of Object.values(m))if(value instanceof T.Texture)textures.add(value);}}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());sun.shadow.dispose();renderer.renderLists.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();scene.clear();}
+ return {start(){engine.start();capture=0;impact=0;message='Segui gli insetti. Le cose grandi fanno male.';messageUntil=5;emit();host.focus({preventScroll:true});},action,dispose};
+}
