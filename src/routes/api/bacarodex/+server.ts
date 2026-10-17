@@ -1,3 +1,4 @@
+import { hasSuperadminRole } from '$lib/server/superadmins';
 import type { RequestHandler } from './$types';
 import { privateJson, requireUser } from '$lib/server/http';
 import { membersCollection, publicMember } from '$lib/server/members';
@@ -10,5 +11,6 @@ export const GET: RequestHandler = async event => {
     const time = doc.data().captures?.[user.uid];
     return typeof time === 'number' ? [{ memberId: doc.id, capturedAt: time }] : [];
   });
-  return privateJson({ members: compatible.map(doc => publicMember(doc.id, doc.data())), captures });
+  const superadmin = await hasSuperadminRole(user.email);
+  return privateJson({ superadmin, members: compatible.map(doc => publicMember(doc.id, doc.data())), captures });
 };

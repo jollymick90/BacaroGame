@@ -286,3 +286,12 @@ La POC usa endpoint pubblici di lettura/confronto per Bacarodex: controlla utili
 ## Stato della consegna
 
 Questa guida descrive la configurazione ricavata dai sorgenti dei due progetti e dalla documentazione ufficiale collegata. Sono stati allineati Node e lockfile e aggiunti `.nvmrc` e `.vercelignore`. Dalla configurazione delle interviste sono stati letti solo gli identificatori pubblici del progetto e del dominio Firebase; nessuna credenziale privata è stata copiata. Non sono stati modificati servizi cloud o eseguiti deployment. La cartella locale non è ancora un repository Git e non contiene un collegamento `.vercel/project.json`: per pubblicarla occorre completare uno dei due percorsi del capitolo 5. Il collaudo Firebase/Vercel va completato sul dominio e sulle credenziali scelti con i passaggi sopra.
+
+
+## Superadmin permanenti e nomine dall’interfaccia
+
+Aggiungi su Vercel, nell’ambiente usato dal deploy, la variabile privata `BACARODEX_SUPERADMIN_EMAILS`: email Google verificate separate da virgole. Questi account possono accedere senza essere ripetuti in `BACARODEX_ALLOWED_EMAILS` e non possono essere declassati dall’app. Esegui un nuovo deploy dopo le modifiche alla configurazione.
+
+In `/admin` apri Bacarodex e usa **Gestione superadmin** per nominare o revocare altri membri già presenti in `BACARODEX_ALLOWED_EMAILS`. Le nomine sono nel documento `bacaroGameConfigurations/superadmins`, senza nuove collezioni. Le regole client di questa collezione devono restare chiuse; l’Admin SDK verifica i permessi sul server. Non sovrascrivere le regole delle altre app nel progetto condiviso.
+
+I superadmin possono registrare più persone scegliendo **Un’altra persona**, dopo aver raccolto il consenso esplicito descritto nel modulo; possono inoltre eliminare qualsiasi registrazione. La cancellazione permette di ritirare la partecipazione anche alle persone senza account. La modalità personale mantiene il documento con UID e il limite di una registrazione per account. Il limite complessivo resta di 200 Bacari.

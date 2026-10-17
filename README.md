@@ -74,9 +74,21 @@ Per la procedura completa, con confronto al progetto interviste, configurazione 
 
 In `/admin`, il QR viene generato per `/#/bacarodex`, così apre direttamente Bacarodex. Il link generale del Game Center rimane la radice del sito. Per l’uso da telefono inserisci il vero indirizzo HTTPS raggiungibile dal telefono, non localhost. Puoi scaricare il PNG e stamparlo. Per giocare non serve conoscere il link dell’area membri.
 
+## Superadmin
+
+Configura `BACARODEX_SUPERADMIN_EMAILS` sul server (su Vercel nell’ambiente Production): email Google verificate separate da virgole. Questi account hanno accesso anche senza essere ripetuti in `BACARODEX_ALLOWED_EMAILS`, sono sempre superadmin e non possono essere declassati dall’interfaccia. Dopo aver cambiato le variabili su Vercel, esegui un nuovo deploy.
+
+In `/admin`, apri **Bacarodex → Gestione superadmin** per nominare o revocare altri superadmin fra le email di `BACARODEX_ALLOWED_EMAILS`. Le nomine sono salvate nel documento `bacaroGameConfigurations/superadmins`; non vengono modificate le identità Firebase Authentication. Togliere un’email delegata dalla lista autorizzata ne disabilita anche il ruolo; per rimuovere definitivamente la nomina, usa la revoca nell’interfaccia. Il server ricontrolla i privilegi a ogni operazione. L’ultimo superadmin effettivo non può essere revocato dall’interfaccia.
+
+Per aggiungere più persone, scegli **Un’altra persona** nel modulo di registrazione. Occorre informare la persona e raccogliere il suo consenso esplicito al riconoscimento nel gioco pubblico, poi confermarlo nel modulo. Le schede ricevono ID distinti; vengono registrati UID dell’operatore, modalità e data del consenso. La foto viene scartata come nel flusso personale. La persona senza account può chiedere a un superadmin di eliminare la sua scheda per ritirare la partecipazione. I superadmin possono eliminare tutte le registrazioni, comprese quelle dei membri; i membri normali conservano la gestione della propria. La revoca di un superadmin non elimina le persone che ha registrato.
+
+Nessuna email viene promossa automaticamente: senza una lista permanente iniziale (o nomine già esistenti), non c’è un superadmin. I ruoli non sono assegnati al primo utente che accede.
+
+Verifica dei ruoli e delle API: `npm run test:superadmins`. I test API usano le route reali e una persistenza in memoria al posto di Firebase; non modificano il database cloud.
+
 ## Registrazione dei membri e consenso
 
-Una registrazione per account autorizzato, documento `bacarodexMembers/{uid}`: nome, Pokémon scelto, descrittore MobileFace, versione del modello, data e versione del consenso. Due membri possono scegliere lo stesso Pokémon. Ogni membro elimina solo la propria registrazione; il pubblico non può registrare/modificare/eliminare membri.
+Per i membri normali, una registrazione per account autorizzato, documento `bacarodexMembers/{uid}`: nome, Pokémon scelto, descrittore MobileFace, versione del modello, data e versione del consenso. Due membri possono scegliere lo stesso Pokémon. Ogni membro normale elimina solo la propria registrazione; i superadmin possono aggiungere altre persone consenzienti ed eliminare qualsiasi registrazione. Il pubblico non può registrare/modificare/eliminare membri.
 
 La registrazione richiede un volto solo e consenso esplicito all’uso nel **gioco pubblico senza login** (`public-game-v2`). Le registrazioni create col precedente consenso limitato agli amici **restano private e sono escluse dal gioco pubblico**: il membro deve eliminarle e registrarsi nuovamente. Nessun cambio di consenso o migrazione automatica.
 

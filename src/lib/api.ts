@@ -1,4 +1,4 @@
-import { EMBEDDING_MODEL, type GameData, type Pokemon } from './types';
+import { EMBEDDING_MODEL, type GameData, type Pokemon, type SuperadminAccount } from './types';
 async function request<T>(path: string, method = 'GET', data?: unknown): Promise<T> {
   const response = await fetch(`/api/bacarodex${path}`, {
     method, credentials: 'same-origin', cache: 'no-store',
@@ -10,7 +10,33 @@ async function request<T>(path: string, method = 'GET', data?: unknown): Promise
   return result;
 }
 export const gameData = () => request<GameData>('');
-export const registerMember = (name: string, pokemon: Pokemon, embedding: number[], consent: boolean) => request('/members', 'POST', { name, pokemonId: pokemon.id, embedding, consent, model: EMBEDDING_MODEL });
+export function registerMember(
+  name: string,
+  pokemon: Pokemon,
+  embedding: number[],
+  consent: boolean,
+  mode: 'self' | 'other' = 'self',
+) {
+  return request('/members', 'POST', {
+    name,
+    pokemonId: pokemon.id,
+    embedding,
+    consent,
+    mode,
+    otherConsent: mode === 'other' && consent,
+    model: EMBEDDING_MODEL,
+  });
+}
+
+export const listSuperadmins = () => request<{ accounts: SuperadminAccount[] }>('/superadmins');
+
+export function changeSuperadmin(email: string, enabled: boolean) {
+  return request('/superadmins', 'PATCH', { email, enabled });
+}
+
+export function removeMember(memberId: string) {
+  return request('/members', 'DELETE', { memberId });
+}
 export const removeMyMember = () => request('/members', 'DELETE');
 export const captureMember = (memberId: string, pokemonId: number) => request('/captures', 'POST', { memberId, pokemonId });
 export const clearMyData = (includeRegistration: boolean) => request('/data', 'DELETE', { includeRegistration });

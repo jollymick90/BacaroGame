@@ -17,7 +17,8 @@
     "test:merge-battle": "node --experimental-strip-types --test src/lib/games/merge-battle/engine.test.ts src/lib/games/merge-battle/config.test.ts src/lib/games/merge-battle/cards.test.ts",
     "test:bug-hunter": "node --experimental-strip-types --test src/lib/games/bug-hunter/mechanics.test.ts",
     "check:collections": "node --experimental-strip-types scripts/check-firestore-collections.mjs",
-    "test:collections": "node --experimental-strip-types --test src/lib/firebase/collections.test.ts scripts/check-firestore-collections.test.mjs"
+    "test:collections": "node --experimental-strip-types --test src/lib/firebase/collections.test.ts scripts/check-firestore-collections.test.mjs",
+    "test:superadmins": "node --experimental-strip-types --test src/lib/server/admin-policy.test.ts tests/superadmins-api.test.mjs"
   },
   "dependencies": {
     "@vladmandic/human": "3.3.6",

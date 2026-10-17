@@ -8,7 +8,10 @@ export function gameCollection(name: string) {
 }
 
 /** Fixed document identifiers only; never accept a path from client input. */
-export function gameDocument(name: string, id: 'merge-battle') {
-  if (name !== 'bacaroGameConfigurations' || id !== 'merge-battle') throw new Error('Documento configurazione non consentito.');
+export function gameDocument(name: string, id: 'merge-battle' | 'superadmins') {
+  const approvedDocument = ['merge-battle', 'superadmins'].includes(id);
+  if (name !== 'bacaroGameConfigurations' || !approvedDocument) {
+    throw new Error('Documento configurazione non consentito.');
+  }
   return gameCollection(name).doc(id);
 }

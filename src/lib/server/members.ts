@@ -6,7 +6,7 @@ export const PUBLIC_CONSENT_VERSION = 'public-game-v2';
 export const membersCollection = () => gameCollection(GAME_COLLECTIONS.members);
 export const validId = (id: unknown): id is string => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(id);
 export function validateRegistration(data: Record<string, unknown>) {
-  if (Object.keys(data).some(k => !['name', 'pokemonId', 'embedding', 'consent', 'model'].includes(k))) error(400, 'Campi non consentiti. Non inviare fotografie.');
+  if (Object.keys(data).some(k => !['name', 'pokemonId', 'embedding', 'consent', 'model', 'mode', 'otherConsent'].includes(k))) error(400, 'Campi non consentiti. Non inviare fotografie.');
   if (data.consent !== true) error(400, 'Consenso esplicito obbligatorio.');
   if (typeof data.name !== 'string' || !data.name.trim() || data.name.trim().length > 60) error(400, 'Nome non valido (massimo 60 caratteri).');
   if (!Number.isInteger(data.pokemonId) || (data.pokemonId as number) < 1 || (data.pokemonId as number) > 100000) error(400, 'Pokémon non valido.');

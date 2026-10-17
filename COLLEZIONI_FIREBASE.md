@@ -21,9 +21,13 @@ Inventario ricavato dallo screenshot, da aggiornare se vengono aggiunte altre co
 
 | Collezione | Documenti e contenuto | Operazioni previste |
 | --- | --- | --- |
-| `bacarodexMembers` | `{uid}` del membro; nome, Pokémon, descrittore facciale, modello, consenso e date; eventuali catture del vecchio flusso come campo del documento | Registrazione del proprio membro, lettura per confronto, ritiro del consenso e gestione dei dati autorizzati |
+| `bacarodexMembers` | `{uid}` per la registrazione personale oppure ID generato per altre persone; nome, Pokémon, descrittore facciale, modello, consenso e date; eventuali catture del vecchio flusso come campo del documento | Registrazione personale o di altre persone da parte di superadmin; lettura per confronto, ritiro del consenso e gestione dei dati autorizzati |
 
-Le vecchie route `captures` e `data` operano anch'esse dentro `bacarodexMembers`; non creano collezioni `captures`, `data` o `users`. Il login crea/usa identità Firebase Authentication, non documenti Firestore `users`. Are You an AI?, Merge Battle e Bug Hunter non scrivono su Firestore. Le catture del Bacarodex pubblico restano nel localStorage del giocatore.
+| `bacaroGameConfigurations` | `merge-battle` per il catalogo del gioco; `superadmins` con email delegate e data ultima modifica | Gestione configurazioni tramite API autorizzate; ruoli modificabili solo da superadmin |
+
+Le registrazioni aggiunte dai superadmin includono `createdBy`, `consentRecordedBy` (UID dell’operatore), `consentMode` e `consentAt`. La revoca del ruolo non cancella le registrazioni. Le email permanenti restano nella configurazione server, non nel documento dei ruoli.
+
+Le vecchie route `captures` e `data` operano anch'esse dentro `bacarodexMembers`; non creano collezioni `captures`, `data` o `users`. Il login crea/usa identità Firebase Authentication, non documenti Firestore `users`. Are You an AI? e Bug Hunter non scrivono su Firestore; il catalogo di Merge Battle usa il documento di configurazione dedicato. Le catture del Bacarodex pubblico restano nel localStorage del giocatore.
 
 Firestore parla di *collezioni*, non tabelle. Riutilizzare lo stesso database non cancella le altre collezioni; il rischio riguarda accessi, aggiornamenti e cancellazioni su percorsi già usati. BacaroGame mantiene tutte le proprie operazioni nel percorso dedicato. Le normali modifiche alla registrazione di un membro possono aggiornare il suo documento `bacarodexMembers/{uid}`: questa è la persistenza prevista dal gioco.
 
