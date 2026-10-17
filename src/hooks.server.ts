@@ -1,5 +1,6 @@
 import { allowed, firebaseAdmin, firebaseConfigured } from '$lib/firebase/firebase-admin.server';
 import { SESSION_COOKIE } from '$lib/server/http';
+import { reportServerError } from '$lib/server/errors';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
   event.locals.user = null;
@@ -21,4 +22,4 @@ export const handle: Handle = async ({ event, resolve }) => {
   return response;
 };
 // Never log request bodies, face descriptors, tokens or Firebase error payloads.
-export const handleError: HandleServerError = () => ({ message: 'Servizio temporaneamente non disponibile. Riprova tra poco.' });
+export const handleError: HandleServerError = reportServerError;
