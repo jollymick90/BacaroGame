@@ -4,7 +4,6 @@ import { dev } from "$app/environment";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { emailList } from '$lib/server/admin-policy';
 import { error } from "@sveltejs/kit";
 
 // Gli emulatori sono ammessi soltanto in sviluppo e con un progetto demo.
@@ -22,23 +21,10 @@ export function firebaseConfigured() {
     publicEnv.PUBLIC_FIREBASE_AUTH_DOMAIN &&
     publicEnv.PUBLIC_FIREBASE_PROJECT_ID,
   );
-  const authorizedEmails = [
-    ...emailList(env.BACARODEX_ALLOWED_EMAILS),
-    ...emailList(env.BACARODEX_SUPERADMIN_EMAILS),
-  ];
-  const serverConfiguration = Boolean(env.FIREBASE_ADMIN_KEY && authorizedEmails.length > 0);
+  // Access may now live entirely in Firestore; credentials enable the service,
+  // while the access policy separately decides which accounts may log in.
+  const serverConfiguration = Boolean(env.FIREBASE_ADMIN_KEY);
   return publicConfiguration && (emulatorMode() || serverConfiguration);
-}
-export function allowed(
-  email: string | undefined,
-  verified: boolean | undefined,
-) {
-  if (emulatorMode()) return true;
-  const emails = [
-    ...emailList(env.BACARODEX_ALLOWED_EMAILS),
-    ...emailList(env.BACARODEX_SUPERADMIN_EMAILS),
-  ];
-  return Boolean(verified && email && emails.includes(email.trim().toLowerCase()));
 }
 export function firebaseAdmin() {
   if (!firebaseConfigured())

@@ -1,6 +1,7 @@
 import { dev } from "$app/environment";
 import { error, type RequestHandler } from "@sveltejs/kit";
-import { allowed, firebaseAdmin } from "$lib/firebase/firebase-admin.server";
+import { firebaseAdmin } from "$lib/firebase/firebase-admin.server";
+import { allowed } from "$lib/server/superadmins";
 import {
   body,
   sameOrigin,
@@ -24,7 +25,7 @@ export const POST: RequestHandler = async (event) => {
   // La sessione può essere creata solo dopo un login effettuato negli ultimi cinque minuti.
   if (Date.now() / 1000 - claims.auth_time > 300)
     error(401, "È richiesto un nuovo accesso.");
-  if (!allowed(claims.email, claims.email_verified))
+  if (!await allowed(claims.email, claims.email_verified))
     error(403, "Questo account non è nella lista degli amici autorizzati.");
   const expiresIn = 5 * 24 * 60 * 60 * 1000;
   let session;

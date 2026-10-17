@@ -213,7 +213,7 @@
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 
     {#if superadmin}
-      <SuperadminPanel onroleschange={refresh} />
+      <SuperadminPanel currentEmail={user.email} onroleschange={refresh} />
     {/if}
 
     <section aria-labelledby="register-title" class="panel">

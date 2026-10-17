@@ -23,7 +23,7 @@ Inventario ricavato dallo screenshot, da aggiornare se vengono aggiunte altre co
 | --- | --- | --- |
 | `bacarodexMembers` | `{uid}` per la registrazione personale oppure ID generato per altre persone; nome, Pokémon, descrittore facciale, modello, consenso e date; eventuali catture del vecchio flusso come campo del documento | Registrazione personale o di altre persone da parte di superadmin; lettura per confronto, ritiro del consenso e gestione dei dati autorizzati |
 
-| `bacaroGameConfigurations` | `merge-battle` per il catalogo del gioco; `superadmins` con email delegate e data ultima modifica | Gestione configurazioni tramite API autorizzate; ruoli modificabili solo da superadmin |
+| `bacaroGameConfigurations` | `merge-battle` per il catalogo del gioco; `superadmins` con `emails` delegate, `allowedEmails` aggiunte, `blockedEmails` rimosse e data ultima modifica | Gestione configurazioni tramite API autorizzate; accessi e ruoli modificabili solo da superadmin |
 
 Le registrazioni aggiunte dai superadmin includono `createdBy`, `consentRecordedBy` (UID dell’operatore), `consentMode` e `consentAt`. La revoca del ruolo non cancella le registrazioni. Le email permanenti restano nella configurazione server, non nel documento dei ruoli.
 

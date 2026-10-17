@@ -267,7 +267,7 @@ Gli account e le registrazioni degli emulatori **non passano automaticamente** a
 | Sintomo | Controllo o intervento |
 | --- | --- |
 | `auth/unauthorized-domain` | Autorizza in Firebase l'hostname esatto da cui stai facendo login. |
-| Accesso negato dopo Google | Controlla email effettiva, verifica dell'email e `BACARODEX_ALLOWED_EMAILS` nel deployment attuale. |
+| Accesso negato dopo Google | Controlla email verificata e autorizzazione nel pannello superadmin; le rimozioni dell’interfaccia prevalgono sulla lista iniziale `BACARODEX_ALLOWED_EMAILS`. |
 | Firebase non configurato | Verifica nomi, valori e ambiente Production; ricorda il redeploy. Non usare `PUBLIC_FIREBASE_ADMIN_KEY` delle interviste. |
 | Configurazione Admin non valida | Il valore deve essere JSON valido completo, senza apici esterni; controlla progetto e validità della chiave. |
 | Errore creando la sessione | Controlla credenziale Admin e permessi Firebase Authentication del service account; usa lo stesso progetto del client. |
@@ -292,6 +292,9 @@ Questa guida descrive la configurazione ricavata dai sorgenti dei due progetti e
 
 Aggiungi su Vercel, nell’ambiente usato dal deploy, la variabile privata `BACARODEX_SUPERADMIN_EMAILS`: email Google verificate separate da virgole. Questi account possono accedere senza essere ripetuti in `BACARODEX_ALLOWED_EMAILS` e non possono essere declassati dall’app. Esegui un nuovo deploy dopo le modifiche alla configurazione.
 
-In `/admin` apri Bacarodex e usa **Gestione superadmin** per nominare o revocare altri membri già presenti in `BACARODEX_ALLOWED_EMAILS`. Le nomine sono nel documento `bacaroGameConfigurations/superadmins`, senza nuove collezioni. Le regole client di questa collezione devono restare chiuse; l’Admin SDK verifica i permessi sul server. Non sovrascrivere le regole delle altre app nel progetto condiviso.
+In `/admin` apri Bacarodex e usa **Membri autorizzati e superadmin** per aggiungere email con **Autorizza membro**, rimuovere l’accesso o assegnare/revocare separatamente il ruolo superadmin. Le nomine sono nel documento `bacaroGameConfigurations/superadmins`, senza nuove collezioni. Le regole client di questa collezione devono restare chiuse; l’Admin SDK verifica i permessi sul server. Non sovrascrivere le regole delle altre app nel progetto condiviso.
 
 I superadmin possono registrare più persone scegliendo **Un’altra persona**, dopo aver raccolto il consenso esplicito descritto nel modulo; possono inoltre eliminare qualsiasi registrazione. La cancellazione permette di ritirare la partecipazione anche alle persone senza account. La modalità personale mantiene il documento con UID e il limite di una registrazione per account. Il limite complessivo resta di 200 Bacari.
+
+
+`BACARODEX_ALLOWED_EMAILS` è la lista iniziale. Le aggiunte e rimozioni dall’interfaccia sono salvate rispettivamente in `allowedEmails` e `blockedEmails` nello stesso documento dei ruoli e si applicano senza redeploy. Le rimozioni prevalgono sulla lista iniziale, ma non sulle email permanenti di `BACARODEX_SUPERADMIN_EMAILS`. Rimuovere l’accesso revoca anche l’eventuale ruolo delegato e blocca le sessioni esistenti alla richiesta successiva. Non cancella le registrazioni né gli account Firebase Authentication. Ripristinare l’accesso non ripristina il ruolo.

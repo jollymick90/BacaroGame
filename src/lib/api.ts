@@ -34,6 +34,10 @@ export function changeSuperadmin(email: string, enabled: boolean) {
   return request('/superadmins', 'PATCH', { email, enabled });
 }
 
+export function changeMemberAccess(email: string, enabled: boolean) {
+  return request('/access', 'PATCH', { email, enabled });
+}
+
 export function removeMember(memberId: string) {
   return request('/members', 'DELETE', { memberId });
 }
