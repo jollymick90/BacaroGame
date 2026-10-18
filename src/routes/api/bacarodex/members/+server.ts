@@ -1,3 +1,4 @@
+import { markMembersChanged } from '$lib/server/member-cache';
 import { error, type RequestHandler } from '@sveltejs/kit';
 import { firebaseAdmin } from '$lib/firebase/firebase-admin.server';
 import { body, privateJson, requireUser, sameOrigin } from '$lib/server/http';
@@ -49,8 +50,8 @@ export const POST: RequestHandler = async event => {
     if (existing.exists) {
       error(409, 'Hai già una registrazione. Eliminala prima di registrarti di nuovo.');
     }
-    const count = await transaction.get(membersCollection().limit(200));
-    if (count.size >= 200) {
+    const count = await transaction.get(membersCollection().limit(200).count());
+    if (count.data().count >= 200) {
       error(409, 'La demo può ospitare al massimo 200 Bacari.');
     }
     const now = Date.now();
@@ -67,6 +68,7 @@ export const POST: RequestHandler = async event => {
       consentRecordedBy: user.uid,
       captures: {},
     });
+    markMembersChanged(transaction);
   });
   return privateJson({ registered: true }, 201);
 };
@@ -90,6 +92,7 @@ export const DELETE: RequestHandler = async event => {
       error(403, 'Puoi eliminare solo la tua registrazione.');
     }
     transaction.delete(membersCollection().doc(memberId));
+    markMembersChanged(transaction);
   });
   return privateJson({ deleted: true });
 };

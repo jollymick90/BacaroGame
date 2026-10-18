@@ -8,6 +8,8 @@ import { createServer } from 'vite';
 const records = new Map();
 let nextId = 0;
 let accessUnavailable = false;
+let memberQueries = 0;
+let roleReads = 0;
 const auth = {
   async verifySessionCookie() { return globalThis.__bacaroTestClaims; },
   async verifyIdToken() { return globalThis.__bacaroTestClaims; },
@@ -25,13 +27,15 @@ function reference(path) {
     id: path.split('/').at(-1),
     async get() {
       if (accessUnavailable) throw new Error('Test database unavailable');
+      if (path === 'bacaroGameConfigurations/superadmins') roleReads++;
       return snapshot(path);
     },
   };
 }
 
 function snapshot(path) {
-  return { exists: records.has(path), data: () => records.get(path) };
+  const value = records.get(path);
+  return { id: path.split('/').at(-1), ref: reference(path), exists: records.has(path), data: () => value };
 }
 
 const database = {
@@ -41,7 +45,15 @@ const database = {
         return reference(`${name}/${id}`);
       },
       limit(limit) {
-        return { collection: name, limit };
+        return {
+          collection: name, limit,
+          count() { return { collection: name, limit, aggregate: true }; },
+          async get() {
+            memberQueries++;
+            const docs = [...records.keys()].filter(path => path.startsWith(`${name}/`)).slice(0, limit).map(snapshot);
+            return { docs, size: docs.length };
+          },
+        };
       },
     };
   },
@@ -51,9 +63,19 @@ const database = {
       async get(target) {
         if (target.path) return snapshot(target.path);
         const matches = [...records.keys()].filter(path => path.startsWith(`${target.collection}/`));
-        return { size: Math.min(matches.length, target.limit) };
+        const count = Math.min(matches.length, target.limit);
+        if (target.aggregate) return { data: () => ({ count }) };
+        return { size: count, docs: matches.slice(0, target.limit).map(snapshot) };
       },
       set(target, data) { writes.push(() => records.set(target.path, data)); },
+      update(target, field, value) {
+        writes.push(() => {
+          const data = structuredClone(records.get(target.path));
+          const [, uid] = field.toString().split('.');
+          data.captures = { ...data.captures, [uid]: value };
+          records.set(target.path, data);
+        });
+      },
       create(target, data) {
         assert.equal(records.has(target.path), false);
         writes.push(() => records.set(target.path, data));
@@ -71,7 +93,10 @@ globalThis.__bacaroTestConfiguration = configuration;
 const server = await createServer({
   configFile: false,
   server: { middlewareMode: true, watch: null },
-  resolve: { alias: { $lib: fileURLToPath(new URL('../src/lib', import.meta.url)) } },
+  resolve: { alias: {
+    $lib: fileURLToPath(new URL('../src/lib', import.meta.url)),
+    'human-match': fileURLToPath(new URL('../node_modules/@vladmandic/human/src/face/match.ts', import.meta.url)),
+  } },
   plugins: [{
     name: 'firebase-test-boundary',
     enforce: 'pre',
@@ -110,6 +135,8 @@ beforeEach(() => {
   records.clear();
   nextId = 0;
   accessUnavailable = false;
+  memberQueries = 0;
+  roleReads = 0;
   configuration.BACARODEX_SUPERADMIN_EMAILS = 'root@example.com';
   configuration.BACARODEX_ALLOWED_EMAILS = 'member@example.com,delegate@example.com';
 });
@@ -361,4 +388,82 @@ test('access database failure fails closed while preserving a valid session cook
   }), /Test database unavailable/);
   assert.equal(resolved, false);
   assert.deepEqual(removedCookies, []);
+});
+
+
+test('member cache reuses the list and detects registrations and withdrawals', async () => {
+  const cache = await server.ssrLoadModule('/src/lib/server/member-cache.ts');
+  await members.POST(event('member@example.com', 'POST', registration()));
+  const firstVersion = records.get('bacaroGameConfigurations/members-version').version;
+  assert.equal((await cache.cachedMembers()).docs.length, 1);
+  assert.equal((await cache.cachedMembers()).docs.length, 1);
+  assert.equal(memberQueries, 1);
+  await members.DELETE(event('member@example.com', 'DELETE'));
+  assert.notEqual(records.get('bacaroGameConfigurations/members-version').version, firstVersion);
+  assert.equal((await cache.cachedMembers()).docs.length, 0);
+  assert.equal(memberQueries, 2);
+  accessUnavailable = true;
+  await assert.rejects(cache.cachedMembers(), /unavailable/);
+});
+
+test('public game endpoints do not consult the session access list', async () => {
+  for (const [path, method] of [
+    ['/api/play', 'GET'], ['/api/play/scan', 'POST'],
+    ['/api/play/answer', 'POST'], ['/api/merge-battle/config', 'GET'],
+  ]) {
+    const { requestEvent } = authenticatedRequest('member@example.com');
+    requestEvent.url = new URL(`https://example.com${path}`);
+    requestEvent.request = new Request(requestEvent.url, { method });
+    accessUnavailable = true;
+    const response = await hooks.handle({ event: requestEvent, resolve: async current => {
+      assert.equal(current.locals.user, null);
+      return new Response('public');
+    } });
+    assert.equal(await response.text(), 'public');
+  }
+});
+
+
+test('hook and role checks share one read only within the current request', async () => {
+  records.set('bacaroGameConfigurations/superadmins', { emails: ['delegate@example.com'] });
+  const { requestEvent } = authenticatedRequest('delegate@example.com');
+  const resolve = async current => {
+    assert.equal(await loginPolicy.hasSuperadminRole(current.locals.user.email), true);
+    await loginPolicy.listSuperadmins(current.locals.user.email);
+    return new Response('ok');
+  };
+  await hooks.handle({ event: requestEvent, resolve });
+  assert.equal(roleReads, 1);
+  await hooks.handle({ event: requestEvent, resolve });
+  assert.equal(roleReads, 2);
+});
+
+
+test('cached matching rechecks direct deletions and withdrawals', async () => {
+  const game = await server.ssrLoadModule('/src/lib/server/game.ts');
+  await members.POST(event('member@example.com', 'POST', registration()));
+  const embedding = registration().embedding;
+  assert.equal((await game.matchPublic(embedding)).id, 'member');
+  assert.equal((await game.matchPublic(embedding)).id, 'member');
+  assert.equal(memberQueries, 1);
+  // Simulate a console edit that cannot update the application's version marker.
+  records.delete('bacarodexMembers/member');
+  await assert.rejects(game.matchPublic(embedding), status(410));
+  assert.equal(memberQueries, 1);
+});
+
+test('legacy capture and data deletion invalidate the shared member list', async () => {
+  const captures = await server.ssrLoadModule('/src/routes/api/bacarodex/captures/+server.ts');
+  const data = await server.ssrLoadModule('/src/routes/api/bacarodex/data/+server.ts');
+  const cache = await server.ssrLoadModule('/src/lib/server/member-cache.ts');
+  await members.POST(event('member@example.com', 'POST', registration()));
+  const before = records.get('bacaroGameConfigurations/members-version').version;
+  await cache.cachedMembers();
+  await captures.POST(event('member@example.com', 'POST', { memberId: 'member', pokemonId: 25 }));
+  const afterCapture = records.get('bacaroGameConfigurations/members-version').version;
+  assert.notEqual(afterCapture, before);
+  assert.equal(typeof (await cache.cachedMembers()).docs[0].data().captures.member, 'number');
+  await data.DELETE(event('member@example.com', 'DELETE', { includeRegistration: true }));
+  assert.notEqual(records.get('bacaroGameConfigurations/members-version').version, afterCapture);
+  assert.equal((await cache.cachedMembers()).docs.length, 0);
 });

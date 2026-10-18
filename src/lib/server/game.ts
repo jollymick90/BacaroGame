@@ -4,12 +4,15 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt } 
 import { similarity } from 'human-match';
 import { emulatorMode, firebaseConfigured } from '$lib/firebase/firebase-admin.server';
 import { membersCollection, PUBLIC_CONSENT_VERSION, canonicalPokemon } from './members';
+import { cachedMembers } from './member-cache';
 import { EMBEDDING_MODEL, type Pokemon } from '$lib/types';
 export const MIN_SIMILARITY = 0.60;
 export const MIN_MARGIN = 0.08;
 export function gameConfigured() { return firebaseConfigured() && Boolean(emulatorMode() || (env.BACARODEX_GAME_SECRET?.length ?? 0) >= 32); }
 export async function playableMembers() {
-  return (await membersCollection().where('consentVersion', '==', PUBLIC_CONSENT_VERSION).limit(200).get()).docs.filter(doc => doc.data().model === EMBEDDING_MODEL);
+  const snapshot = await cachedMembers();
+  return snapshot.docs.filter(doc => doc.data().consentVersion === PUBLIC_CONSENT_VERSION)
+    .slice(0, 200).filter(doc => doc.data().model === EMBEDDING_MODEL);
 }
 export function validEmbedding(value: unknown): value is number[] {
   return Array.isArray(value) && value.length === 256 && value.every(v => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e6) && value.some(v => v !== 0);
@@ -19,7 +22,14 @@ export async function matchPublic(embedding: number[]) {
   const ranked = candidates.filter(doc => validEmbedding(doc.data().embedding)).map(doc => ({ doc, score: similarity(embedding, doc.data().embedding) })).filter(c => Number.isFinite(c.score)).sort((a,b) => b.score-a.score);
   if (!ranked[0] || ranked[0].score < MIN_SIMILARITY) error(422, 'Nessun Bacaro sufficientemente simile. Rifai la foto con più luce.');
   if (ranked[1] && ranked[0].score - ranked[1].score < MIN_MARGIN) error(422, 'Corrispondenza ambigua. Inquadra meglio il volto e rifai la foto.');
-  return ranked[0].doc;
+  // Also reject direct-console deletions or a withdrawal during the cached lookup.
+  const record = await membersCollection().doc(ranked[0].doc.id).get();
+  const current = record.data();
+  if (!current || current.consentVersion !== PUBLIC_CONSENT_VERSION ||
+      current.model !== EMBEDDING_MODEL || current.createdAt !== ranked[0].doc.data().createdAt) {
+    error(410, 'Il membro non partecipa più. Scansiona di nuovo.');
+  }
+  return record;
 }
 interface Attempt { memberId: string; pokemonId: number; createdAt: number; expires: number; choices: number[] }
 function key() {

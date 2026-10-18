@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
 import type { Transaction } from 'firebase-admin/firestore';
@@ -8,6 +9,24 @@ import { emailList, isSuperadmin, updateDelegatedAdmins } from './admin-policy';
 
 function roleDocument() {
   return gameDocument(GAME_COLLECTIONS.configurations, 'superadmins');
+}
+
+// Reuse one permissions snapshot within a request, never across users/requests.
+const accessReads = new AsyncLocalStorage<{ snapshot?: Promise<FirebaseFirestore.DocumentSnapshot> }>();
+
+export function withAccessReadCache<T>(run: () => T): T {
+  return accessReads.run({}, run);
+}
+
+function readRoles() {
+  const context = accessReads.getStore();
+  if (!context) {
+    return roleDocument().get();
+  }
+  if (!context.snapshot) {
+    context.snapshot = roleDocument().get();
+  }
+  return context.snapshot;
 }
 
 function storedEmails(value: unknown): string[] {
@@ -39,7 +58,7 @@ export async function allowed(email: string | undefined, verified: boolean | und
   if (emailList(env.BACARODEX_SUPERADMIN_EMAILS).includes(normalizedEmail)) {
     return true;
   }
-  const snapshot = await roleDocument().get();
+  const snapshot = await readRoles();
   return accessState(snapshot.data()).allowed.includes(normalizedEmail);
 }
 
@@ -49,13 +68,13 @@ export async function hasSuperadminRole(email: string, transaction?: Transaction
     return true;
   }
   const reference = roleDocument();
-  const snapshot = transaction ? await transaction.get(reference) : await reference.get();
+  const snapshot = transaction ? await transaction.get(reference) : await readRoles();
   const state = accessState(snapshot.data());
   return isSuperadmin(email, state.permanent, state.allowed, state.delegated);
 }
 
 export async function listSuperadmins(email: string) {
-  const snapshot = await roleDocument().get();
+  const snapshot = await readRoles();
   const state = accessState(snapshot.data());
   if (!isSuperadmin(email, state.permanent, state.allowed, state.delegated)) {
     error(403, 'Questa operazione richiede il ruolo superadmin.');

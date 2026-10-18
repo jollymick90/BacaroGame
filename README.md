@@ -122,10 +122,36 @@ Verifiche effettivamente eseguite e prove ancora necessarie in [IMPLEMENTAZIONE.
 
 Per modifiche e verifiche del Game Center, vedi [IMPLEMENTAZIONE_GAMECENTER.md](IMPLEMENTAZIONE_GAMECENTER.md). Il report precedente di Bacarodex rimane separato.
 
-## Cache delle letture pubbliche
+## Cache e letture Firebase
 
-Il conteggio di `GET /api/play` e la configurazione di `GET /api/merge-battle/config` sono conservati sul server per 60 secondi. Le richieste simultanee condividono la lettura in corso; gli errori non vengono conservati. Il salvataggio di Merge Battle aggiorna la cache dell’istanza che gestisce la scrittura. Le altre istanze vedono le modifiche alla scadenza della propria cache; anche il conteggio può restare indietro fino a 60 secondi.
+Il conteggio di `GET /api/play` usa un’aggregazione Firestore ed è conservato per 60 secondi. Anche `GET /api/merge-battle/config` usa una cache di 60 secondi, aggiornata sull’istanza che salva il catalogo. Richieste simultanee condividono la lettura in corso; gli errori non vengono conservati. Le risposte HTTP restano `private, no-store`.
 
-Su Vercel la cache è in memoria per singola istanza: riavvii e nuove istanze richiedono nuove letture. Non è una cache globale e non ripristina una quota già esaurita. Le risposte HTTP restano `private, no-store`. Permessi, consenso, riconoscimento e risposte del quiz continuano a leggere i dati aggiornati da Firestore; i descrittori facciali non sono conservati nella cache.
+L’elenco membri è condiviso sul server tra scansioni e area membri per 60 secondi. Ogni utilizzo legge prima `bacaroGameConfigurations/members-version`: registrazioni, cancellazioni e modifiche alle catture legacy aggiornano questo documento nella stessa transazione dei membri. Un cambio di versione forza il caricamento anche sulle altre istanze Vercel. Nei database esistenti, l’assenza del documento rappresenta la versione iniziale; il primo cambiamento tramite l’app crea il documento automaticamente. Non serve una migrazione preventiva.
 
-Test della cache: `node --experimental-strip-types --test src/lib/server/ttl-cache.test.ts`.
+La cache contiene i documenti dei membri, inclusi i descrittori registrati, esclusivamente in memoria sul server. I descrittori inviati dai giocatori non vengono conservati. Prima di creare un tentativo il server rilegge il membro riconosciuto e verifica partecipazione, modello e data di registrazione; ogni risposta al quiz verifica ancora il documento attuale. Le modifiche fatte direttamente da console o da altri script devono aggiornare anche la versione per invalidare subito l’elenco; altrimenti l’elenco si rinnova alla scadenza. La verifica puntuale blocca comunque un membro eliminato o con consenso ritirato.
+
+I controlli dei permessi condividono una lettura per richiesta HTTP; ogni nuova richiesta li rilegge. Le transazioni verificano sempre i permessi nel database. Le quattro API pubbliche del gioco non verificano la sessione amministrativa. Firebase Authentication usa chiamate proprie e non alimenta il contatore delle letture Firestore.
+
+Su Vercel la memoria resta per singola istanza: riavvii, scadenze e versioni nuove causano un nuovo caricamento. La verifica della versione è condivisa tramite Firestore, non la memoria della cache. Non vengono serviti dati se la verifica della versione fallisce. Il conteggio può restare indietro di 60 secondi; la configurazione Merge Battle può fare altrettanto sulle altre istanze.
+
+### Inventario delle letture (18 ottobre 2026)
+
+`N` indica i membri letti (massimo 201 per l’elenco amministrativo, con limite applicativo di 200 registrazioni). I numeri descrivono le operazioni applicative; retry delle transazioni, nuove istanze e quote delle aggregazioni vanno considerati separatamente.
+
+| Percorso | Prima | Dopo |
+| --- | --- | --- |
+| `GET /api/play` | Fino a 200 documenti a ogni scadenza della cache | Un’aggregazione alla scadenza, nessuna lettura durante i 60 secondi |
+| `POST /api/play/scan` | Fino a 200 documenti a ogni scansione | Cache valida: 1 versione + 1 membro riconosciuto; cache assente/scaduta/modificata: anche N documenti |
+| `GET /api/bacarodex` | N documenti + controlli permessi duplicati | 1 versione + N solo se cache da ricaricare; 1 lettura permessi per richiesta |
+| `POST /api/bacarodex/members` | Documento candidato + fino a 200 documenti per il limite + permessi | Documento candidato + aggregazione transazionale per il limite + permessi; 1 scrittura aggiuntiva della versione |
+| `DELETE /api/bacarodex/members` | Controlli permessi | Controlli permessi; 1 scrittura aggiuntiva della versione |
+| `POST /api/play/answer` | 1 documento per risposta | 1 documento attuale per verificare ritiro o nuova registrazione |
+| `GET /api/merge-battle/config` | Già in cache 60 secondi | Cache confermata; eliminato il controllo sessione sulle richieste pubbliche |
+| `PUT /api/merge-battle/config` | Lettura transazionale della revisione | Lettura attuale per prevenire salvataggi concorrenti |
+| `GET /api/bacarodex/superadmins` | Hook e route leggono entrambi i permessi | Una lettura condivisa nella richiesta |
+| `PATCH /api/bacarodex/superadmins`, `/access` | Lettura dei permessi nella transazione | Lettura transazionale mantenuta, oltre al controllo di accesso della richiesta |
+| `POST /api/bacarodex/captures` (legacy) | 1 membro nella transazione | Come prima, con aggiornamento atomico della versione se cambia |
+| `DELETE /api/bacarodex/data` (legacy) | Fino a 201 documenti nella transazione | Come prima: serve individuare e cancellare tutte le catture dell’utente; aggiorna la versione |
+| Login e hook delle pagine private | Verifica Auth e permessi | Verifica Auth e permessi, con deduplicazione dei permessi nella richiesta |
+
+Non risultano polling Firestore o listener realtime nel client di BacaroGame. Le letture partono dall’ingresso nei giochi/pannelli, dalle scansioni e dalle azioni dell’utente. Test cache: `node --experimental-strip-types --test src/lib/server/ttl-cache.test.ts src/lib/server/versioned-cache.test.ts`. Test API e revoche: `npm run test:superadmins`.

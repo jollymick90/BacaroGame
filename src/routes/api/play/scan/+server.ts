@@ -9,6 +9,7 @@ export const POST: RequestHandler = async event => {
   if(!gameConfigured()) error(503,'Gioco non ancora configurato dagli amministratori.');
   // No photo; submitted embedding is used only for this request, never persisted.
   const member = await matchPublic(data.embedding);
-  const options = await quizOptions(member.data().pokemon, event.fetch);
-  return privateJson({ options, token: sealAttempt(member.id,member.data().pokemon.id,options.map(p=>p.id),member.data().createdAt) });
+  const record = member.data()!;
+  const options = await quizOptions(record.pokemon, event.fetch);
+  return privateJson({ options, token: sealAttempt(member.id,record.pokemon.id,options.map(p=>p.id),record.createdAt) });
 };

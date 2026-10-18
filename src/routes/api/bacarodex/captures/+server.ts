@@ -1,3 +1,4 @@
+import { markMembersChanged } from '$lib/server/member-cache';
 import { error, type RequestHandler } from '@sveltejs/kit';
 import { FieldPath } from 'firebase-admin/firestore';
 import { firebaseAdmin } from '$lib/firebase/firebase-admin.server';
@@ -13,6 +14,7 @@ export const POST: RequestHandler = async event => {
     if (record.data()!.pokemon.id !== pokemonId) error(400, 'Risposta errata. Riprova!');
     if (record.data()!.captures?.[user.uid] !== undefined) return;
     tx.update(ref, new FieldPath('captures', user.uid), Date.now());
+    markMembersChanged(tx);
   });
   return privateJson({ captured: true });
 };

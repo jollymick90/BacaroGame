@@ -1,3 +1,4 @@
+import { markMembersChanged } from '$lib/server/member-cache';
 import type { RequestHandler } from './$types';
 import { FieldPath, FieldValue } from 'firebase-admin/firestore';
 import { firebaseAdmin } from '$lib/firebase/firebase-admin.server';
@@ -14,6 +15,7 @@ export const DELETE: RequestHandler = async event => {
       if (includeRegistration && record.id === user.uid) tx.delete(record.ref);
       else if (record.data().captures?.[user.uid] !== undefined) tx.update(record.ref, new FieldPath('captures', user.uid), FieldValue.delete());
     }
+    markMembersChanged(tx);
   });
   // Deleting a member document also removes all captures of that member.
   return privateJson({ deleted: true });

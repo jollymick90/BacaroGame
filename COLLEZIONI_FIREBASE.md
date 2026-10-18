@@ -23,7 +23,7 @@ Inventario ricavato dallo screenshot, da aggiornare se vengono aggiunte altre co
 | --- | --- | --- |
 | `bacarodexMembers` | `{uid}` per la registrazione personale oppure ID generato per altre persone; nome, Pokémon, descrittore facciale, modello, consenso e date; eventuali catture del vecchio flusso come campo del documento | Registrazione personale o di altre persone da parte di superadmin; lettura per confronto, ritiro del consenso e gestione dei dati autorizzati |
 
-| `bacaroGameConfigurations` | `merge-battle` per il catalogo del gioco; `superadmins` con `emails` delegate, `allowedEmails` aggiunte, `blockedEmails` rimosse e data ultima modifica | Gestione configurazioni tramite API autorizzate; accessi e ruoli modificabili solo da superadmin |
+| `bacaroGameConfigurations` | `merge-battle` per il catalogo del gioco; `members-version` per invalidare la cache dei membri, `superadmins` con `emails` delegate, `allowedEmails` aggiunte, `blockedEmails` rimosse e data ultima modifica | Gestione configurazioni tramite API autorizzate; accessi e ruoli modificabili solo da superadmin |
 
 Le registrazioni aggiunte dai superadmin includono `createdBy`, `consentRecordedBy` (UID dell’operatore), `consentMode` e `consentAt`. La revoca del ruolo non cancella le registrazioni. Le email permanenti restano nella configurazione server, non nel documento dei ruoli.
 
@@ -57,3 +57,5 @@ Non rinominare una collezione già popolata modificando soltanto la costante: se
 Non pubblicare il solo `firestore.rules` del Game Center sostituendo il ruleset delle interviste. Conserva le regole delle collezioni riservate e verifica che eventuali wildcard permissive non concedano accesso browser a `bacarodexMembers`. Admin SDK usa autorizzazioni server: le regole Firestore del client non sostituiscono la lista applicativa.
 
 L'inventario deriva dallo screenshot e dal codice locale; le regole attive e l'eventuale presenza di ulteriori collezioni in cloud non sono state interrogate.
+
+Il documento `bacaroGameConfigurations/members-version` contiene una versione opaca casuale. Viene scritto atomicamente con ogni modifica a `bacarodexMembers`, comprese le route legacy. Non contiene dati personali. Le letture del marker precedono ogni riuso della cache membri; le letture e le scritture usano il gateway approvato. Gli script esterni che modificano i membri devono aggiornare questo marker nella stessa transazione o batch per invalidare subito la cache.

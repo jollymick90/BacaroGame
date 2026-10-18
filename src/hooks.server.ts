@@ -1,13 +1,20 @@
 import { firebaseAdmin, firebaseConfigured } from '$lib/firebase/firebase-admin.server';
-import { allowed } from '$lib/server/superadmins';
+import { allowed, withAccessReadCache } from '$lib/server/superadmins';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import { SESSION_COOKIE } from '$lib/server/http';
 import { reportServerError } from '$lib/server/errors';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-export const handle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = input => withAccessReadCache(() => handleRequest(input));
+
+const handleRequest: Handle = async ({ event, resolve }) => {
   event.locals.user = null;
   const cookie = event.cookies.get(SESSION_COOKIE);
-  if (cookie && firebaseConfigured()) {
+  const path = event.url.pathname;
+  const method = event.request.method;
+  const publicGameRequest =
+    (method === 'GET' && (path === '/api/play' || path === '/api/merge-battle/config')) ||
+    (method === 'POST' && (path === '/api/play/scan' || path === '/api/play/answer'));
+  if (!publicGameRequest && cookie && firebaseConfigured()) {
     let claims: DecodedIdToken | null = null;
     try {
       claims = await firebaseAdmin().auth.verifySessionCookie(cookie, true);
