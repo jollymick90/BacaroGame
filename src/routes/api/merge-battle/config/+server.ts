@@ -3,14 +3,21 @@ import { gameDocument } from '$lib/firebase/game-collections.server';
 import { GAME_COLLECTIONS } from '$lib/firebase/collections';
 import { firebaseConfigured } from '$lib/firebase/firebase-admin.server';
 import { body, privateJson, requireUser, sameOrigin } from '$lib/server/http';
+import { createTtlCache } from '$lib/server/ttl-cache';
 import { DEFAULT_CONFIG, validateConfig, readConfig } from '$lib/games/merge-battle/config';
 const configDocument = () => gameDocument(GAME_COLLECTIONS.configurations, 'merge-battle');
+async function loadConfiguration() {
+ const snapshot = await configDocument().get();
+ if (!snapshot.exists) return { config: DEFAULT_CONFIG, revision: 0, persisted: false };
+ const data = snapshot.data()!;
+ return { config: readConfig(data.config), revision: data.revision, persisted: true };
+}
+
+const configurationCache = createTtlCache<Awaited<ReturnType<typeof loadConfiguration>>>(60_000);
+
 export const GET: RequestHandler = async () => {
- if(!firebaseConfigured()) return privateJson({config:DEFAULT_CONFIG,revision:0,persisted:false});
- const snapshot=await configDocument().get();
- if(!snapshot.exists) return privateJson({config:DEFAULT_CONFIG,revision:0,persisted:false});
- const data=snapshot.data()!;
- return privateJson({config:readConfig(data.config),revision:data.revision,persisted:true});
+ if (!firebaseConfigured()) return privateJson({ config: DEFAULT_CONFIG, revision: 0, persisted: false });
+ return privateJson(await configurationCache.get(loadConfiguration));
 };
 export const PUT: RequestHandler = async event => {
  sameOrigin(event);const user=requireUser(event);
@@ -27,5 +34,7 @@ export const PUT: RequestHandler = async event => {
   tx.set(ref,{config,revision:next,updatedAt:Date.now(),updatedBy:user.uid});
   return next;
  });
- return privateJson({config,revision,persisted:true});
+ const saved = { config, revision, persisted: true };
+ configurationCache.set(saved);
+ return privateJson(saved);
 };

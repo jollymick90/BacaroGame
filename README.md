@@ -121,3 +121,11 @@ Demo volontaria, non autenticazione, anti-spoofing o sistema anti-cheat. Prima d
 Verifiche effettivamente eseguite e prove ancora necessarie in [IMPLEMENTAZIONE.md](IMPLEMENTAZIONE.md).
 
 Per modifiche e verifiche del Game Center, vedi [IMPLEMENTAZIONE_GAMECENTER.md](IMPLEMENTAZIONE_GAMECENTER.md). Il report precedente di Bacarodex rimane separato.
+
+## Cache delle letture pubbliche
+
+Il conteggio di `GET /api/play` e la configurazione di `GET /api/merge-battle/config` sono conservati sul server per 60 secondi. Le richieste simultanee condividono la lettura in corso; gli errori non vengono conservati. Il salvataggio di Merge Battle aggiorna la cache dell’istanza che gestisce la scrittura. Le altre istanze vedono le modifiche alla scadenza della propria cache; anche il conteggio può restare indietro fino a 60 secondi.
+
+Su Vercel la cache è in memoria per singola istanza: riavvii e nuove istanze richiedono nuove letture. Non è una cache globale e non ripristina una quota già esaurita. Le risposte HTTP restano `private, no-store`. Permessi, consenso, riconoscimento e risposte del quiz continuano a leggere i dati aggiornati da Firestore; i descrittori facciali non sono conservati nella cache.
+
+Test della cache: `node --experimental-strip-types --test src/lib/server/ttl-cache.test.ts`.
