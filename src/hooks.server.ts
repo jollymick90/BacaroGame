@@ -12,7 +12,7 @@ const handleRequest: Handle = async ({ event, resolve }) => {
   const path = event.url.pathname;
   const method = event.request.method;
   const publicGameRequest =
-    (method === 'GET' && (path === '/api/play' || path === '/api/merge-battle/config' || path === '/api/bug-hunter/config')) ||
+    (method === 'GET' && (path === '/api/play' || path === '/api/game-center/config' || path === '/api/merge-battle/config' || path === '/api/bug-hunter/config')) ||
     (method === 'POST' && (path === '/api/play/scan' || path === '/api/play/answer'));
   if (!publicGameRequest && cookie && firebaseConfigured()) {
     let claims: DecodedIdToken | null = null;

@@ -1,3 +1,4 @@
+import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
 import assert from 'node:assert/strict';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
 import { AXES } from '../src/lib/games/merge-battle/cards.ts';
@@ -21,6 +22,7 @@ await page.route('**/api/merge-battle/config', route => {
   published = { config: payload.config, revision: published.revision + 1, persisted: true };
   return route.fulfill({ json: published });
 });
+await mockGameConfiguration(page, () => ({ mergeBattle: published.config }));
 await page.addInitScript(() => { Math.random = () => 0; });
 
 async function openHand(game, mode = 'solo') {
@@ -79,8 +81,7 @@ try {
     published.config.activeAxes = activeAxes;
     for (const mode of ['solo', 'local']) {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto(`${origin}/#/merge-battle`);
-      await page.reload();
+      await openGame(page, origin, '/merge-battle');
       await openHand(page.locator('main.mb-shell'), mode);
       assert.equal(await page.locator('.card-values b').count(), activeAxes.length * 3);
       const gameText = await page.locator('main').innerText();

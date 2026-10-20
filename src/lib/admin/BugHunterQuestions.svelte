@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidate } from '$app/navigation';
   import { onMount, tick } from 'svelte';
   import { DEFAULT_QUESTIONS, validateQuestionConfig, type QuestionConfig } from '$lib/games/bug-hunter/questions';
 
@@ -67,6 +68,7 @@
       draft = published;
       revision = data.revision;
       saved = JSON.stringify(published);
+      void invalidate('game-center:configuration');
       status = 'Domande salvate. Saranno usate alle prossime aperture di Bug Hunter.';
     } catch (error) {
       failure = error instanceof Error ? error.message : 'Salvataggio non riuscito. Le modifiche sono conservate.';

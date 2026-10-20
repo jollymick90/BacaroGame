@@ -63,7 +63,7 @@
 </svelte:head>
 <div class="arcade-shell">
   <main class="share-page">
-    <a class="back" href="/#/">← Torna al Game Center</a>
+    <a class="back" href="/">← Torna al Game Center</a>
     <header>
       <img src="/bacarotech-logo.png" alt="BacaroTech" width="52" height="52" />
       <h1>Invita a giocare.</h1>
@@ -74,7 +74,7 @@
         <img class="qr" src={image} alt="QR per aprire il BacaroTech Game Center" />
       {:else}<p role="status">{qrError || 'Prepariamo il QR…'}</p>{/if}
     </div>
-    <a class="address" href={address || '/#/'}>{address}</a>
+    <a class="address" href={address || '/'}>{address}</a>
     <div class="actions">
       {#if canShare}<button class="arcade-primary" onclick={share} disabled={!address || sharing}>Condividi link</button>{/if}
       <button class={canShare ? 'arcade-secondary' : 'arcade-primary'} onclick={copy} disabled={!address}>{copied ? 'Link copiato' : 'Copia link'}</button>

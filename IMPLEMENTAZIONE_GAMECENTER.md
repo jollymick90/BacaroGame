@@ -1,3 +1,38 @@
+# Router SvelteKit e configurazioni condivise — 20 ottobre 2026
+
+La home e i quattro giochi ora appartengono al gruppo `src/routes/(game-center)`. Le pagine hanno URL `/`, `/merge-battle`, `/bug-hunter`, `/are-you-an-ai`, `/bacarodex`. `GameCenter.svelte` conserva solo la cornice e un indicatore discreto durante la navigazione: eliminati switch sui frammenti, import manuali, azzeramento dei componenti e schermata di caricamento generica.
+
+Il layout universale carica `GET /api/game-center/config` una volta all’ingresso. In SSR SvelteKit esegue la richiesta internamente e incorpora la risposta per l’idratazione; navigando tra i giochi la funzione non dipende dal percorso e i dati vengono riutilizzati. Il caricamento dei bundle e la cronologia sono gestiti dal framework. Le pagine montano gli stessi componenti: regole, mosse, punteggi e cleanup restano invariati. Bug Hunter riceve le domande dal layout invece di avviare un altro fetch.
+
+I servizi server estratti condividono i dati pubblici tramite cache di 60 secondi, deduplicano le letture concorrenti e aggiornano il valore dopo PUT. Il test verifica anche che un caricamento precedente non sovrascriva una pubblicazione. Un timeout di tre secondi impedisce a una lettura bloccata di trattenere tutta la home. La degradazione è separata: Merge Battle offre Riprova con riferimento diagnostico, Bug Hunter usa le 20 domande integrate. Gli errori non vengono memorizzati. Il timeout libera l’attesa applicativa, non cancella la richiesta Firestore sottostante.
+
+QR, inviti e link admin usano i nuovi percorsi. I frammenti legacy vengono riconosciuti soltanto nella home e convertiti con replaceState tramite goto, preservando i parametri di query. Nessun redirect verso destinazioni arbitrarie. Nessuna migrazione dei dati.
+
+## Verifica
+
+- Nuovo `npm run test:game-center`: cache condivisa, deduplicazione, salvataggi, scadenza, errori e letture bloccate; compatibilità dei link legacy.
+- `scripts/test-game-center-router.mjs`: URL diretti SSR, idratazione senza nuovo fetch, documento preservato, indietro/avanti, refresh, vecchi link, ingresso client con una sola richiesta di configurazione, errore e recupero.
+- Le fixture browser di Merge Battle e Bug Hunter entrano da `/qr` attraverso il router, così il caricamento client viene intercettato; l’SSR viene testato separatamente con il backend reale locale.
+
+### Risultati eseguiti
+
+- `npm run check`: zero errori e zero avvisi; gateway Firestore verificati.
+- `npm run build`: completata, inclusi checksum dei modelli e adapter Vercel. Restano gli avvisi di tracing già presenti per `google-gax/metadataResolver` e `supports-color`.
+- Suite npm passate: `test:game-center`, `test:merge-battle`, `test:bug-hunter`, `test:qr`, `test:ai`, `test:recognition`, `test:collections`, `test:superadmins`, `test:local`. Passati anche i test diretti delle cache TTL e versionata. I test con orologio simulato emettono l’avviso sperimentale standard Node MockTimers.
+- Browser locale Chrome: test router completo passato; admin parametri e 8 scontri solo/local passati; redesign mobile con 18 ulteriori scontri, tutti gli scenari, configurazioni personalizzate, 320 px, animazione e uscita durante lo scontro passato.
+- Bug Hunter: desktop e mobile con scena reale, raccolta cuore, risposta corretta/errata, focus nel dialogo, pausa e smontaggio del canvas passati.
+- Revisione indipendente: corretto il rischio di attesa illimitata delle configurazioni; seconda verifica senza rilievi residui.
+
+Queste prove usano il backend locale/emulatori o fixture per i dati pubblici; non includono deploy Vercel, Safari iOS fisico o una nuova prova biometrica con volontari.
+
+## Limiti intenzionali
+
+Configurazioni conservate fino all’uscita dal gruppo di pagine o al refresh; nessun polling e nessuna sincronizzazione live tra schede. Un salvataggio aggiorna la cache dell’istanza corrente e invalida i preload del browser amministrativo; altre istanze possono conservare i valori per 60 secondi. Un refresh non salva una partita. La disponibilità dei membri continua a usare la propria API, separata dalle configurazioni statiche. Nessun deploy eseguito.
+
+I report sotto descrivono le implementazioni precedenti e le verifiche svolte allora; i riferimenti al vecchio router hash sono storici.
+
+---
+
 ## Aggiornamento gameplay e inviti — 20 ottobre 2026
 
 Questa sezione descrive il comportamento attuale dei due giochi e della pagina QR; le sezioni successive conservano il resoconto della prima implementazione e le sue verifiche storiche.

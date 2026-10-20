@@ -2,14 +2,14 @@
 
 Una raccolta di piccoli giochi nello stesso progetto SvelteKit + TypeScript + Vite. Home e giochi pubblici non richiedono account.
 
-- **`/#/` — Game Center**: scegli Bug Hunter, Merge Battle, Bacarodex o Are You an AI?. Bacarodex mostra la disponibilità dei membri registrati; gli altri giochi non richiedono la registrazione. La radice `/` apre la home.
-- **`/#/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
-- **`/#/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
-- **`/#/merge-battle` — Merge Battle**: battaglie illustrate single player o 1 vs 1 locale. Di default contano solo Rapidità e Solidità. In Admin → Merge Battle → Parametri dello scontro puoi attivare da uno a quattro parametri; quelli esclusi sono nascosti e non danno punti. Il confronto mostra valore × peso e totale delle due carte.
-- **`/#/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli, retino e cuori con quiz. Giocabile senza account; domande configurabili in admin.
+- **`/` — Game Center**: scegli Bug Hunter, Merge Battle, Bacarodex o Are You an AI?. Bacarodex mostra la disponibilità dei membri registrati; gli altri giochi non richiedono la registrazione. La radice `/` apre la home.
+- **`/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
+- **`/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
+- **`/merge-battle` — Merge Battle**: battaglie illustrate single player o 1 vs 1 locale. Di default contano solo Rapidità e Solidità. In Admin → Merge Battle → Parametri dello scontro puoi attivare da uno a quattro parametri; quelli esclusi sono nascosti e non danno punti. Il confronto mostra valore × peso e totale delle due carte.
+- **`/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli, retino e cuori con quiz. Giocabile senza account; domande configurabili in admin.
 - **`/admin` — area membri Bacarodex**: solo gli account Google della lista autorizzata possono registrare se stessi, scegliere il Pokémon e ritirare la propria partecipazione. Include il QR scaricabile diretto a Bacarodex.
 
-I giochi sono caricati dinamicamente. Human e i modelli facciali si caricano soltanto dopo una richiesta di elaborazione in Bacarodex o nell’area membri. Navigazione tramite hash, apertura diretta, refresh e indietro/avanti senza router aggiuntivi; hash sconosciuti ricondotti alla home. Tutti i giochi hanno “Torna al Game Center”. Le vecchie stampe QR dirette alla radice aprono ora la home.
+I giochi sono caricati dinamicamente. Human e i modelli facciali si caricano soltanto dopo una richiesta di elaborazione in Bacarodex o nell’area membri. Navigazione nativa SvelteKit: pagine separate, rendering iniziale sul server, apertura diretta, refresh e indietro/avanti. I vecchi link `/#/nome-gioco` vengono convertiti al percorso corrispondente; gli hash legacy sconosciuti tornano alla home. Tutti i giochi hanno “Torna al Game Center”. Le vecchie stampe QR dirette alla radice aprono ora la home.
 
 ## Are You an AI?
 
@@ -94,7 +94,7 @@ Per la procedura completa, con confronto al progetto interviste, configurazione 
 5. Mantieni chiuso l’accesso Firestore diretto ai documenti `bacarodexMembers` con `firestore.rules`: passano tutti dal backend. Se il progetto ospita altre app, integra le regole senza sovrascriverle e senza wildcard permissive che rendano pubblico questo archivio.
 6. Vercel: preset **SvelteKit**, Node **22**, build `npm run build`, output automatico `.vercel/output`. Configura le variabili del server anche su Vercel. Nessun deployment eseguito.
 
-In `/admin`, il QR viene generato per `/#/bacarodex`, così apre direttamente Bacarodex. Il link generale del Game Center rimane la radice del sito. Per l’uso da telefono inserisci il vero indirizzo HTTPS raggiungibile dal telefono, non localhost. Puoi scaricare il PNG e stamparlo. Per giocare non serve conoscere il link dell’area membri.
+In `/admin`, il QR viene generato per `/bacarodex`, così apre direttamente Bacarodex. Il link generale del Game Center rimane la radice del sito. Per l’uso da telefono inserisci il vero indirizzo HTTPS raggiungibile dal telefono, non localhost. Puoi scaricare il PNG e stamparlo. Per giocare non serve conoscere il link dell’area membri.
 
 ## Superadmin
 
@@ -124,7 +124,7 @@ Ritirare il consenso elimina la registrazione e impedisce nuove scansioni/rispos
 
 ## Flusso del giocatore
 
-QR → pagina `/#/bacarodex` → nuova foto di un membro consenziente → estrazione locale con Human → confronto server → quattro Pokémon → risposta → cattura salvata sul dispositivo. Nessuna identità Firebase anonima o account viene creato per il giocatore.
+QR → pagina `/bacarodex` → nuova foto di un membro consenziente → estrazione locale con Human → confronto server → quattro Pokémon → risposta → cattura salvata sul dispositivo. Nessuna identità Firebase anonima o account viene creato per il giocatore.
 
 Il server confronta i descrittori MobileFace a 256 valori tramite similarità coseno, indipendente dalla loro ampiezza, in `src/lib/server/face-match.ts`. La soglia è **0.50** e il margine minimo tra i primi due candidati è **0.08**. Questo evita la falsa parità introdotta dalla normalizzazione predefinita di `human.match.similarity` su vettori di scala diversa: in un test riproducibile restituiva 1 sia per vettori identici sia per vettori ortogonali. Due registrazioni realmente troppo vicine restano ambigue; il messaggio mostra il distacco senza rivelarne l'identità. Soglia e margine vanno calibrati con foto reali: il punteggio non è una probabilità di identità né una percentuale di accuratezza. Non serve registrarsi nuovamente: i descrittori esistenti restano compatibili.
 
@@ -148,13 +148,21 @@ Per modifiche e verifiche del Game Center, vedi [IMPLEMENTAZIONE_GAMECENTER.md](
 
 ## Cache e letture Firebase
 
+Il layout `src/routes/(game-center)/+layout.ts` carica insieme le impostazioni pubbliche tramite `GET /api/game-center/config`. La prima apertura le include nell’HTML SSR; l’idratazione non ripete la richiesta. Durante la navigazione fra home e giochi, SvelteKit riusa il layout e i suoi dati. Entrando da `/admin` o `/qr` viene eseguita una sola richiesta condivisa. I giochi mantengono chunk separati; Three.js e Human restano lazy.
+
+Merge Battle e Bug Hunter condividono cache server da 60 secondi per istanza, aggiornate dopo un salvataggio autorizzato. Gli editor invalidano anche eventuali pre-caricamenti del router. Una lettura bloccata scade dopo tre secondi: Merge Battle mostra un errore recuperabile; Bug Hunter conserva le domande predefinite. Il GET dell’editor Bug Hunter legge la revisione corrente senza cache.
+
+Il riuso segue il [ciclo di caricamento dei layout SvelteKit](https://svelte.dev/docs/kit/load#Rerunning-load-functions).
+
+I dati del layout restano uno snapshot finché si rimane nel Game Center: per acquisire modifiche fatte da un’altra scheda occorre ricaricare oppure uscire e rientrare. Un refresh completo ricrea il browser e rilegge attraverso la cache server; non conserva la partita in corso. Su istanze server diverse un salvataggio può essere visibile solo alla scadenza dei 60 secondi. Non è una cache distribuita né una persistenza offline. Disponibilità membri (`/api/play`), riconoscimento e dati privati mantengono flussi separati.
+
 Il conteggio di `GET /api/play` usa un’aggregazione Firestore ed è conservato per 60 secondi. Anche `GET /api/merge-battle/config` usa una cache di 60 secondi, aggiornata sull’istanza che salva il catalogo. Richieste simultanee condividono la lettura in corso; gli errori non vengono conservati. Le risposte HTTP restano `private, no-store`.
 
 L’elenco membri è condiviso sul server tra scansioni e area membri per 60 secondi. Ogni utilizzo legge prima `bacaroGameConfigurations/members-version`: registrazioni, cancellazioni e modifiche alle catture legacy aggiornano questo documento nella stessa transazione dei membri. Un cambio di versione forza il caricamento anche sulle altre istanze Vercel. Nei database esistenti, l’assenza del documento rappresenta la versione iniziale; il primo cambiamento tramite l’app crea il documento automaticamente. Non serve una migrazione preventiva.
 
 La cache contiene i documenti dei membri, inclusi i descrittori registrati, esclusivamente in memoria sul server. I descrittori inviati dai giocatori non vengono conservati. Prima di creare un tentativo il server rilegge il membro riconosciuto e verifica partecipazione, modello e data di registrazione; ogni risposta al quiz verifica ancora il documento attuale. Le modifiche fatte direttamente da console o da altri script devono aggiornare anche la versione per invalidare subito l’elenco; altrimenti l’elenco si rinnova alla scadenza. La verifica puntuale blocca comunque un membro eliminato o con consenso ritirato.
 
-I controlli dei permessi condividono una lettura per richiesta HTTP; ogni nuova richiesta li rilegge. Le transazioni verificano sempre i permessi nel database. Le quattro API pubbliche del gioco non verificano la sessione amministrativa. Firebase Authentication usa chiamate proprie e non alimenta il contatore delle letture Firestore.
+I controlli dei permessi condividono una lettura per richiesta HTTP; ogni nuova richiesta li rilegge. Le transazioni verificano sempre i permessi nel database. Le API pubbliche del gioco, incluse le configurazioni condivise, non verificano la sessione amministrativa. Firebase Authentication usa chiamate proprie e non alimenta il contatore delle letture Firestore.
 
 Su Vercel la memoria resta per singola istanza: riavvii, scadenze e versioni nuove causano un nuovo caricamento. La verifica della versione è condivisa tramite Firestore, non la memoria della cache. Non vengono serviti dati se la verifica della versione fallisce. Il conteggio può restare indietro di 60 secondi; la configurazione Merge Battle può fare altrettanto sulle altre istanze.
 

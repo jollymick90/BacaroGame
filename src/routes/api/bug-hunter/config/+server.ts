@@ -1,37 +1,11 @@
 import { error, type RequestHandler } from '@sveltejs/kit';
-import { GAME_COLLECTIONS } from '$lib/firebase/collections';
-import { firebaseAdmin, firebaseConfigured } from '$lib/firebase/firebase-admin.server';
-import { gameDocument } from '$lib/firebase/game-collections.server';
-import { DEFAULT_QUESTIONS, validateQuestionConfig, type QuestionConfig } from '$lib/games/bug-hunter/questions';
+import { firebaseAdmin } from '$lib/firebase/firebase-admin.server';
+import { validateQuestionConfig, type QuestionConfig } from '$lib/games/bug-hunter/questions';
 import { body, privateJson, requireUser, sameOrigin } from '$lib/server/http';
+import { bugHunterConfigDocument, readRevision, readBugHunterConfiguration, bugHunterConfigurationCache } from '$lib/server/bug-hunter-configuration';
 
-function configDocument() {
-  return gameDocument(GAME_COLLECTIONS.configurations, 'bug-hunter');
-}
-
-function readRevision(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0 || value >= Number.MAX_SAFE_INTEGER) {
-    throw new Error('Revisione della configurazione Bug Hunter non valida.');
-  }
-  return value;
-}
-
-export const GET: RequestHandler = async () => {
-  const defaults = { config: { questions: DEFAULT_QUESTIONS }, revision: 0, persisted: false };
-  if (!firebaseConfigured()) {
-    return privateJson(defaults);
-  }
-  const snapshot = await configDocument().get();
-  if (!snapshot.exists) {
-    return privateJson(defaults);
-  }
-  const data = snapshot.data()!;
-  return privateJson({
-    config: validateQuestionConfig(data.config),
-    revision: readRevision(data.revision),
-    persisted: true,
-  });
-};
+// The editor reads current revisions; public game loads use the shared cache.
+export const GET: RequestHandler = async () => privateJson(await readBugHunterConfiguration());
 
 export const PUT: RequestHandler = async event => {
   sameOrigin(event);
@@ -48,7 +22,7 @@ export const PUT: RequestHandler = async event => {
   } catch (failure) {
     error(400, failure instanceof Error ? failure.message : 'Configurazione non valida.');
   }
-  const reference = configDocument();
+  const reference = bugHunterConfigDocument();
   const revision = await firebaseAdmin().db.runTransaction(async transaction => {
     const snapshot = await transaction.get(reference);
     let currentRevision = 0;
@@ -67,5 +41,7 @@ export const PUT: RequestHandler = async event => {
     });
     return nextRevision;
   });
-  return privateJson({ config, revision, persisted: true });
+  const saved = { config, revision, persisted: true };
+  bugHunterConfigurationCache.set(saved);
+  return privateJson(saved);
 };

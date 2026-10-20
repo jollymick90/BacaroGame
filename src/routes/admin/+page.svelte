@@ -22,7 +22,7 @@
 </script>
 
 <div class="public-navigation">
-  <a href="/#/">← Vai al Game Center</a>
+  <a href="/">← Vai al Game Center</a>
 </div>
 
 {#if data.user}
@@ -46,7 +46,7 @@
     {:else if selected === 'bug-hunter'}
       <BugHunterQuestions />
     {:else if selected !== 'bacarodex'}
-      <div class="pending"><p>La gestione di questo gioco non è ancora disponibile.</p><a href={`/#/${selected}`}>Apri il gioco →</a></div>
+      <div class="pending"><p>La gestione di questo gioco non è ancora disponibile.</p><a href={`/${selected}`}>Apri il gioco →</a></div>
     {/if}
   </div>
   {#if selected === 'bacarodex'}<App user={data.user} />{/if}

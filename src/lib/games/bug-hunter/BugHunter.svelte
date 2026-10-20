@@ -3,13 +3,13 @@
   import { bugs } from './content';
   import { ABILITY_THRESHOLDS } from './mechanics';
   import HeartQuestionDialog from './HeartQuestion.svelte';
-  import { DEFAULT_QUESTIONS, validateQuestionConfig, type HeartQuestion } from './questions';
+  import { DEFAULT_QUESTIONS, type HeartQuestion } from './questions';
   import type { mountRunner, Snapshot } from './scene';
   let host: HTMLDivElement;
   let game: ReturnType<typeof mountRunner> | undefined;
   let ready = $state(false),
     error = $state(false);
-  let questions = DEFAULT_QUESTIONS;
+  let { questions = DEFAULT_QUESTIONS }: { questions?: HeartQuestion[] } = $props();
   let questionBag: HeartQuestion[] = [];
   let currentQuestion = $state<HeartQuestion | null>(null);
   let hud = $state<Snapshot>({
@@ -30,18 +30,8 @@
   });
   onMount(() => {
     let cancelled = false;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3000);
-    const loadQuestions = fetch('/api/bug-hunter/config', { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const payload = await response.json();
-        questions = validateQuestionConfig(payload.config).questions;
-      })
-      .catch(() => { /* The built-in questions keep the game playable offline. */ })
-      .finally(() => window.clearTimeout(timeout));
-    void Promise.all([import('./scene'), loadQuestions])
-      .then(([{ mountRunner }]) => {
+    void import('./scene')
+      .then(({ mountRunner }) => {
         if (cancelled) return;
         try {
           game = mountRunner(
@@ -63,8 +53,6 @@
       });
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeout);
       game?.dispose();
       game = undefined;
     };
@@ -117,7 +105,7 @@
     {#if error}<div class="bh-overlay">
         <h1 tabindex="-1">Il retino ha perso il segnale.</h1>
         <p>La scena 3D non è disponibile. Riapri il gioco con WebGL attivo.</p>
-        <a href="#/">Torna al Game Center</a>
+        <a href="/">Torna al Game Center</a>
       </div>
     {:else if hud.phase === 'intro'}
       <div class="bh-intro">
@@ -175,7 +163,7 @@
       {:else if hud.phase === 'paused'}<div class="bh-overlay">
           <h1 tabindex="-1">In pausa.</h1>
           <p>I bug aspettano. Stranamente educati.</p>
-          <button class="bh-go" onclick={() => control('pause')}>Riprendi</button><a href="#/"
+          <button class="bh-go" onclick={() => control('pause')}>Riprendi</button><a href="/"
             >Torna al Game Center</a
           >
         </div>
@@ -199,7 +187,7 @@
                 </p>
               </div>{/each}
           </div>
-          <button class="bh-go" onclick={start}>Riprova</button><a href="#/"
+          <button class="bh-go" onclick={start}>Riprova</button><a href="/"
             >Torna al Game Center</a
           >
         </div>{/if}

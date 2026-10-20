@@ -36,7 +36,7 @@
 
 <div class="center-home">
   <header class="center-header">
-    <a class="center-brand" href="#/" aria-label="BacaroTech Game Center">
+    <a class="center-brand" href="/" aria-label="BacaroTech Game Center">
       <img src="/bacarotech-logo.png" alt="" width="44" height="44" />
       <span>BacaroTech<small>Game Center</small></span>
     </a>
@@ -53,7 +53,7 @@
             <p>{game.description}</p>
             {#if game.id === 'bacarodex'}<p class="prerequisite" role="status">{dexStatus}</p>
             {:else if game.detail}<p class="prerequisite">{game.detail}</p>{/if}
-            <a class="play-link" href={`#/${game.id}`} aria-label={`${game.id === 'bacarodex' && !dexReady ? 'Apri' : 'Gioca a'} ${game.name}`}>
+            <a class="play-link" href={`/${game.id}`} aria-label={`${game.id === 'bacarodex' && !dexReady ? 'Apri' : 'Gioca a'} ${game.name}`}>
               {game.id === 'bacarodex' && !dexReady ? 'Apri Bacarodex' : 'Gioca'}
               <span aria-hidden="true">▶</span>
             </a>

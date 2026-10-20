@@ -1,3 +1,4 @@
+import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
 import assert from 'node:assert/strict';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:5173';
@@ -24,10 +25,8 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     // Fix course lanes while running the real scene, physics and keyboard/touch controls.
     await page.addInitScript(() => { Math.random = () => 0.5; });
-    await page.route('**/api/bug-hunter/config', route => route.fulfill({
-      json: { config: { questions: [question] }, revision: 1, persisted: true },
-    }));
-    await page.goto(`${origin}/#/bug-hunter`);
+    await mockGameConfiguration(page, () => ({ bugHunter: { questions: [question] } }));
+    await openGame(page, origin, '/bug-hunter');
     await page.getByRole('button', { name: 'Inizia', exact: true }).click();
     await page.getByRole('button', { name: 'Spostati a sinistra' }).click();
     await page.getByLabel('2 possibilità rimaste').waitFor({ timeout: 30000 });
@@ -72,12 +71,12 @@ try {
     await page.close();
   }
   const offline = await browser.newPage();
-  await offline.route('**/api/bug-hunter/config', route => route.abort());
-  await offline.goto(`${origin}/#/bug-hunter`);
+  await mockGameConfiguration(offline);
+  await openGame(offline, origin, '/bug-hunter');
   await offline.getByRole('button', { name: 'Inizia', exact: true }).click();
   await offline.getByRole('button', { name: 'Salta', exact: true }).waitFor();
   await offline.close();
-  console.log('Unavailable config: built-in questions keep game playable PASS');
+  console.log('Built-in question configuration: game playable PASS (server fallback covered by API test)');
 } finally {
   await browser.close();
 }

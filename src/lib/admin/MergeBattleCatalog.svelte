@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidate } from '$app/navigation';
  import {onMount} from 'svelte';
  import {AXES} from '$lib/games/merge-battle/cards';
  import {characters,trials} from '$lib/games/merge-battle/catalog';
@@ -11,7 +12,30 @@
  const dirty=$derived(JSON.stringify(draft)!==saved);
  const validation=$derived.by(()=>{try{validateConfig(draft);return '';}catch(e){return e instanceof Error?e.message:'Configurazione non valida.';}});
  async function load(){loading=true;error='';status='';preview=false;try{const response=await fetch('/api/merge-battle/config');const data=await response.json();if(!response.ok)throw Error(data.message||'Caricamento non riuscito.');draft=validateConfig(data.config);revision=data.revision;saved=JSON.stringify(draft);status=data.persisted?'Configurazione caricata da Firebase.':'Valori predefiniti: salva per pubblicarli su Firebase.';}catch(e){error=e instanceof Error?e.message:'Caricamento non riuscito.';}finally{loading=false;}}
- async function save(){saving=true;error='';status='';try{const config=validateConfig(draft);const response=await fetch('/api/merge-battle/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({config,revision})});const data=await response.json();if(!response.ok)throw Error(data.message||'Salvataggio non riuscito.');revision=data.revision;draft=validateConfig(data.config);saved=JSON.stringify(draft);status='Configurazione salvata su Firebase. Sarà usata nelle nuove partite.';}catch(e){error=e instanceof Error?e.message:'Salvataggio non riuscito.';}finally{saving=false;}}
+ async function save() {
+  saving = true;
+  error = '';
+  status = '';
+  try {
+   const config = validateConfig(draft);
+   const response = await fetch('/api/merge-battle/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config, revision }),
+   });
+   const data = await response.json();
+   if (!response.ok) throw Error(data.message || 'Salvataggio non riuscito.');
+   revision = data.revision;
+   draft = validateConfig(data.config);
+   saved = JSON.stringify(draft);
+   void invalidate('game-center:configuration');
+   status = 'Configurazione salvata su Firebase. Sarà usata nelle nuove partite.';
+  } catch (failure) {
+   error = failure instanceof Error ? failure.message : 'Salvataggio non riuscito.';
+  } finally {
+   saving = false;
+  }
+ }
  function toggle(kind:'characters'|'judges',id:number){const list=draft[kind];draft[kind]=list.includes(id)?list.filter(n=>n!==id):[...list,id].sort((a,b)=>a-b);if(kind==='characters'&&!draft.assignments[id])draft.assignments[id]=[...DEFAULT_CONFIG.assignments[id]];if(kind==='judges'&&!draft.weights[id])draft.weights[id]=[...DEFAULT_CONFIG.weights[id]];}
  function toggleAxis(axis: number) {
   const enabled = draft.activeAxes.includes(axis);

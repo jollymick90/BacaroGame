@@ -225,7 +225,7 @@
         <div class="certificate-actions">
           <button class="home-button" onclick={replay}>Riprova</button><a
             class="home-button"
-            href="#/">Torna al Game Center</a
+            href="/">Torna al Game Center</a
           >
         </div>
       </section>

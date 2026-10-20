@@ -61,3 +61,7 @@ Non pubblicare il solo `firestore.rules` del Game Center sostituendo il ruleset 
 L'inventario deriva dallo screenshot e dal codice locale; le regole attive e l'eventuale presenza di ulteriori collezioni in cloud non sono state interrogate.
 
 Il documento `bacaroGameConfigurations/members-version` contiene una versione opaca casuale. Viene scritto atomicamente con ogni modifica a `bacarodexMembers`, comprese le route legacy. Non contiene dati personali. Le letture del marker precedono ogni riuso della cache membri; le letture e le scritture usano il gateway approvato. Gli script esterni che modificano i membri devono aggiornare questo marker nella stessa transazione o batch per invalidare subito la cache.
+
+### Configurazioni condivise del Game Center (20 ottobre 2026)
+
+`GET /api/game-center/config` legge soltanto i documenti `merge-battle` e `bug-hunter` attraverso gli stessi gateway approvati. Restituisce le impostazioni pubbliche e il flag di disponibilità della configurazione Bacarodex, senza UID degli editor, sessioni, membri o descrittori. Nessun nuovo documento o collezione. Le cache server durano 60 secondi per istanza e vengono aggiornate dal rispettivo PUT; non vi sono scritture durante la lettura. Il layout SvelteKit conserva la risposta durante la navigazione tra giochi. Le cache dei membri e i controlli del consenso non cambiano.

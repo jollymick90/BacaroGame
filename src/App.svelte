@@ -187,7 +187,7 @@
 <div class="app-shell">
   <header>
     <div class="brand"><span class="ball" aria-hidden="true"></span>Bacarodex.</div>
-    <a href="/#/bacarodex">Apri il gioco →</a>
+    <a href="/bacarodex">Apri il gioco →</a>
   </header>
   <main>
     <div class="hero">

@@ -1,3 +1,4 @@
+import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
@@ -45,10 +46,10 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     let activeConfig = structuredClone(DEFAULT_CONFIG);
     // Deterministic config only; all components, state transitions and scoring are real.
-    await page.route('**/api/merge-battle/config', route => route.fulfill({ json: { config: activeConfig, revision: 0, persisted: false } }));
+    await mockGameConfiguration(page, () => ({ mergeBattle: activeConfig }));
     await page.addInitScript(() => { Math.random = () => 0; });
     for (const mode of ['local', 'solo']) {
-      await page.goto(`${origin}/#/merge-battle`);
+      await openGame(page, origin, '/merge-battle');
       await checkScreen(page, 'intro', mode === 'local' ? `${device}-intro` : '');
       await page.getByRole('button', { name: mode === 'local' ? /Gioca in due/ : /Gioca da solo/ }).click();
       await checkScreen(page, 'character1', mode === 'local' ? `${device}-cast` : '');
@@ -112,7 +113,7 @@ try {
     const longCard = activeConfig.cards.find(card => card.id === activeConfig.assignments[3][0]);
     longCard.name = 'M'.repeat(80);
     longCard.description = 'Dettagli personalizzati. '.repeat(20);
-    await page.reload();
+    await openGame(page, origin, '/merge-battle');
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
     assert.equal(await page.locator('.mb-character').count(), 2);
     await page.getByRole('button', { name: 'Platform Engineer', exact: true }).click();
@@ -145,8 +146,8 @@ try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('**/api/merge-battle/config', route => route.fulfill({ json: { config: DEFAULT_CONFIG } }));
-  await page.goto(`${origin}/#/merge-battle`);
+  await mockGameConfiguration(page);
+  await openGame(page, origin, '/merge-battle');
   await page.getByRole('button', { name: /Gioca da solo/ }).click();
   await page.getByRole('button', { name: 'Security Engineer', exact: true }).click();
   await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();

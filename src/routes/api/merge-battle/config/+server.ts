@@ -1,30 +1,16 @@
 import { error, type RequestHandler } from '@sveltejs/kit';
-import { gameDocument } from '$lib/firebase/game-collections.server';
-import { GAME_COLLECTIONS } from '$lib/firebase/collections';
-import { firebaseConfigured } from '$lib/firebase/firebase-admin.server';
 import { body, privateJson, requireUser, sameOrigin } from '$lib/server/http';
-import { createTtlCache } from '$lib/server/ttl-cache';
-import { DEFAULT_CONFIG, validateConfig, readConfig } from '$lib/games/merge-battle/config';
-const configDocument = () => gameDocument(GAME_COLLECTIONS.configurations, 'merge-battle');
-async function loadConfiguration() {
- const snapshot = await configDocument().get();
- if (!snapshot.exists) return { config: DEFAULT_CONFIG, revision: 0, persisted: false };
- const data = snapshot.data()!;
- return { config: readConfig(data.config), revision: data.revision, persisted: true };
-}
+import { validateConfig } from '$lib/games/merge-battle/config';
+import { getMergeConfiguration, mergeConfigDocument, mergeConfigurationCache } from '$lib/server/merge-configuration';
 
-const configurationCache = createTtlCache<Awaited<ReturnType<typeof loadConfiguration>>>(60_000);
+export const GET: RequestHandler = async () => privateJson(await getMergeConfiguration());
 
-export const GET: RequestHandler = async () => {
- if (!firebaseConfigured()) return privateJson({ config: DEFAULT_CONFIG, revision: 0, persisted: false });
- return privateJson(await configurationCache.get(loadConfiguration));
-};
 export const PUT: RequestHandler = async event => {
  sameOrigin(event);const user=requireUser(event);
  const payload=await body(event, 128000);
  if(Object.keys(payload).some(key=>!['config','revision'].includes(key))||!Number.isSafeInteger(payload.revision)||(payload.revision as number)<0) error(400,'Revisione non valida.');
  let config;try{config=validateConfig(payload.config);}catch(e){error(400,e instanceof Error?e.message:'Configurazione non valida.');}
- const ref=configDocument();
+ const ref=mergeConfigDocument();
  const { firebaseAdmin }=await import('$lib/firebase/firebase-admin.server');
  const revision=await firebaseAdmin().db.runTransaction(async tx=>{
   const snapshot=await tx.get(ref);
@@ -35,6 +21,6 @@ export const PUT: RequestHandler = async event => {
   return next;
  });
  const saved = { config, revision, persisted: true };
- configurationCache.set(saved);
+ mergeConfigurationCache.set(saved);
  return privateJson(saved);
 };

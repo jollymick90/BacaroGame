@@ -24,7 +24,8 @@
     "test:recognition": "node --experimental-strip-types --test src/lib/face-analysis.test.ts src/lib/server/face-match.test.ts",
     "dev:local": "node scripts/dev-local.mjs",
     "dev:cloud": "vite --host 0.0.0.0",
-    "test:local": "node --test scripts/local-environment.test.mjs"
+    "test:local": "node --test scripts/local-environment.test.mjs",
+    "test:game-center": "node --experimental-strip-types --test tests/game-center-config.test.mjs src/lib/server/configuration-timeout.test.ts src/lib/server/ttl-cache.test.ts src/lib/game-center/legacy-route.test.ts"
   },
   "dependencies": {
     "@vladmandic/human": "3.3.6",
