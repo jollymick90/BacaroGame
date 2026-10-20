@@ -1,6 +1,6 @@
 import * as T from 'three';
 import { Runner, LANE, type Phase } from './mechanics';
-import { hunter, insect, obstacle, sphere } from './models';
+import { hunter, insect, obstacle, sphere, heartPickup } from './models';
 import { createBox as box } from './primitives';
 import { bugs } from './content';
 export type Snapshot = {
@@ -71,11 +71,13 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     buildings.push(b);
   }
   const views = engine.rows.map(() => {
+    const heart = heartPickup();
+    scene.add(heart.root);
     const insects = bugs.map((_, i) => insect(i)),
       obstacles = Array.from({ length: 3 }, () => [0, 1, 2].map(obstacle));
     for (const b of insects) scene.add(b.root);
     for (const slot of obstacles) for (const o of slot) scene.add(o);
-    return { insects, obstacles };
+    return { insects, obstacles, heart };
   });
   const flyers = bugs.map((_, i) => insect(i));
   flyers.forEach((f) => {
@@ -136,6 +138,8 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       ][event.kind];
     } else if (event.type === 'speed') {
       message = `Si accelera! Velocità ${event.speed}`;
+    } else if (event.type === 'heart') {
+      message = 'Un cuore trovato! Una risposta giusta per recuperare una vita.';
     } else {
       impact = 0.6;
       message =
@@ -267,9 +271,14 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     for (let i = 0; i < views.length; i++) {
       const row = engine.rows[i],
         v = views[i];
+      v.heart.root.visible = row.heart && !row.caught && !row.missed;
+      if (v.heart.root.visible) {
+        v.heart.root.position.set(row.lane * LANE, row.height, row.z);
+        v.heart.animate(elapsed, reduced);
+      }
       for (let k = 0; k < 4; k++) {
         const b = v.insects[k];
-        b.root.visible = k === row.kind && !row.caught && !row.missed;
+        b.root.visible = !row.heart && k === row.kind && !row.caught && !row.missed;
         if (b.root.visible) {
           b.animate(elapsed + row.index, reduced);
           b.root.position.x = row.lane * LANE;
@@ -375,6 +384,15 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       host.focus({ preventScroll: true });
     },
     action,
+    resolveHeart(correct: boolean) {
+      const resolved = engine.resolveHeart(correct);
+      if (resolved) {
+        message = correct ? 'Risposta giusta: una vita recuperata ♥' : 'Nessuna vita persa. Il prossimo cuore ti aspetta!';
+        messageUntil = engine.time + 3;
+        emit();
+      }
+      return resolved;
+    },
     dispose,
   };
 }

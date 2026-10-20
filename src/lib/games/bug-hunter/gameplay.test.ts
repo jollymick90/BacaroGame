@@ -15,17 +15,20 @@ function capture(game: Runner, kind: number) {
   game.rows = [row];
   game.update(0.001);
 }
-test('speed increases every twenty active seconds and caps at sixteen', () => {
+test('speed keeps increasing every twenty active seconds beyond sixteen', () => {
   const game = runner();
   game.time = 19.99;
   game.update(0.02);
   assert.equal(game.speed, 10);
   game.time = 100;
   game.update(0.01);
-  assert.equal(game.speed, 16);
+  assert.equal(game.speed, 18);
+  game.time = 600;
+  game.update(0.01);
+  assert.equal(game.speed, 68);
   game.pause();
   game.update(5);
-  assert.equal(game.time, 100.01);
+  assert.equal(game.time, 600.01);
 });
 test('missed bugs cost one life each, even during collision immunity', () => {
   const game = runner();
@@ -64,7 +67,7 @@ test('one penalty per row, final life ends immediately, reset clears effects', (
   assert.equal(game.score, 0);
   assert.deepEqual(game.charges, [0, 0, 0, 0]);
 });
-test('special rows require jumping and are reachable at maximum speed', () => {
+test('special rows require jumping and are reachable at speed sixteen', () => {
   assert.ok(GAP / 16 > JUMP_TIME + 0.3);
   for (const index of [5, 9, 13, 17]) {
     const game = runner();
@@ -72,7 +75,7 @@ test('special rows require jumping and are reachable at maximum speed', () => {
     assert.ok(row.height > 2);
     assert.equal(row.obstacles.length, index % 8 === 5 ? 3 : 0);
     row.z = -6.8;
-    game.time = 100;
+    game.time = 80;
     game.rows = [row];
     game.jump();
     for (let i = 0; i < 20; i++) game.update(0.05);
@@ -118,4 +121,86 @@ test('abilities activate at thresholds, freeze in pause and do not multiply char
   assert.equal(game.speed, 4.8);
   for (let i = 0; i < 210; i++) game.update(0.05);
   assert.equal(game.double, 0);
+});
+
+test('optional hearts freeze the world and reward only one answer, capped at three lives', () => {
+  const game = runner();
+  const heart = makeRow(4, () => 0.5);
+  assert.equal(heart.heart, true);
+  assert.deepEqual(heart.obstacles, []);
+  heart.z = 0;
+  game.rows = [heart];
+  game.health = 2;
+  game.shield = 5;
+  game.update(0.01);
+  assert.equal(game.phase, 'question');
+  assert.equal(game.caught, 0);
+  assert.equal(game.score, 0);
+  const before = [game.time, game.distance, heart.z, game.shield, game.x];
+  game.move(1);
+  game.jump();
+  game.resume();
+  game.update(1);
+  assert.deepEqual([game.time, game.distance, heart.z, game.shield, game.x], before);
+  assert.equal(game.resolveHeart(true), true);
+  assert.equal(game.health, 3);
+  assert.equal(game.phase, 'paused');
+  assert.equal(game.resolveHeart(true), false);
+  game.resume();
+  game.update(0.01);
+  assert.equal(game.phase, 'running');
+  assert.equal(game.health, 3);
+});
+
+test('missing a heart or answering incorrectly never costs a life', () => {
+  const game = runner();
+  game.health = 1;
+  const heart = makeRow(4, () => 0.5);
+  heart.z = 2;
+  game.rows = [heart];
+  game.update(0.01);
+  assert.equal(game.health, 1);
+  assert.equal(game.phase, 'running');
+  const next = makeRow(10, () => 0.5);
+  next.z = 0;
+  game.rows = [next];
+  game.update(0.01);
+  game.resolveHeart(false);
+  assert.equal(game.health, 1);
+  assert.equal(game.phase, 'paused');
+  game.start();
+  assert.equal(game.health, 3);
+  assert.equal(game.phase, 'running');
+  assert.equal(game.resolveHeart(true), false);
+});
+
+test('at full health a heart is collected without interrupting the run or charging bugs', () => {
+  const game = runner();
+  const heart = makeRow(4, () => 0.5);
+  heart.z = 0;
+  game.rows = [heart];
+  game.update(0.01);
+  assert.equal(game.phase, 'running');
+  assert.equal(game.health, 3);
+  assert.equal(game.caught, 0);
+  assert.deepEqual(game.charges, [0, 0, 0, 0]);
+});
+
+test('high speed cannot tunnel through a bug, obstacle or heart between frames', () => {
+  for (const kind of ['bug', 'obstacle', 'heart']) {
+    const game = runner();
+    game.health = 2;
+    game.time = 4000;
+    const row = makeRow(kind === 'heart' ? 4 : 0, () => 0.5);
+    row.z = -4;
+    if (kind === 'obstacle') {
+      row.caught = true;
+      row.obstacles = [{ lane: 0, kind: 0, hit: false }];
+    }
+    game.rows = [row];
+    game.update(0.05);
+    if (kind === 'bug') assert.equal(game.caught, 1);
+    if (kind === 'obstacle') assert.equal(game.health, 1);
+    if (kind === 'heart') assert.equal(game.phase, 'question');
+  }
 });

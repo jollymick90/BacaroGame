@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import App from '../../App.svelte';
+  import BugHunterQuestions from '$lib/admin/BugHunterQuestions.svelte';
   import MergeBattleCatalog from '$lib/admin/MergeBattleCatalog.svelte';
   import Login from '$lib/Login.svelte';
   let { data } = $props();
@@ -11,7 +12,7 @@
     { id: 'bacarodex', name: 'Bacarodex', icon: '◉', description: 'Registrazione membri e Pokémon.', available: true },
     { id: 'merge-battle', name: 'Merge Battle', icon: '⑂', description: 'Catalogo, combinazioni e anteprima giocabile.', available: true },
     { id: 'are-you-an-ai', name: 'Are You an AI?', icon: '▣', description: 'Personalizzazione non ancora disponibile.', available: false },
-    { id: 'bug-hunter', name: 'Bug Hunter', icon: '⌁', description: 'Personalizzazione non ancora disponibile.', available: false },
+    { id: 'bug-hunter', name: 'Bug Hunter', icon: '⌁', description: 'Domande semplici per recuperare una vita con i cuori.', available: true },
   ];
   async function open(game: Game | null) {
     selected = game;
@@ -42,6 +43,8 @@
       </div>
     {:else if selected === 'merge-battle'}
       <MergeBattleCatalog />
+    {:else if selected === 'bug-hunter'}
+      <BugHunterQuestions />
     {:else if selected !== 'bacarodex'}
       <div class="pending"><p>La gestione di questo gioco non è ancora disponibile.</p><a href={`/#/${selected}`}>Apri il gioco →</a></div>
     {/if}

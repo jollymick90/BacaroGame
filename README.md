@@ -6,7 +6,7 @@ Una raccolta di piccoli giochi nello stesso progetto SvelteKit + TypeScript + Vi
 - **`/#/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
 - **`/#/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
 - **`/#/merge-battle` — Merge Battle**: battaglie comiche single player o 1 vs 1 locale, senza backend.
-- **`/#/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli e retino, senza backend.
+- **`/#/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli, retino e cuori con quiz. Giocabile senza account; domande configurabili in admin.
 - **`/admin` — area membri Bacarodex**: solo gli account Google della lista autorizzata possono registrare se stessi, scegliere il Pokémon e ritirare la propria partecipazione. Include il QR scaricabile diretto a Bacarodex.
 
 I giochi sono caricati dinamicamente. Human e i modelli facciali si caricano soltanto dopo una richiesta di elaborazione in Bacarodex o nell’area membri. Navigazione tramite hash, apertura diretta, refresh e indietro/avanti senza router aggiuntivi; hash sconosciuti ricondotti alla home. Tutti i giochi hanno “Torna al Game Center”. Le vecchie stampe QR dirette alla radice aprono ora la home.
@@ -24,9 +24,13 @@ Il certificato umano o robot si può scaricare come PDF A4 con il logo ufficiale
 
 ## Bug Hunter
 
-Tre vite: ogni bug mancato o urto costa una vita, con un massimo di una penalità per riga. Dopo un urto, due secondi di protezione dagli altri ostacoli; i bug persi nelle righe successive continuano a costare vite. Corri verso gli insetti, cambia corsia e salta quelli in aria o le barriere che occupano tutte le corsie. La velocità aumenta ogni 20 secondi attivi da 8 fino a 16; pausa e background congelano la simulazione.
+Tre vite: ogni bug mancato o urto costa una vita, con un massimo di una penalità per riga. Dopo un urto, due secondi di protezione dagli altri ostacoli; i bug persi nelle righe successive continuano a costare vite. Corri verso gli insetti, cambia corsia e salta quelli in aria o le barriere che occupano tutte le corsie. La velocità aumenta ogni 20 secondi attivi di 2 a partire da 8, senza limite massimo; pausa, quiz e background congelano la simulazione. Oltre velocità 16 le nuove righe sono più distanziate per mantenere leggibile il percorso.
 
-Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli per 8 s, 25 Regression recuperano una vita (massimo 3, oppure una cura pronta), 30 Production rallentano il mondo al 60% per 6 s, 40 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie premiano le partite lunghe: con una specie ogni quattro righe, il primo bonus richiede diversi minuti. Nessun backend o account necessario.
+Un cuore lampeggiante compare dopo le prime quattro righe e poi ogni sei righe, senza ostacoli. Se hai meno di tre vite, raccoglierlo mette in pausa la corsa e apre una domanda semplice a tre risposte, senza timer. Una risposta corretta recupera una vita (massimo tre); errore, salto della domanda o cuore ignorato non tolgono vite. La corsa riparte solo premendo Continua; Escape lascia in pausa. A vite piene il cuore non interrompe il gioco. Il lampeggio lento rispetta la preferenza di movimento ridotto.
+
+In **Admin → Bug Hunter** puoi modificare le 20 domande iniziali, aggiungerne altre (massimo 100), scegliere la risposta corretta e la spiegazione, oppure rimuoverle (ne deve restare almeno una). Premi **Salva domande** per pubblicare. Le modifiche vengono caricate alla prossima apertura del gioco; in caso di rete assente o configurazione non disponibile il gioco usa le 20 domande integrate. Le domande vengono estratte senza ripetizioni fino a esaurimento del gruppo.
+
+Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli per 8 s, 25 Regression recuperano una vita (massimo 3, oppure una cura pronta), 30 Production rallentano il mondo al 60% per 6 s, 40 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie premiano le partite lunghe: con una specie ogni quattro righe, il primo bonus richiede diversi minuti. Nessun account necessario per giocare.
 
 ## Invita a giocare con il QR
 

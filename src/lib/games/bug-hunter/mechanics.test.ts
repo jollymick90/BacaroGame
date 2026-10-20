@@ -89,7 +89,7 @@ test('actual collisions damage once and invulnerability protects subsequent cont
   r.update(0.01);
   assert.equal(r.health, 2);
 });
-test('ten minutes of generated route remain navigable at capped speed with bounded rows', () => {
+test('ten minutes of generated route keep increasing speed with bounded rows', () => {
   let seed = 42;
   const rng = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -98,16 +98,17 @@ test('ten minutes of generated route remain navigable at capped speed with bound
   const r = new Runner(rng);
   r.start();
   for (let i = 0; i < 12000; i++) {
-    const next = r.rows.find((row) => row.z < -1 && row.z > -12);
+    // Hold the safe lane until the obstacle plane has passed, even after pickup.
+    const next = [...r.rows].filter(row => row.z < 0.8).sort((a, b) => b.z - a.z)[0];
     if (next) {
       r.move(Math.sign(next.lane - r.lane));
-      if (next.height > 2 && next.z >= -r.speed * 0.425 && r.jumpTime < 0) r.jump();
+      if (!next.caught && next.height > 2 && next.z >= -r.speed * 0.425 && r.jumpTime < 0) r.jump();
     }
     r.update(0.05);
   }
   assert.equal(r.health, 3);
   assert.equal(r.phase, 'running');
-  assert.equal(r.speed, 16);
+  assert.ok(r.speed >= 66);
   assert.equal(r.rows.length, 8);
   assert.ok(r.caught > 200);
 });

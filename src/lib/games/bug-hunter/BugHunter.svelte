@@ -2,11 +2,16 @@
   import { onMount } from 'svelte';
   import { bugs } from './content';
   import { ABILITY_THRESHOLDS } from './mechanics';
+  import HeartQuestionDialog from './HeartQuestion.svelte';
+  import { DEFAULT_QUESTIONS, validateQuestionConfig, type HeartQuestion } from './questions';
   import type { mountRunner, Snapshot } from './scene';
   let host: HTMLDivElement;
   let game: ReturnType<typeof mountRunner> | undefined;
   let ready = $state(false),
     error = $state(false);
+  let questions = DEFAULT_QUESTIONS;
+  let questionBag: HeartQuestion[] = [];
+  let currentQuestion = $state<HeartQuestion | null>(null);
   let hud = $state<Snapshot>({
     phase: 'intro',
     health: 3,
@@ -25,8 +30,18 @@
   });
   onMount(() => {
     let cancelled = false;
-    void import('./scene')
-      .then(({ mountRunner }) => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3000);
+    const loadQuestions = fetch('/api/bug-hunter/config', { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const payload = await response.json();
+        questions = validateQuestionConfig(payload.config).questions;
+      })
+      .catch(() => { /* The built-in questions keep the game playable offline. */ })
+      .finally(() => window.clearTimeout(timeout));
+    void Promise.all([import('./scene'), loadQuestions])
+      .then(([{ mountRunner }]) => {
         if (cancelled) return;
         try {
           game = mountRunner(
@@ -34,6 +49,7 @@
             (s) => (hud = s),
             () => {
               error = true;
+              currentQuestion = null;
             },
           );
           ready = true;
@@ -47,10 +63,36 @@
       });
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
       game?.dispose();
       game = undefined;
     };
   });
+  $effect(() => {
+    if (!error && hud.phase === 'question' && !currentQuestion) {
+      if (!questionBag.length) {
+        questionBag = [...questions];
+        for (let index = questionBag.length - 1; index > 0; index--) {
+          const other = Math.floor(Math.random() * (index + 1));
+          [questionBag[index], questionBag[other]] = [questionBag[other], questionBag[index]];
+        }
+      }
+      currentQuestion = questionBag.pop()!;
+    }
+  });
+  function start() {
+    currentQuestion = null;
+    questionBag = [];
+    game?.start();
+  }
+  function finishQuestion(resume: boolean) {
+    // Resolve a skipped question too; a second resolution cannot grant another life.
+    game?.resolveHeart(false);
+    currentQuestion = null;
+    if (resume && hud.phase === 'paused') game?.action('pause');
+    host.focus({ preventScroll: true });
+  }
   function control(type: 'left' | 'right' | 'jump' | 'pause') {
     game?.action(type);
     host.focus({ preventScroll: true });
@@ -82,12 +124,13 @@
 
         <h1 tabindex="-1">Bug Hunter</h1>
         <p>Corri, salta e riprendi i bug scappati.</p>
-        <button class="bh-go" disabled={!ready} onclick={() => game?.start()}
+        <button class="bh-go" disabled={!ready} onclick={start}
           >{ready ? 'Inizia' : 'Prepariamo il retino…'}</button
         >
         <div class="bh-instructions">
           <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
           <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
+          <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
           <details><summary>Abilità automatiche</summary><p>50 Heisenbug: scudo per 8 s. 25 Regression: una vita in più. 30 Production: rallentamento per 6 s. 40 Feature: punti doppi per 10 s.</p></details>
         </div>
       </div>
@@ -99,7 +142,7 @@
             >{'♥'.repeat(hud.health)}{'♡'.repeat(3 - hud.health)}</span
           >
         </div>
-        <button aria-label="Pausa" onclick={() => control('pause')} disabled={hud.phase === 'over'}
+        <button aria-label="Pausa" onclick={() => control('pause')} disabled={hud.phase === 'over' || hud.phase === 'question'}
           >Ⅱ</button
         >
         <div class="bh-jar" class:bh-pop={hud.capture > 0}>
@@ -156,12 +199,18 @@
                 </p>
               </div>{/each}
           </div>
-          <button class="bh-go" onclick={() => game?.start()}>Riprova</button><a href="#/"
+          <button class="bh-go" onclick={start}>Riprova</button><a href="#/"
             >Torna al Game Center</a
           >
         </div>{/if}
     {/if}
   </div>
+  {#if currentQuestion && !error}
+    <HeartQuestionDialog question={currentQuestion}
+      onanswer={(correct) => game?.resolveHeart(correct)}
+      oncontinue={() => finishQuestion(true)}
+      onskip={() => finishQuestion(false)} />
+  {/if}
 </main>
 
 <style>

@@ -3,7 +3,7 @@ export const LANE = 2.5;
 export const GAP = 23;
 export const JUMP_TIME = 0.85;
 export const ABILITY_THRESHOLDS = [50, 25, 30, 40];
-export type Phase = 'intro' | 'running' | 'paused' | 'over';
+export type Phase = 'intro' | 'running' | 'paused' | 'question' | 'over';
 export type Obstacle = { lane: number; kind: number; hit: boolean };
 export type Row = {
   index: number;
@@ -11,6 +11,7 @@ export type Row = {
   lane: number;
   kind: number;
   height: number;
+  heart: boolean;
   caught: boolean;
   missed: boolean;
   penalized: boolean;
@@ -26,12 +27,13 @@ export function overlaps(x: number, y: number, z: number, ox: number, oz: number
 export function makeRow(index: number, rng: () => number = Math.random): Row {
   const lane = index === 0 ? 0 : Math.floor(rng() * 3) - 1;
   const obstacles: Obstacle[] = [];
-  const special = index >= 5 && (index - 5) % 4 === 0;
+  const heart = index >= 4 && (index - 4) % 6 === 0;
+  const special = !heart && index >= 5 && (index - 5) % 4 === 0;
   if (special && (index - 5) % 8 === 0) {
     for (const obstacleLane of [-1, 0, 1]) {
       obstacles.push({ lane: obstacleLane, kind: 2, hit: false });
     }
-  } else if (!special && index > 1) {
+  } else if (!heart && !special && index > 1) {
     const blocked = [-1, 0, 1].filter((candidate) => candidate !== lane);
     obstacles.push({ lane: blocked[index % 2], kind: index % 3, hit: false });
     if (index > 10 && index % 3 === 0) {
@@ -44,6 +46,7 @@ export function makeRow(index: number, rng: () => number = Math.random): Row {
     lane,
     kind: index % 4,
     height: special ? 3 : 0.9,
+    heart,
     caught: false,
     missed: false,
     penalized: false,
@@ -52,7 +55,7 @@ export function makeRow(index: number, rng: () => number = Math.random): Row {
 }
 export type RunnerEvent =
   | { type: 'capture'; kind: number; row: Row }
-  | { type: 'hit' | 'miss' }
+  | { type: 'hit' | 'miss' | 'heart' }
   | { type: 'ability'; kind: number }
   | { type: 'speed'; speed: number };
 
@@ -115,6 +118,13 @@ export class Runner {
   resume() {
     if (this.phase === 'paused') this.phase = 'running';
   }
+  resolveHeart(correct: boolean) {
+    if (this.phase !== 'question') return false;
+    if (correct) this.health = Math.min(3, this.health + 1);
+    // Stay paused for feedback. Only the player's explicit Continue resumes the run.
+    this.phase = 'paused';
+    return true;
+  }
   move(direction: number) {
     if (this.phase === 'running') this.lane = Math.max(-1, Math.min(1, this.lane + direction));
   }
@@ -156,9 +166,9 @@ export class Runner {
   update(delta: number) {
     if (this.phase !== 'running') return;
     const dt = Math.min(0.05, Math.max(0, delta));
-    const previousLevel = Math.min(4, Math.floor(this.time / 20));
+    const previousLevel = Math.floor(this.time / 20);
     this.time += dt;
-    const level = Math.min(4, Math.floor(this.time / 20));
+    const level = Math.floor(this.time / 20);
     this.shield = Math.max(0, this.shield - dt);
     this.slow = Math.max(0, this.slow - dt);
     this.double = Math.max(0, this.double - dt);
@@ -168,6 +178,8 @@ export class Runner {
     if (this.slow > 0) this.speed *= 0.6;
     if (level > previousLevel) this.onEvent({ type: 'speed', speed: baseSpeed });
     this.distance += this.speed * dt;
+    const previousX = this.x;
+    const previousY = this.y;
     const target = this.lane * LANE;
     this.x += Math.sign(target - this.x) * Math.min(Math.abs(target - this.x), dt * 15);
     if (this.jumpTime >= 0) {
@@ -175,23 +187,40 @@ export class Runner {
       this.y = jumpHeight(this.jumpTime);
       if (this.jumpTime >= JUMP_TIME) this.jumpTime = -1;
     }
-    for (const row of this.rows) {
-      row.z += this.speed * dt;
-      // Capture volume follows the rendered insect, including elevated rows.
-      const inLane = Math.abs(this.x - row.lane * LANE) < 1.05;
-      const inHeight = Math.abs(this.y + 0.9 - row.height) < 1;
-      if (!row.caught && !row.missed && Math.abs(row.z) <= 1.4 && inLane && inHeight) {
+    const travel = this.speed * dt;
+    for (const row of this.rows) row.z += travel;
+    // Process the closest row first; swept checks prevent tunnelling at higher speeds.
+    const approachingRows = [...this.rows].sort((first, second) => second.z - first.z);
+    for (const row of approachingRows) {
+      const previousZ = row.z - travel;
+      const contact = travel > 0 ? Math.max(0, Math.min(1, -previousZ / travel)) : 1;
+      const contactX = previousX + (this.x - previousX) * contact;
+      const contactY = previousY + (this.y - previousY) * contact;
+      const inLane = Math.abs(contactX - row.lane * LANE) < 1.05;
+      const inHeight = Math.abs(contactY + 0.9 - row.height) < 1;
+      const crossedPickup = previousZ <= 1.4 && row.z >= -1.4;
+      if (!row.caught && !row.missed && crossedPickup && inLane && inHeight) {
         row.caught = true;
-        this.caught++;
-        this.score += this.double > 0 ? 2 : 1;
-        this.collection[row.kind]++;
-        this.onEvent({ type: 'capture', kind: row.kind, row });
-        this.charge(row.kind);
+        if (row.heart) {
+          if (this.health < 3) {
+            this.phase = 'question';
+            this.onEvent({ type: 'heart' });
+            break;
+          }
+        } else {
+          this.caught++;
+          this.score += this.double > 0 ? 2 : 1;
+          this.collection[row.kind]++;
+          this.onEvent({ type: 'capture', kind: row.kind, row });
+          this.charge(row.kind);
+        }
       }
       for (const obstacle of row.obstacles) {
         if (
           !obstacle.hit &&
-          overlaps(this.x, this.y, 0, obstacle.lane * LANE, row.z, [1.25, 1.6, 0.65][obstacle.kind])
+          previousZ <= 0.7 &&
+          row.z >= -0.7 &&
+          overlaps(contactX, contactY, 0, obstacle.lane * LANE, 0, [1.25, 1.6, 0.65][obstacle.kind])
         ) {
           obstacle.hit = true;
           this.hit(row);
@@ -200,12 +229,14 @@ export class Runner {
       if (this.phase !== 'running') break;
       if (row.z > 1.4 && !row.caught && !row.missed) {
         row.missed = true;
-        this.loseLife('miss', row);
+        if (!row.heart) this.loseLife('miss', row);
       }
       if (this.phase !== 'running') break;
       if (row.z > 8) {
         const next = makeRow(this.next++, this.rng);
-        next.z = Math.min(...this.rows.map((candidate) => candidate.z)) - GAP;
+        // More space preserves a readable sequence while speed keeps growing.
+        const spacing = GAP * Math.max(1, baseSpeed / 16);
+        next.z = Math.min(-12, ...this.rows.map((candidate) => candidate.z)) - spacing;
         Object.assign(row, next);
       }
     }

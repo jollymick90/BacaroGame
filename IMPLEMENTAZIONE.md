@@ -1,3 +1,15 @@
+## Bug Hunter: velocità e cuori con quiz — 20 ottobre 2026
+
+- Rimossa la soglia massima di 16: la velocità base aumenta di 2 ogni 20 secondi attivi a partire da 8. Le righe successive vengono distanziate oltre 16 e le collisioni controllano anche il tratto attraversato fra due frame, evitando di saltare oggetti ad alta velocità.
+- Cuore 3D con pulsazione lenta (ferma con movimento ridotto), prima comparsa alla quinta riga e poi ogni sei righe. Le righe dei cuori sono prive di ostacoli. Un cuore ignorato non causa danni; a tre vite non interrompe la corsa.
+- Raccogliere il cuore con meno di tre vite apre un dialogo nativo con una domanda a tre risposte. Simulazione e timer congelati, nessun conto alla rovescia. Una sola risposta può recuperare una vita, fino a tre; errore o salto non penalizzano. L’esito resta visibile fino a Continua; Escape lascia il gioco in pausa.
+- Venti domande integrate su nozioni elementari, estratte senza ripetizioni fino a esaurimento. La configurazione pubblica viene caricata all’apertura; in caso di errore o timeout di tre secondi si usano le domande integrate. Lo smontaggio interrompe il caricamento e libera scena e dialogo.
+- Admin → Bug Hunter: aggiunta, modifica, rimozione e scelta della risposta corretta, da 1 a 100 domande. Validazione condivisa, salvataggio esplicito e revisione transazionale contro sovrascritture concorrenti. GET pubblico e PUT riservato ai membri; nessuna nuova collezione, solo il documento `bacaroGameConfigurations/bug-hunter`.
+- Browser: `scripts/test-bug-hunter-hearts-browser.mjs` verifica la scena reale su desktop e viewport mobile: raccolta del cuore, pausa del mondo, risposta corretta con recupero vita, risposta errata senza penalità, Escape, ripresa e smontaggio. Verificato anche l’avvio con API indisponibile. `scripts/test-bug-hunter-admin-browser.mjs` verifica aggiunta/modifica/rimozione, conflitto di salvataggio, ricaricamento e layout mobile.
+- Verifiche: 26 test di gameplay, banca domande e API; 6 test del gateway collezioni; controllo Svelte senza errori o warning; build riuscita con i preesistenti avvisi di tracing Vercel per metadataResolver/supports-color. Test API con persistenza sostituita in memoria. L’editor browser usa risposte HTTP controllate; nessuna modifica alle domande in Firebase cloud.
+
+---
+
 ## Avvio locale automatico — 20 ottobre 2026
 
 - Causa del blocco locale: flag emulatori abbinato a un project ID cloud, senza chiave Admin e segreto del gioco; Docker non avviato. Il `.env` conteneva anche righe JavaScript non valide per il parser di Docker Compose.

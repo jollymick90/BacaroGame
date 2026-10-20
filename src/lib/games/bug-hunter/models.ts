@@ -1,6 +1,26 @@
 import * as T from 'three';
 import { createBox as box, createGroup as group, createLimb, sinusoid } from './primitives';
 import { bugs } from './content';
+export function heartPickup() {
+  const shape = new T.Shape();
+  shape.moveTo(0, -0.5);
+  shape.bezierCurveTo(-0.9, 0.1, -0.55, 0.85, 0, 0.4);
+  shape.bezierCurveTo(0.55, 0.85, 0.9, 0.1, 0, -0.5);
+  const material = new T.MeshPhongMaterial({ color: 0xff417b, emissive: 0xb81744 });
+  const root = new T.Mesh(
+    new T.ExtrudeGeometry(shape, { depth: 0.18, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.06, bevelSegments: 2, steps: 1 }),
+    material,
+  );
+  root.castShadow = true;
+  return {
+    root,
+    animate(time: number, reduced: boolean) {
+      const pulse = reduced ? 0.5 : (Math.sin(time * Math.PI * 1.6) + 1) / 2;
+      root.scale.setScalar(0.95 + pulse * 0.16);
+      material.emissiveIntensity = 0.2 + pulse * 0.8;
+    },
+  };
+}
 export function sphere(radius: number, color: number, x = 0, y = 0, z = 0) {
   const m = new T.Mesh(
     new T.SphereGeometry(radius, 10, 7),
