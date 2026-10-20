@@ -31,6 +31,7 @@
 
 <style>
   form {
+    color: #193e35;
     background: #fffef9;
     border: 2px solid #193e35;
     border-radius: 13px;
@@ -59,7 +60,7 @@
     color: #fffef9;
   }
   small {
-    font-size: 11px;
+    font-size: 13px;
     color: #536559;
   }
 </style>

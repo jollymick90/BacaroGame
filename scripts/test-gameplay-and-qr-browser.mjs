@@ -33,12 +33,12 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(origin);
-    await page.getByRole('link', { name: /Mostra QR/ }).click();
+    await page.getByRole('link', { name: /Invita/ }).click();
     await page.getByRole('img', { name: /QR per aprire/ }).waitFor();
     assert.equal(await page.locator('.address').getAttribute('href'), `${origin}/#/`);
     const image = await page.locator('img.qr').getAttribute('src');
     assert.ok(image.startsWith('data:image/png;base64,'));
-    const headingBox = await page.getByRole('heading', { name: /Inquadra/ }).boundingBox();
+    const headingBox = await page.getByRole('heading', { name: /Invita a giocare/ }).boundingBox();
     const qrBox = await page.locator('.qr-frame').boundingBox();
     assert.ok(headingBox.y + headingBox.height <= qrBox.y, 'QR must not overlap heading');
     const qr = await page.getByRole('link', { name: 'Scarica QR' }).boundingBox();
@@ -57,6 +57,7 @@ try {
     const close = page.getByRole('button', { name: 'Chiudi finestra 3', exact: true });
     await close.click();
     assert.equal(await page.locator('.fake-window').count(), 2);
+    assert.ok(await page.evaluate(() => document.activeElement?.matches('.window-bar button')), 'closing a window preserves keyboard focus');
     await close.waitFor();
     assert.equal(await page.locator('.fake-window').count(), 3);
     await page.getByRole('button', { name: /Spegni il desktop/ }).click();

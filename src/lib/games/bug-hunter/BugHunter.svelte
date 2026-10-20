@@ -79,23 +79,22 @@
       </div>
     {:else if hud.phase === 'intro'}
       <div class="bh-intro">
-        <span class="bh-kicker">BacaroTech presenta</span>
-        <h1 tabindex="-1">BUG<br />HUNTER</h1>
-        <p>I bug sono scappati in production.<br />Riprendili.</p>
+
+        <h1 tabindex="-1">Bug Hunter</h1>
+        <p>Corri, salta e riprendi i bug scappati.</p>
         <button class="bh-go" disabled={!ready} onclick={() => game?.start()}
-          >{ready ? 'VAI A CACCIA' : 'Prepariamo il retino…'}</button
+          >{ready ? 'Inizia' : 'Prepariamo il retino…'}</button
         >
-        <p class="bh-instructions">
-          ← → / A D per muoverti · ↑ / W / spazio per saltare<br />Su telefono: scorri o usa i tre
-          pulsanti.<br />Tre vite: ogni bug mancato o urto costa una vita.<br />Salta i bug in aria
-          e le barriere. Abilità automatiche: 50 Heisenbug → scudo 8 s · 25 Regression → +1 vita ·
-          30 Production → rallenta 6 s · 40 Feature → punti ×2 per 10 s.
-        </p>
+        <div class="bh-instructions">
+          <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
+          <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
+          <details><summary>Abilità automatiche</summary><p>50 Heisenbug: scudo per 8 s. 25 Regression: una vita in più. 30 Production: rallentamento per 6 s. 40 Feature: punti doppi per 10 s.</p></details>
+        </div>
       </div>
     {:else}
       <div class="bh-hud">
         <div>
-          <b>{hud.score} punti</b><small>{hud.distance} m · velocità {hud.speed.toFixed(1)}</small
+          <b>{hud.score} {hud.score === 1 ? 'punto' : 'punti'}</b><small>{hud.distance} m · velocità {hud.speed.toFixed(1)}</small
           ><span aria-label={`${hud.health} possibilità rimaste`}
             >{'♥'.repeat(hud.health)}{'♡'.repeat(3 - hud.health)}</span
           >
@@ -127,18 +126,18 @@
         <div class="bh-controls">
           <button aria-label="Spostati a sinistra" onclick={() => control('left')}>←</button><button
             aria-label="Salta"
-            onclick={() => control('jump')}>SALTA ↑</button
+            onclick={() => control('jump')}>Salta ↑</button
           ><button aria-label="Spostati a destra" onclick={() => control('right')}>→</button>
         </div>
       {:else if hud.phase === 'paused'}<div class="bh-overlay">
-          <h1 tabindex="-1">Pausa caffè.</h1>
+          <h1 tabindex="-1">In pausa.</h1>
           <p>I bug aspettano. Stranamente educati.</p>
-          <button class="bh-go" onclick={() => control('pause')}>RIPRENDI</button><a href="#/"
+          <button class="bh-go" onclick={() => control('pause')}>Riprendi</button><a href="#/"
             >Torna al Game Center</a
           >
         </div>
       {:else if hud.phase === 'over'}<div class="bh-overlay bh-results">
-          <h1 tabindex="-1">PRODUCTION È ANCORA IN FIAMME.</h1>
+          <h1 tabindex="-1">Fine della corsa.</h1>
           <p>
             <strong>{hud.caught} bug catturati · {hud.score} punti · {hud.distance} metri</strong
             ><br />{hud.caught
@@ -157,7 +156,7 @@
                 </p>
               </div>{/each}
           </div>
-          <button class="bh-go" onclick={() => game?.start()}>RIPROVA</button><a href="#/"
+          <button class="bh-go" onclick={() => game?.start()}>Riprova</button><a href="#/"
             >Torna al Game Center</a
           >
         </div>{/if}
@@ -172,7 +171,7 @@
     left: 12px;
     display: grid;
     gap: 4px;
-    font-size: 10px;
+    font-size: 13px;
     background: #fff4d7e8;
     border-radius: 10px;
     padding: 8px;
@@ -189,12 +188,12 @@
     color: #6742a6;
   }
   .bh-hud small {
-    font-size: 11px;
+    font-size: 13px;
   }
   @media (max-height: 450px) {
     .bh-abilities {
       top: 130px;
-      font-size: 9px;
+      font-size: 12px;
       padding: 4px;
     }
     .bh-abilities > div {
@@ -238,17 +237,17 @@
     max-width: 470px;
     pointer-events: none;
   }
-  .bh-intro button {
+  .bh-intro button, .bh-intro details {
     pointer-events: auto;
   }
-  .bh-kicker {
-    font-size: 16px;
-    font-weight: bold;
-  }
+  .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
+  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
+  .bh-instructions p:last-child { margin-bottom: 0; }
+  .bh-instructions summary { font-size: 14px; font-weight: 700; }
   .bh-intro h1 {
-    font-size: clamp(62px, 8vw, 108px);
-    letter-spacing: -5px;
-    line-height: 0.83;
+    font-size: clamp(42px, 7vw, 78px);
+    letter-spacing: -3px;
+    line-height: 1;
     margin: 20px 0;
     color: #46328b;
     text-shadow: 3px 4px 0 #fff3cf;
@@ -258,11 +257,11 @@
     line-height: 1.4;
   }
   .bh-go {
-    background: #ffcc52;
-    color: #30264e;
-    border: 3px solid #46328b;
+    background: var(--arcade-mint);
+    color: #15151b;
+    border: 2px solid #15151b;
     border-radius: 12px;
-    box-shadow: 0 5px 0 #46328b;
+    box-shadow: 0 5px 0 #0c0c10;
     padding: 15px 30px;
     min-height: 58px;
     font-size: 20px;
@@ -270,12 +269,12 @@
     letter-spacing: 0.5px;
   }
   .bh-go:hover {
-    background: #ffe28b;
+    background: #67ffd1;
   }
   .bh-intro .bh-instructions {
     font-size: 12px;
     line-height: 1.7;
-    background: #fff4d7dc;
+    background: #fff4d7f5;
     border-radius: 12px;
     padding: 12px;
     margin-top: 20px;
@@ -331,7 +330,7 @@
   }
   .bh-jar small {
     grid-column: span 2;
-    font-size: 10px;
+    font-size: 13px;
   }
   .bh-pop {
     transform: scale(1.1);
@@ -381,7 +380,8 @@
     text-align: center;
     gap: 16px;
     padding: 28px;
-    background: #d7f3f1e8;
+    background: var(--arcade-panel);
+    color: var(--arcade-text);
     overflow: auto;
     touch-action: pan-y;
   }
@@ -398,7 +398,7 @@
     max-width: 500px;
   }
   .bh-overlay a {
-    color: #46328b;
+    color: var(--arcade-violet);
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -430,17 +430,18 @@
   }
   .bh-collection small {
     display: block;
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.5;
   }
   .bh-missing {
-    opacity: 0.55;
+    opacity: 0.8;
   }
   .bh-stage button:focus-visible,
   .bh-stage a:focus-visible {
     outline: 3px solid #46328b;
     outline-offset: 4px;
   }
+  .bh-overlay button:focus-visible, .bh-overlay a:focus-visible { outline-color: var(--arcade-orange); }
   @media (max-width: 600px) {
     .bh-stage {
       height: calc(100svh - 57px);
@@ -453,14 +454,18 @@
       text-align: center;
       max-width: none;
     }
-    .bh-intro h1 {
-      font-size: 72px;
+    .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
+  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
+  .bh-instructions p:last-child { margin-bottom: 0; }
+  .bh-instructions summary { font-size: 14px; font-weight: 700; }
+  .bh-intro h1 {
+      font-size: 52px;
     }
     .bh-intro p {
       font-size: 16px;
     }
     .bh-intro .bh-instructions {
-      font-size: 11px;
+      font-size: 13px;
       margin-top: 15px;
     }
     .bh-hud {
@@ -500,15 +505,16 @@
       top: 4%;
       max-width: 45%;
     }
-    .bh-intro h1 {
+    .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
+  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
+  .bh-instructions p:last-child { margin-bottom: 0; }
+  .bh-instructions summary { font-size: 14px; font-weight: 700; }
+  .bh-intro h1 {
       font-size: 42px;
       margin: 10px 0;
     }
     .bh-intro p {
       font-size: 13px;
-    }
-    .bh-intro .bh-kicker {
-      font-size: 12px;
     }
     .bh-intro .bh-go {
       font-size: 15px;
@@ -516,7 +522,7 @@
       padding: 8px 18px;
     }
     .bh-intro .bh-instructions {
-      font-size: 10px;
+      font-size: 13px;
       padding: 8px;
     }
     .bh-intro .bh-instructions {
@@ -543,7 +549,7 @@
     }
     .bh-feedback {
       top: 85px;
-      font-size: 11px;
+      font-size: 13px;
     }
     .bh-jar {
       padding: 4px 8px;

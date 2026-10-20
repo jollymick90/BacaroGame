@@ -101,7 +101,7 @@
       <section class="intro-screen">
         <div class="intro-heading">
           <div>
-            <p class="intro-note">Verifica umanità</p>
+
             <h1 bind:this={heading} tabindex="-1">Hai l’aria<br />di un algoritmo.</h1>
           </div>
           <Robot />
@@ -125,8 +125,7 @@
           >Verificami, allora</button
         >
         <p class="small-print">
-          Nessun game over. Solo un po’ di sana diffidenza. È un gioco, non una certificazione
-          reale.
+          È un gioco, non una certificazione reale.
         </p>
       </section>
     {:else if phase === 'trial'}
@@ -224,7 +223,7 @@
         >
         {#if downloadError}<p role="alert">{downloadError}</p>{/if}
         <div class="certificate-actions">
-          <button class="ai-primary" onclick={replay}>Riprova</button><a
+          <button class="home-button" onclick={replay}>Riprova</button><a
             class="home-button"
             href="#/">Torna al Game Center</a
           >
@@ -252,8 +251,8 @@
     max-width: 850px;
     margin: auto;
     padding: 0 28px;
-    font-family: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif;
-    color: #193e35;
+    font-family: var(--arcade-display);
+    color: var(--arcade-text);
   }
   .ai-header {
     height: 75px;
@@ -261,7 +260,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    border-bottom: 1px solid #d7d9cb;
+    border-bottom: 1px solid var(--arcade-border);
   }
   .game-name {
     font-size: 20px;
@@ -269,14 +268,14 @@
     letter-spacing: -0.7px;
   }
   .department {
-    font-size: 11px;
-    color: #596452;
+    font-size: 13px;
+    color: var(--arcade-muted);
   }
   .ai-main {
     max-width: 640px;
     margin: 30px auto 48px;
-    background: #f0eaf7;
-    border: 1px solid #d9cfe5;
+    background: var(--arcade-panel);
+    border: 1px solid var(--arcade-border);
     border-radius: 22px;
     padding: 28px;
   }
@@ -293,17 +292,11 @@
     line-height: 1.06;
     margin: 0;
   }
-  .intro-note {
-    font-size: 13px;
-    color: #6742a6;
-    font-weight: 700;
-    margin: 0 0 12px;
-  }
   .intro-copy {
     font-size: 15px;
     max-width: 50ch;
     margin: 24px 0;
-    color: #536559;
+    color: var(--arcade-muted);
   }
   .human-checkbox {
     display: flex !important;
@@ -311,6 +304,7 @@
     gap: 14px;
     padding: 22px 18px;
     background: #fffef9;
+    color: #193e35;
     border: 2px solid #193e35;
     border-radius: 12px;
     font-size: 20px !important;
@@ -321,30 +315,31 @@
   .human-checkbox input {
     width: 28px;
     height: 28px;
-    accent-color: #6742a6;
+    accent-color: var(--arcade-violet);
     flex: none;
     margin: 0;
   }
   .checkbox-mark {
     font-size: 24px;
     margin-left: auto;
-    color: #6742a6;
+    color: var(--arcade-violet);
   }
   .intro-answer {
     min-height: 78px;
     padding: 17px 0;
     font-size: 15px;
     font-weight: 600;
-    color: #6742a6;
+    color: var(--arcade-violet);
   }
   .intro-answer p {
     margin: 0;
     max-width: 43ch;
   }
   .ai-primary {
-    background: #6742a6;
-    border: 1px solid #6742a6;
-    color: #fffef9;
+    box-shadow: 0 4px 0 #0c0c10;
+    background: var(--arcade-violet);
+    border: 1px solid #15151b;
+    color: #15151b;
     min-height: 50px;
     padding: 12px 24px;
     font-weight: 700;
@@ -352,14 +347,14 @@
     font-size: 15px;
   }
   .ai-primary:hover:not(:disabled) {
-    background: #53328c;
+    background: #c9b5ff;
   }
   .start-button {
     width: 100%;
   }
   .small-print {
-    font-size: 11px;
-    color: #596452;
+    font-size: 13px;
+    color: var(--arcade-muted);
     margin: 15px 0 0;
     text-align: center;
   }
@@ -370,7 +365,7 @@
     gap: 10px;
     font-size: 13px;
     font-weight: 700;
-    color: #6742a6;
+    color: var(--arcade-violet);
     margin-bottom: 20px;
   }
   .progress-dots {
@@ -400,9 +395,9 @@
     max-width: 15ch;
   }
   .trial-heading p {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.45;
-    color: #536559;
+    color: var(--arcade-muted);
     max-width: 29ch;
     margin: 0;
   }
@@ -414,26 +409,26 @@
     margin-top: 14px;
   }
   .hint-button {
-    color: #6742a6;
-    background: #fffef9;
+    color: var(--arcade-violet);
+    background: var(--arcade-raised);
     border: 1px solid #b7a4cc;
     font-size: 13px;
     min-height: 44px;
     padding: 8px 14px;
   }
   .hint-button:hover:not(:disabled) {
-    background: #e4d9f4;
+    background: var(--arcade-raised);
   }
   .hint-button span {
     font-weight: 800;
   }
   .restart-button {
     background: none !important;
-    color: #536559;
+    color: var(--arcade-muted);
     border: 0;
     text-decoration: underline;
     text-underline-offset: 3px;
-    font-size: 12px;
+    font-size: 14px;
     min-height: 44px;
     padding: 8px;
   }
@@ -443,6 +438,7 @@
   }
   .hint-area p {
     background: #fffef9;
+    color: #193e35;
     border-left: 3px solid #6742a6;
     padding: 12px 14px;
     margin: 12px 0 0;
@@ -456,10 +452,11 @@
     padding: 30px 20px;
     text-align: center;
     background: #fffef9;
+    color: #193e35;
   }
   .solved-symbol {
     font-size: 52px;
-    color: #6742a6;
+    color: var(--arcade-violet);
     font-weight: 800;
     letter-spacing: -2px;
   }
@@ -469,7 +466,7 @@
     letter-spacing: -0.7px;
     margin: 12px 0 20px;
   }
-  .robot-response {
+  .solved-panel .robot-response {
     font-size: 20px;
     line-height: 1.4;
     color: #6742a6;
@@ -482,6 +479,7 @@
     outline-offset: 5px;
     border-radius: 4px;
     background: #fffef9;
+    color: #193e35;
     padding: 22px;
   }
   .certificate-top {
@@ -491,14 +489,14 @@
     gap: 10px;
     border-bottom: 1px solid #bac4b1;
     padding-bottom: 16px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .certificate-top > span:last-child {
     font-size: 32px;
     line-height: 1;
   }
-  .certificate-label {
-    font-size: 12px;
+  .certificate .certificate-label {
+    font-size: 14px;
     color: #6742a6;
     margin: 24px 0 12px;
   }
@@ -520,7 +518,7 @@
     justify-content: space-between;
     gap: 10px;
     margin-top: 28px;
-    font-size: 10px;
+    font-size: 13px;
     color: #536559;
   }
   .human-stamp {
@@ -544,6 +542,7 @@
     text-align: center;
   }
   .home-button {
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -552,12 +551,12 @@
     min-height: 50px;
     padding: 10px 14px;
     font-size: 14px;
-    color: #6742a6;
+    color: var(--arcade-violet);
     font-weight: 700;
     text-decoration: none;
   }
   .home-button:hover {
-    background: #e4d9f4;
+    background: var(--arcade-raised);
   }
   @media (max-width: 650px) {
     .ai-game {
@@ -567,7 +566,7 @@
       height: 61px;
     }
     .department {
-      font-size: 10px;
+      font-size: 13px;
       max-width: 16ch;
       text-align: right;
     }
@@ -614,14 +613,14 @@
     .certificate-actions {
       flex-direction: column;
     }
-    .robot-response {
+    .solved-panel .robot-response {
       font-size: 18px;
     }
     .trial-controls {
       gap: 5px;
     }
     .hint-button {
-      font-size: 12px;
+      font-size: 14px;
       padding: 8px 10px;
     }
   }

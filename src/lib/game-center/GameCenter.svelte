@@ -63,11 +63,12 @@
 </script>
 
 <svelte:head>{#if route === '#/'}<title>BacaroTech Game Center</title>{/if}</svelte:head>
+<div class="arcade-shell">
 {#if route !== '#/'}
   <div class="center-return"><a href="#/">← Torna al Game Center</a><span>BacaroTech</span></div>
 {/if}
 <div bind:this={content}>
-  {#if route === '#/'}<GameCenterHome />
+  {#if route === '#/'}<GameCenterHome {configured} />
   {:else if loading}<main class="route-message" aria-busy="true"><h1 tabindex="-1">Prepariamo il gioco…</h1><p role="status">Un momento e si comincia.</p></main>
   {:else if error}<main class="route-message"><h1 tabindex="-1">Il gioco si fa aspettare</h1><p role="alert">{error}</p><button onclick={() => openRoute(true)}>Riprova</button></main>
   {:else if route === '#/bacarodex' && Bacarodex}<Bacarodex {configured} />
@@ -75,10 +76,11 @@
   {:else if route === '#/merge-battle' && MergeBattle}<MergeBattle config={mergeConfig ?? undefined} />
   {:else if route === '#/bug-hunter' && BugHunter}<BugHunter />{/if}
 </div>
+</div>
 
 <style>
-  .center-return{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1080px;margin:auto;padding:12px 28px;border-bottom:1px solid #d7d9cb;font-size:13px}
-  .center-return a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-underline-offset:4px}.center-return span{font-size:12px;color:#667368}
+  .center-return{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:auto;padding:12px 28px;border-bottom:1px solid var(--arcade-border);font-size:13px}
+  .center-return a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-underline-offset:4px}.center-return span{font-size:12px;color:var(--arcade-muted)}
   .route-message{max-width:700px;padding:48px 20px;margin:auto}.route-message h1{font-size:32px}
   @media(max-width:650px){.center-return{padding:6px 16px}.center-return span{display:none}}
 </style>

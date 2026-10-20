@@ -2,7 +2,7 @@
 
 Una raccolta di piccoli giochi nello stesso progetto SvelteKit + TypeScript + Vite. Home e giochi pubblici non richiedono account.
 
-- **`/#/` — Game Center**: scegli Bacarodex, Are You an AI?, Merge Battle o Bug Hunter. Production Is on Fire resta “In arrivo”. La radice `/` apre la home.
+- **`/#/` — Game Center**: scegli Bug Hunter, Merge Battle, Bacarodex o Are You an AI?. Bacarodex mostra la disponibilità dei membri registrati; gli altri giochi non richiedono la registrazione. La radice `/` apre la home.
 - **`/#/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
 - **`/#/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
 - **`/#/merge-battle` — Merge Battle**: battaglie comiche single player o 1 vs 1 locale, senza backend.
@@ -30,7 +30,7 @@ Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli 
 
 ## Invita a giocare con il QR
 
-Dalla home scegli **“Mostra QR · Invita a giocare”**, oppure apri **`/qr`** sul sito pubblicato. La pagina mostra un grande codice in bianco e nero da far inquadrare agli altri telefoni, con copia del link e download PNG. Il codice apre la home pubblica del Game Center sullo stesso dominio e non richiede login. L'indirizzo deriva dal sito aperto, senza includere query, credenziali o percorsi amministrativi: per invitare altri dispositivi aprire la pagina sull'indirizzo HTTPS pubblico o su un indirizzo di rete raggiungibile, non su localhost.
+Dalla home scegli **“Invita”**, oppure apri **`/qr`** sul sito pubblicato. La pagina raccoglie un grande QR in bianco e nero, la condivisione nativa quando supportata, la copia del link e il download PNG. La copia viene confermata solo quando riesce; annullare la condivisione non mostra un errore. Il codice apre la home pubblica del Game Center sullo stesso dominio e non richiede login. L'indirizzo deriva dal sito aperto, senza includere query, credenziali o percorsi amministrativi: per invitare altri dispositivi aprire la pagina sull'indirizzo HTTPS pubblico o su un indirizzo di rete raggiungibile, non su localhost.
 
 ## Bacarodex e Firebase
 
@@ -175,3 +175,5 @@ Su Vercel la memoria resta per singola istanza: riavvii, scadenze e versioni nuo
 | Login e hook delle pagine private | Verifica Auth e permessi | Verifica Auth e permessi, con deduplicazione dei permessi nella richiesta |
 
 Non risultano polling Firestore o listener realtime nel client di BacaroGame. Le letture partono dall’ingresso nei giochi/pannelli, dalle scansioni e dalle azioni dell’utente. Test cache: `node --experimental-strip-types --test src/lib/server/ttl-cache.test.ts src/lib/server/versioned-cache.test.ts`. Test API e revoche: `npm run test:superadmins`.
+
+La revisione grafica e le verifiche del 20 ottobre 2026 sono documentate in [REPORT_UX_UI_GAMECENTER.md](REPORT_UX_UI_GAMECENTER.md).

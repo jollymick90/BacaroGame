@@ -87,6 +87,7 @@
 
 <style>
   .loading-box {
+    color: #193e35;
     border: 2px solid #193e35;
     border-radius: 13px;
     background: #fffef9;
@@ -94,7 +95,7 @@
   }
   .filename {
     text-align: center;
-    font-size: 12px;
+    font-size: 14px;
     color: #536559;
     margin: 0 0 26px;
     overflow-wrap: anywhere;
@@ -109,7 +110,7 @@
     font-size: 33px;
   }
   .loading-label span {
-    font-size: 12px;
+    font-size: 14px;
   }
   progress {
     display: block;
@@ -137,7 +138,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
   }
   .loading-box input {
@@ -147,7 +148,7 @@
     accent-color: #6742a6;
   }
   #loading-instructions {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
     border-top: 1px solid #ded6e7;
     margin: 20px 0 0;

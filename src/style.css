@@ -2,3 +2,42 @@
 .field-label{font-weight:650;font-size:14px;margin:0 0 8px}
 .account-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0;font-size:12px}.account-bar .actions{margin:0}.login-panel{max-width:640px;margin:45px auto}.login-panel h1{font-size:40px;letter-spacing:-1.5px;line-height:1.1}.login-panel .privacy-note{display:block;margin:22px 0}.login-panel button{margin:0 8px 12px 0}.login-panel code{overflow-wrap:anywhere}@media(max-width:650px){.account-bar{align-items:flex-start;flex-direction:column}}
 .qr-panel{max-width:650px}.qr-image{width:280px;max-width:100%;height:auto;margin-top:20px}.qr-panel>div{text-align:center}
+
+/* Shared arcade tokens. Admin forms keep their existing light surfaces. */
+:root {
+  --arcade-bg: #15151b;
+  --arcade-panel: #23232e;
+  --arcade-raised: #2c2c3a;
+  --arcade-border: #49495c;
+  --arcade-text: #f6f3ea;
+  --arcade-muted: #b8b8ca;
+  --arcade-mint: #00e5a3;
+  --arcade-violet: #b9a1fb;
+  --arcade-orange: #ff9a64;
+  --arcade-display: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif;
+}
+.arcade-shell { display: flow-root; min-height: 100svh; background: var(--arcade-bg); color: var(--arcade-text); }
+.arcade-primary, .arcade-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid var(--arcade-border);
+  border-radius: 8px;
+  padding: 12px 18px;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 4px 0 #0c0c10;
+}
+.arcade-primary { color: #15151b; background: var(--arcade-orange); }
+.arcade-secondary { color: var(--arcade-text); background: var(--arcade-panel); }
+.arcade-primary:hover:not(:disabled), .arcade-secondary:hover:not(:disabled) { filter: brightness(1.12); }
+.arcade-primary:active:not(:disabled), .arcade-secondary:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #0c0c10; }
+.arcade-shell :is(a, button, input, summary):focus-visible { outline: 3px solid #ff9a64; outline-offset: 4px; }
+.arcade-shell summary { cursor: pointer; min-height: 44px; align-content: center; }
+.arcade-shell .route-message button { background: var(--arcade-orange); color: #15151b; }
+
+.arcade-primary:hover:not(:disabled) { background: var(--arcade-orange); }
+.arcade-secondary:hover:not(:disabled) { background: var(--arcade-panel); }
+.arcade-shell :is(h1, h2)[tabindex="-1"]:focus { outline: none; }

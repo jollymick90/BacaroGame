@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   let { onsolve }: { onsolve: () => void } = $props();
   const titles = [
     'Aggiornamento aggiornamenti',
@@ -9,16 +9,20 @@
     'Finestra chiusa. Quasi.',
     'Riavvio del riavvio',
   ];
+  let desktop: HTMLDivElement;
+  let disposed = false;
   let windows = $state([0, 1, 2]);
   let replacements = $state(0);
   let feedback = $state('');
   let hidden = $state([false, false, false]);
   const timers = new Set<ReturnType<typeof setTimeout>>();
   onDestroy(() => {
+    disposed = true;
     for (const timer of timers) clearTimeout(timer);
   });
-  function close(index: number) {
+  async function close(index: number, trigger: HTMLButtonElement) {
     if (hidden[index]) return;
+    const moveFocus = document.activeElement === trigger;
     hidden[index] = true;
     const timer = setTimeout(() => {
       hidden[index] = false;
@@ -31,10 +35,16 @@
       replacements === 1
         ? 'Ottimo. Una finestra in meno, una finestra in più.'
         : 'Il reparto finestre approva questo ricambio d’aria.';
+    if (moveFocus) {
+      await tick();
+      if (disposed) return;
+      const nextClose = desktop.querySelector<HTMLButtonElement>('.window-bar button');
+      (nextClose ?? desktop).focus({ preventScroll: true });
+    }
   }
 </script>
 
-<div class="simulated-desktop" aria-label="Desktop simulato">
+<div class="simulated-desktop" bind:this={desktop} tabindex="-1" role="group" aria-label="Desktop simulato">
   <div class="desktop-label">
     <span aria-hidden="true">▦</span> Finestre OS <span>Edizione ostinata</span>
   </div>
@@ -49,7 +59,7 @@
           <div class="window-bar">
             <span>{titles[title]}</span><button
               aria-label={`Chiudi finestra ${index + 1}`}
-              onclick={() => close(index)}>×</button
+              onclick={(event) => close(index, event.currentTarget)}>×</button
             >
           </div>
           <div class="window-body">
@@ -79,6 +89,7 @@
 
 <style>
   .simulated-desktop {
+    color: #193e35;
     border: 2px solid #193e35;
     border-radius: 13px;
     overflow: hidden;
@@ -89,11 +100,11 @@
     gap: 8px;
     align-items: center;
     padding: 10px 14px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .desktop-label > span:last-child {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 13px;
   }
   .window-area {
     position: relative;
@@ -120,7 +131,7 @@
     padding-left: 10px;
     background: #eee8f5;
     border-bottom: 1px solid #193e35;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
   }
   .window-bar button {
@@ -148,7 +159,7 @@
     font-size: 30px;
   }
   .window-body p {
-    font-size: 12px;
+    font-size: 14px;
     margin: 0;
     max-width: 25ch;
   }
@@ -162,7 +173,7 @@
     padding: 8px 12px;
   }
   .taskbar > span {
-    font-size: 10px;
+    font-size: 13px;
     max-width: 25ch;
   }
   .taskbar button {
@@ -179,7 +190,7 @@
     font-size: 13px;
     min-height: 40px;
     margin: 12px 0 0;
-    color: #536559;
+    color: var(--arcade-muted);
   }
   @media (max-width: 420px) {
     .window-area {
@@ -191,7 +202,7 @@
       left: calc(var(--window-index) * 6%);
     }
     .window-bar {
-      font-size: 11px;
+      font-size: 13px;
     }
     .window-body {
       padding: 12px;

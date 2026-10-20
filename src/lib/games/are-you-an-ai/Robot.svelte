@@ -23,8 +23,8 @@
     flex: none;
     padding: 16px 14px 10px;
     min-width: 122px;
-    color: #193e35;
-    font-size: 11px;
+    color: var(--arcade-muted);
+    font-size: 13px;
     font-weight: 700;
     line-height: 1.2;
     background: none;
@@ -40,7 +40,7 @@
     outline-offset: 3px;
   }
   .robot-button:hover:not(:disabled) {
-    background: #e4d9f4;
+    background: var(--arcade-raised);
   }
   .robot-face {
     width: 76px;

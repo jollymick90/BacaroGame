@@ -1,12 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { gameCenterUrl } from '$lib/game-center/share';
+
   let address = $state('');
   let image = $state('');
-  let error = $state('');
+  let qrError = $state('');
+  let actionError = $state('');
   let copied = $state(false);
+  let canShare = $state(false);
+  let sharing = $state(false);
+
   async function generate() {
-    error = '';
+    qrError = '';
     try {
       const { default: QRCode } = await import('qrcode');
       image = await QRCode.toDataURL(address, {
@@ -16,165 +21,83 @@
         color: { dark: '#000000', light: '#ffffff' },
       });
     } catch {
-      error = 'Il QR non si è caricato. Puoi usare il link qui sotto o riprovare.';
+      qrError = 'Il QR non si è caricato. Puoi usare il link qui sotto o riprovare.';
     }
   }
+
   async function copy() {
+    copied = false;
+    actionError = '';
     try {
       await navigator.clipboard.writeText(address);
       copied = true;
     } catch {
-      error = 'Copia il link dal testo qui sotto.';
+      actionError = 'Copia non riuscita. Seleziona e copia il link qui sopra.';
     }
   }
+
+  async function share() {
+    actionError = '';
+    sharing = true;
+    try {
+      await navigator.share({ title: 'BacaroTech Game Center', url: address });
+    } catch (error) {
+      if (!(error instanceof Error && error.name === 'AbortError')) {
+        actionError = 'Condivisione non riuscita. Puoi copiare il link o mostrare il QR.';
+      }
+    } finally {
+      sharing = false;
+    }
+  }
+
   onMount(() => {
     address = gameCenterUrl(window.location.href);
+    canShare = typeof navigator.share === 'function';
     void generate();
   });
 </script>
 
-<svelte:head
-  ><title>Invita a giocare · BacaroTech</title><meta
-    name="description"
-    content="Inquadra il QR e scegli un gioco al BacaroTech."
-  /></svelte:head
->
-<main class="share-page">
-  <a class="back" href="/#/">← Torna al Game Center</a>
-  <header>
-    <img src="/bacarotech-logo.png" alt="BacaroTech" />
-    <p>Il prossimo round è tuo.</p>
-    <h1>Inquadra.<br />Scegli. Gioca.</h1>
-  </header>
-  <div class="qr-frame" aria-busy={!image && !error}>
-    {#if image}<img class="qr" src={image} alt="QR per aprire il BacaroTech Game Center" />{:else}<p
-        role="status"
-      >
-        {error || 'Prepariamo il QR…'}
-      </p>{/if}
-  </div>
-  <p class="instructions">Apri la fotocamera del tuo telefono e inquadra il codice.</p>
-  <a class="address" href={address || '/#/'}>{address}</a>
-  <div class="actions">
-    <button onclick={copy} disabled={!address}>{copied ? 'Link copiato ✓' : 'Copia link'}</button
-    >{#if image}<a href={image} download="bacarotech-game-center-qr.png">Scarica QR</a>{/if}
-  </div>
-  {#if error}<p role="alert">{error}</p>
-    <button onclick={generate}>Riprova</button>{/if}
-</main>
+<svelte:head>
+  <title>Invita a giocare · BacaroTech</title>
+  <meta name="description" content="Inquadra il QR e scegli un gioco al BacaroTech." />
+</svelte:head>
+<div class="arcade-shell">
+  <main class="share-page">
+    <a class="back" href="/#/">← Torna al Game Center</a>
+    <header>
+      <img src="/bacarotech-logo.png" alt="BacaroTech" width="52" height="52" />
+      <h1>Invita a giocare.</h1>
+    </header>
+    <p class="instructions">Inquadra il QR con la fotocamera del telefono.</p>
+    <div class="qr-frame" aria-busy={!image && !qrError}>
+      {#if image}
+        <img class="qr" src={image} alt="QR per aprire il BacaroTech Game Center" />
+      {:else}<p role="status">{qrError || 'Prepariamo il QR…'}</p>{/if}
+    </div>
+    <a class="address" href={address || '/#/'}>{address}</a>
+    <div class="actions">
+      {#if canShare}<button class="arcade-primary" onclick={share} disabled={!address || sharing}>Condividi link</button>{/if}
+      <button class={canShare ? 'arcade-secondary' : 'arcade-primary'} onclick={copy} disabled={!address}>{copied ? 'Link copiato' : 'Copia link'}</button>
+      {#if image}<a class="arcade-secondary" href={image} download="bacarotech-game-center-qr.png">Scarica QR</a>{/if}
+    </div>
+    <p class="copy-status" role="status">{copied ? 'Link copiato negli appunti.' : ''}</p>
+    {#if actionError}<p class="error" role="alert">{actionError}</p>{/if}
+    {#if qrError}<p class="error" role="alert">{qrError}</p><button class="arcade-secondary" onclick={generate}>Riprova QR</button>{/if}
+  </main>
+</div>
 
 <style>
-  .share-page {
-    max-width: 540px;
-    margin: auto;
-    padding: 18px 22px 32px;
-    text-align: center;
-    font-family: 'Trebuchet MS', sans-serif;
-    color: #193e35;
-  }
-  .back {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    font-size: 13px;
-    text-align: left;
-  }
-  header {
-    display: block;
-    height: auto;
-    border: 0;
-    margin: 0;
-    padding: 0;
-  }
-  header img {
-    width: 68px;
-    height: 68px;
-    object-fit: contain;
-    background: #193e35;
-    border-radius: 8px;
-    padding: 5px;
-  }
-  header p {
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 8px 0;
-  }
-  h1 {
-    font-size: clamp(35px, 9vw, 52px);
-    line-height: 1;
-    letter-spacing: -2px;
-    margin: 12px 0 22px;
-  }
-  .qr-frame {
-    aspect-ratio: 1;
-    background: white;
-    border: 2px solid #193e35;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    max-width: 390px;
-    margin: auto;
-  }
-  .qr {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .instructions {
-    font-size: 14px;
-    line-height: 1.5;
-    max-width: 30ch;
-    margin: 18px auto 12px;
-  }
-  .address {
-    font-size: 13px;
-    overflow-wrap: anywhere;
-    display: block;
-    padding: 5px;
-  }
-  .actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 18px;
-  }
-  .actions > * {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #193e35;
-    border-radius: 9px;
-    min-height: 48px;
-    text-decoration: none;
-    font-size: 13px;
-    padding: 10px;
-    background: #fffef9;
-    color: #193e35;
-  }
-  .actions button {
-    background: #193e35;
-    color: white;
-  }
-  @media (max-height: 750px) {
-    header img {
-      width: 46px;
-      height: 46px;
-    }
-    h1 {
-      font-size: 35px;
-      margin: 8px 0 14px;
-    }
-    .qr-frame {
-      max-width: 310px;
-    }
-    .instructions {
-      margin-top: 12px;
-    }
-  }
+  .share-page { max-width: 560px; margin: auto; padding: 12px 22px 28px; text-align: center; }
+  .back { display: flex; align-items: center; min-height: 44px; font-size: 14px; text-align: left; }
+  header { display: flex; justify-content: center; gap: 16px; height: auto; border: 0; padding: 18px 0 0; }
+  header img { object-fit: contain; flex-shrink: 0; }
+  h1 { font-family: var(--arcade-display); font-size: clamp(28px, 5vw, 38px); line-height: 1.1; letter-spacing: -1px; margin: 0; }
+  .qr-frame { aspect-ratio: 1; background: white; color: #15151b; border: 2px solid white; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; max-width: 360px; margin: auto; }
+  .qr { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .instructions { font-size: 16px; color: var(--arcade-muted); margin: 18px auto 22px; }
+  .address { font-size: 14px; overflow-wrap: anywhere; display: block; padding: 12px 4px; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  .actions > * { flex: 1 1 130px; font-size: 15px; padding: 12px; }
+  .copy-status { min-height: 22px; font-size: 14px; color: var(--arcade-muted); margin: 14px 0 0; }
+  @media (max-height: 750px) { .qr-frame { max-width: 290px; } header { padding-top: 8px; } .instructions { margin: 12px 0 16px; } }
 </style>
