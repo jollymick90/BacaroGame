@@ -1,5 +1,6 @@
+const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:5173';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE || 'playwright');import assert from 'node:assert/strict';
-const b=await chromium.launch({channel:'chrome',args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});try{const p=await b.newPage();await p.goto('http://localhost:5173/');const report=await p.evaluate(async()=>{
+const b=await chromium.launch({channel:'chrome',args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});try{const p=await b.newPage();await p.goto(`${origin}/`);const report=await p.evaluate(async()=>{
 const {mountRunner}=await import('/src/lib/games/bug-hunter/scene.ts');const host=document.createElement('div');host.style.cssText='width:400px;height:600px';document.body.append(host);
 const add=EventTarget.prototype.addEventListener,remove=EventTarget.prototype.removeEventListener;const active=[];
 EventTarget.prototype.addEventListener=function(type,fn,options){active.push({target:this,type,fn});return add.call(this,type,fn,options)};

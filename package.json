@@ -15,15 +15,18 @@
     "firebase:down": "docker compose down",
     "firebase:logs": "docker compose logs -f firebase",
     "test:merge-battle": "node --experimental-strip-types --test src/lib/games/merge-battle/engine.test.ts src/lib/games/merge-battle/config.test.ts src/lib/games/merge-battle/cards.test.ts",
-    "test:bug-hunter": "node --experimental-strip-types --test src/lib/games/bug-hunter/mechanics.test.ts",
+    "test:bug-hunter": "node --experimental-strip-types --test src/lib/games/bug-hunter/mechanics.test.ts src/lib/games/bug-hunter/gameplay.test.ts",
     "check:collections": "node --experimental-strip-types scripts/check-firestore-collections.mjs",
     "test:collections": "node --experimental-strip-types --test src/lib/firebase/collections.test.ts scripts/check-firestore-collections.test.mjs",
-    "test:superadmins": "node --experimental-strip-types --test src/lib/server/admin-policy.test.ts tests/superadmins-api.test.mjs"
+    "test:superadmins": "node --experimental-strip-types --test src/lib/server/admin-policy.test.ts tests/superadmins-api.test.mjs",
+    "test:ai": "node --experimental-strip-types --test src/lib/games/are-you-an-ai/trials.test.ts src/lib/games/are-you-an-ai/certificate.test.ts",
+    "test:qr": "node --experimental-strip-types --test src/lib/game-center/share.test.ts"
   },
   "dependencies": {
     "@vladmandic/human": "3.3.6",
     "firebase": "^12.19.0",
     "firebase-admin": "^14.5.0",
+    "pdf-lib": "1.17.1",
     "qrcode": "^1.5.4",
     "svelte": "^5.0.0",
     "three": "0.171.0"

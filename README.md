@@ -13,13 +13,24 @@ I giochi sono caricati dinamicamente. Human e i modelli facciali si caricano sol
 
 ## Are You an AI?
 
-Seleziona “Non sono un robot” e premi “Verificami, allora”. Ogni prova offre due indizi immediati e “Ricomincia la prova”; dopo la soluzione leggi la battuta e premi “Continua”. Nessun timer, vite o game over.
+Seleziona “Non sono un robot” e premi “Verificami, allora”. Ogni partita estrae tre prove distinte da una pool di quattro. Due indizi aiutano in ogni prova; “Ricomincia dalla prima prova” azzera il percorso mantenendo le stesse tre prove. Dopo una soluzione, leggi la battuta e premi “Continua”.
 
-1. **Chiudi tutte le finestre:** le X sostituiscono le tre finestre simulate, senza moltiplicarle. “Spegni” chiude il desktop e risolve la prova.
-2. **Completa il caricamento:** trascina un punto qualsiasi della barra verso destra, oppure seleziona la barra e premi “100%”. Con tastiera: Freccia destra o Fine sulla barra; in alternativa Invio/Spazio per selezionarla, Tab e Invio su “100%”.
-3. **Seleziona il robot:** scegli il robot assistente fuori dalla griglia. Gli oggetti sbagliati danno solo un commento e puoi riprovare.
+- **Chiudi tutte le finestre:** ogni X chiude visibilmente una finestra, che riappare dopo 400 ms. “Spegni” risolve il desktop simulato, senza aprire o chiudere vere finestre del browser.
+- **Completa il caricamento:** cinque conferme quando appare “ORA”, da 20% ciascuna. Gli errori non cancellano progresso. Touch, Invio e Spazio; opzione senza scadenza per confermare con calma.
+- **Seleziona il robot:** scegli l'assistente fuori griglia. Nessun bordo tratteggiato suggerisce la soluzione; il focus da tastiera resta visibile.
+- **Un calcolo semplicissimo:** rispondere esattamente dà un certificato robot e termina anticipatamente; un errore valido permette di proseguire come umano. Input vuoto o non numerico non conta come risposta. È un trabocchetto comico, non un test reale.
 
-Il certificato “UMANO PER INSUFFICIENZA DI PROVE” resta nell’interfaccia. “Riprova” riparte dall’intro; uscita o refresh ricominciano il gioco. Le catture di Bacarodex restano indipendenti. Non si aprono vere finestre o richieste di permesso e non si producono PDF o immagini del certificato.
+Il certificato umano o robot si può scaricare come PDF A4 con il logo ufficiale BacaroTech, generato sul dispositivo. Nessun dato personale richiesto. “Riprova” torna all'intro e la partita successiva effettua un nuovo sorteggio. Nessuna AI reale, API o persistenza del gioco.
+
+## Bug Hunter
+
+Tre vite: ogni bug mancato o urto costa una vita, con un massimo di una penalità per riga. Dopo un urto, due secondi di protezione dagli altri ostacoli; i bug persi nelle righe successive continuano a costare vite. Corri verso gli insetti, cambia corsia e salta quelli in aria o le barriere che occupano tutte le corsie. La velocità aumenta ogni 20 secondi attivi da 8 fino a 16; pausa e background congelano la simulazione.
+
+Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli per 8 s, 25 Regression recuperano una vita (massimo 3, oppure una cura pronta), 30 Production rallentano il mondo al 60% per 6 s, 40 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie premiano le partite lunghe: con una specie ogni quattro righe, il primo bonus richiede diversi minuti. Nessun backend o account necessario.
+
+## Invita a giocare con il QR
+
+Dalla home scegli **“Mostra QR · Invita a giocare”**, oppure apri **`/qr`** sul sito pubblicato. La pagina mostra un grande codice in bianco e nero da far inquadrare agli altri telefoni, con copia del link e download PNG. Il codice apre la home pubblica del Game Center sullo stesso dominio e non richiede login. L'indirizzo deriva dal sito aperto, senza includere query, credenziali o percorsi amministrativi: per invitare altri dispositivi aprire la pagina sull'indirizzo HTTPS pubblico o su un indirizzo di rete raggiungibile, non su localhost.
 
 ## Bacarodex e Firebase
 

@@ -1,3 +1,30 @@
+## Aggiornamento gameplay e inviti — 20 ottobre 2026
+
+Questa sezione descrive il comportamento attuale dei due giochi e della pagina QR; le sezioni successive conservano il resoconto della prima implementazione e le sue verifiche storiche.
+
+- Bug Hunter: personaggio rivolto verso la corsa; velocità a scatti ogni 20 s, massimo 16; righe speciali dalla sesta ogni quattro, alternate tra tre ostacoli bassi e soli bug in aria. Coordinate verticali condivise tra simulazione e scena; pool grafico di tre slot per ostacoli, ciascuno con i tre tipi disponibili. Animazione di cattura diretta alla posizione reale del retino.
+- Vite: bug perso dopo la zona di cattura, evento distinto dall'urto, una sola penalità per riga. Le righe successive possono penalizzare anche durante l'invulnerabilità da urto. Fine immediata a zero vite.
+- Abilità automatiche: soglie originali [50, 25, 30, 40] nell'ordine Heisenbug/Regression/Production/Feature. Scudo 8 s, cura o singola cura pronta, rallentamento al 60% per 6 s, punteggio ×2 per 10 s. Timer in tempo attivo, effetti contemporanei, rinnovo senza somma, reset completo. Conteggi fisici, cariche e punti separati. Le soglie restano volutamente adatte a partite lunghe, senza aumentare lo spawn.
+- Are You an AI?: registro di quattro prove con ID stabili e sorteggio di tre senza duplicati. Reset alla prima prova della stessa selezione; nuova partita con nuovo sorteggio. Le finestre si richiudono per 400 ms; caricamento con cinque conferme, scadenza 1.2 s e alternativa senza scadenza. Timer cancellati allo smontaggio. Robot senza bordo tratteggiato e con focus visibile. Calcolo corretto → finale robot; numero errato → percorso umano; input invalido non risolve.
+- Certificato PDF umano/robot: `pdf-lib` 1.17.1 caricato solo alla richiesta, una pagina A4, testo selezionabile, logo ufficiale copiato da `../bacarotech.github.io/static/img/logo.png`. Logo bianco su fondo verde sia nell'HTML sia nel PDF. Nessun backend o dato personale.
+- `/qr`: pagina pubblica raggiungibile dalla home, QR PNG grande con margine bianco, URL pubblico alla home dello stesso dominio; copia link e download. `qrcode` già presente, caricato soltanto nella pagina. Nessuna modifica al QR amministrativo di Bacarodex.
+
+### Verifiche dell'aggiornamento
+
+- `npm run test:bug-hunter`: 13 test, inclusi percorso simulato di dieci minuti, salti alla velocità massima, penalità e abilità.
+- `npm run test:ai`: 5 test su estrazione, ritmo, input matematico e struttura dei PDF.
+- `npm run test:qr`: URL pubblico senza query, credenziali o percorso amministrativo.
+- `npm run check`: zero errori e zero warning Svelte.
+- `npm run build`: riuscita; rimangono gli avvisi preesistenti sul chunk Human e sul tracing Vercel di metadataResolver/supports-color.
+- Browser Chrome, viewport desktop e mobile: `scripts/test-gameplay-and-qr-browser.mjs` verifica QR/download, finestre riaperte, cinque conferme da tastiera, reset, certificato umano, trabocchetto matematico e PDF robot. Verifica anche assenza di sovrapposizione tra titolo e QR.
+- Script browser Bug Hunter: cattura, comandi, pausa, game over, reset e rilascio WebGL; viewport corte verticale/orizzontale e pulizia listener/background verificati. Gli script accettano `TEST_ORIGIN`; `PLAYWRIGHT_MODULE` consente di indicare l'installazione Playwright disponibile.
+- PDF effettivamente scaricati dal browser renderizzati con Poppler e controllati visivamente: pagina singola, logo leggibile, accenti e testo senza tagli.
+- Restano da collaudare su dispositivi fisici: scansione da una fotocamera esterna e gestione del download nei browser iOS/Android. I test mobile usano emulazione Chrome, non certificano Safari iOS.
+
+Nessun deploy, push o modifica ai dati Firebase effettuato.
+
+---
+
 # BacaroTech Game Center — 15 ottobre 2026
 
 ## Obiettivo e base preservata

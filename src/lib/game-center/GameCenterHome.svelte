@@ -5,7 +5,7 @@
 </script>
 
 <div class="center-home">
-  <header class="center-header"><a class="center-brand" href="#/">BacaroTech<span>Game Center</span></a><span class="open-sign">Si gioca tra amici</span></header>
+  <header class="center-header"><a class="center-brand" href="#/">BacaroTech<span>Game Center</span></a><a class="open-sign" href="/qr">Mostra QR · Invita a giocare ↗</a></header>
   <main class="center-main">
     <div class="welcome"><h1 tabindex="-1">Una pausa.<br />Quattro modi di perderla bene.</h1><p>Scegli un gioco, passa il telefono, sfida il buon senso.</p></div>
     <div class="playable">
