@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
+import { AXES } from '../src/lib/games/merge-battle/cards.ts';
 import { resolve } from '../src/lib/games/merge-battle/engine.ts';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -31,7 +32,7 @@ async function finishBattle(page, ids, moves, trial, config) {
   assert.equal(title === 'Pareggio!', expected.winner === null);
   assert.equal(await page.locator('.mb-merge img').count(), 2);
   await page.getByText('Perché questo risultato?', { exact: true }).click();
-  assert.equal(await page.locator('.calculation-grid dd').count(), 8);
+  assert.equal(await page.locator('.comparison tbody tr').count(), config.activeAxes.length);
   await page.getByText('Perché questo risultato?', { exact: true }).click();
   battles++;
 }
@@ -71,13 +72,13 @@ try {
         await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
         await checkScreen(page, 'move1', round === 0 ? `${device}-${mode}-moves` : '');
         assert.equal(await page.locator('.mb-card').count(), 3);
-        assert.equal(await page.locator('.card-values b').count(), 12);
+        assert.equal(await page.locator('.card-values b').count(), activeConfig.activeAxes.length * 3);
         await page.keyboard.press('Tab');
         assert.equal(await page.locator('.mb-card').first().evaluate(node => document.activeElement === node), true);
         const accessibleStats = await page.locator('.mb-card').first().evaluate(node =>
           document.getElementById(node.getAttribute('aria-describedby')).textContent
         );
-        for (const axis of ['Rapidità', 'Solidità', 'Evidenza', 'Adattabilità']) assert.ok(accessibleStats.includes(axis));
+        for (const [index, axis] of AXES.entries()) assert.equal(accessibleStats.includes(axis), activeConfig.activeAxes.includes(index));
         const playerMove = round % 3;
         const opponentMove = mode === 'local' ? (round === 0 ? 0 : (round + 1) % 3) : (round + round) % 3;
         const moves = [activeConfig.assignments[0][playerMove], activeConfig.assignments[1][opponentMove]];

@@ -40,3 +40,18 @@ test('session snapshots survive edits and deactivation in the source config',()=
 test('invalid judges and card IDs cannot resolve',()=>{
  assert.throws(()=>createSession('solo',99));assert.throws(()=>resolve([0,1],['missing',card(1,0)],0));assert.throws(()=>resolve([0,0],[card(0,0),card(0,1)],0));
 });
+
+test('resolution, explanation and session snapshot respect active parameters', () => {
+ const config = structuredClone(DEFAULT_CONFIG);
+ config.activeAxes = [1];
+ const session = createSession('solo', 0, config);
+ config.activeAxes.push(2);
+ assert.deepEqual(session.config.activeAxes, [1]);
+ const result = resolve([0, 1], [card(0, 0), card(1, 1)], 0, session.config);
+ assert.deepEqual(result.scores, [4, 8]);
+ assert.deepEqual(result.contributions, [[0, 4, 0, 0], [0, 8, 0, 0]]);
+ assert.equal(result.winner, 1);
+ assert.equal(result.calculations[0], 'Disattivo la feature con un flag: 2×2 = 4');
+ assert.ok(result.reason.includes('Solidità'));
+ assert.ok(!result.reason.includes('Evidenza'));
+});

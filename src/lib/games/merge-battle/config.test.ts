@@ -19,3 +19,16 @@ test('custom cards use stable IDs and restricted bots/rematches stay enabled',()
  let s=createSession('solo',7,c);assert.throws(()=>input(s,{type:'character',actor:0,value:0}));s=input(s,{type:'character',actor:0,value:11});assert.equal(s.ids[1],9);
  for(const judge of [7,5,7]){assert.equal(s.trial,judge);s=input(s,{type:'ready'});s=input(s,{type:'move',actor:0,value:'my-card'});s=input(s,{type:'finish'});s=input(s,{type:'rematch'});}
 });
+
+test('old v2 configurations default to two axes without altering stored values', () => {
+ const legacy = structuredClone(DEFAULT_CONFIG) as Record<string, unknown>;
+ delete legacy.activeAxes;
+ const migrated = readConfig(legacy);
+ assert.deepEqual(migrated.activeAxes, [0, 1]);
+ assert.deepEqual(migrated.cards, legacy.cards);
+ assert.deepEqual(migrated.weights, legacy.weights);
+ assert.deepEqual(validateConfig({...legacy, activeAxes: [3, 0]}).activeAxes, [0, 3]);
+ for (const activeAxes of [[], [0, 0], [4], [null], 'all', null]) {
+  assert.throws(() => validateConfig({...legacy, activeAxes}));
+ }
+});

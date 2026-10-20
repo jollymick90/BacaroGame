@@ -4,6 +4,7 @@
   import Fighter from './Fighter.svelte';
   import BattleArena from './BattleArena.svelte';
   import ReviewWeights from './ReviewWeights.svelte';
+  import ScoreComparison from './ScoreComparison.svelte';
   import { characters, trials, createSession, input, resolve, roleCards, type Session, type Input, type Mode } from './engine';
   import { AXES } from './cards';
   import { DEFAULT_CONFIG, type MergeConfig } from './config';
@@ -104,9 +105,9 @@
             <li>Gioca una delle tre carte, in segreto.</li>
             <li>Vince chi totalizza più punti. Poi fate il merge!</li>
           </ol>
-          <p>Ogni attributo viene moltiplicato per il peso del maintainer. Si sommano i quattro risultati; a pari punti è pareggio.</p>
-          <p><b>Esempio:</b> Rapidità 4 × peso 3 = 12 punti.</p>
-          <p>Rapidità: agire subito. Solidità: reggere gli errori. Evidenza: verifiche e dati. Adattabilità: gestire i cambiamenti.</p>
+          <p>Ogni attributo viene moltiplicato per il peso del maintainer. Si sommano i risultati dei parametri attivi; a pari punti è pareggio.</p>
+          <p><b>Esempio:</b> {AXES[config.activeAxes[0]]} 4 × peso 3 = 12 punti.</p>
+          <p>{#each config.activeAxes as axis}{AXES[axis]}: {['agire subito', 'reggere gli errori', 'verifiche e dati', 'gestire i cambiamenti'][axis]}. {/each}</p>
           <p>In due, chi non sceglie guarda altrove. Nessun limite di tempo.</p>
         </details>
       </section>
@@ -147,7 +148,7 @@
         <b class="vs-label" aria-hidden="true">VS</b>
       </div>
     </div>
-    <div class="criteria"><h2>Cosa conta in questa sfida</h2><ReviewWeights weights={session.config.weights[session.trial]} /><p>Valore della carta × peso. Vince la somma più alta.</p></div>
+    <div class="criteria"><h2>Cosa conta in questa sfida</h2><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p>Valore della carta × peso. Vince la somma più alta.</p></div>
     <p class="instruction">{session.mode === 'local' ? 'Player 2, guarda altrove: Player 1 sceglie per primo.' : 'Il computer sceglie prima di vedere la tua carta.'}</p>
     <button class="mb-primary" onclick={() => send({ type: 'ready' })}>Scegli la mossa</button>
   {:else if session.phase === 'move1' || session.phase === 'move2'}
@@ -155,10 +156,10 @@
       <Fighter id={session.ids[actor]!} size="small" eager />
       <div><p class="turn-label">{playerName(actor)} · {characters[session.ids[actor]!].short}</p><h1 bind:this={heading} tabindex="-1">La tua mossa?</h1><p class="instruction">Tocca una carta. La scelta è segreta.</p></div>
     </div>
-    <div class="move-scenario"><p>{trials[session.trial].title}</p><ReviewWeights weights={session.config.weights[session.trial]} /></div>
+    <div class="move-scenario"><p>{trials[session.trial].title}</p><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p class="scoring-hint">Ogni valore della carta si moltiplica per il peso qui sopra. Vince il totale più alto.</p></div>
     <div class="mb-hand">
       {#each roleCards(session.config, session.ids[actor]!) as card, index}
-        <MoveCard {card} {index} onplay={() => send({ type: 'move', actor: actor as 0 | 1, value: card.id })} />
+        <MoveCard {card} {index} activeAxes={session.config.activeAxes} onplay={() => send({ type: 'move', actor: actor as 0 | 1, value: card.id })} />
       {/each}
     </div>
   {:else if session.phase === 'handoff'}
@@ -172,6 +173,14 @@
   {:else if session.phase === 'battle' && result}
     <div class="screen-heading"><div><p class="turn-label">{trials[session.trial].place}</p><h1 bind:this={heading} tabindex="-1">La resa dei conti.</h1></div></div>
     <BattleArena ids={session.ids as number[]} moves={session.moves as string[]} config={session.config} trial={session.trial} mode={session.mode} {stage} />
+    {#if stage >= 5}
+      <ScoreComparison
+        cards={session.moves.map(move => session!.config.cards.find(card => card.id === move)!)}
+        weights={session.config.weights[session.trial]}
+        activeAxes={session.config.activeAxes}
+        labels={[playerName(0), playerName(1)]}
+      />
+    {/if}
     <div class="battle-feedback" aria-live="polite">
       {#if stage >= 6}<p>{result.winner === null ? 'Stesso punteggio. Nessuno cede il branch!' : `${playerName(result.winner)} porta a casa la review.`}</p>
         <button class="mb-primary" onclick={() => send({ type: 'finish' })}>Scopri il merge</button>
@@ -204,17 +213,12 @@
       <summary>Perché questo risultato?</summary>
       <p>{trials[session.trial].title}</p>
       <p><b>{trials[session.trial].jury}</b></p>
-      <ReviewWeights weights={session.config.weights[session.trial]} />
-      <div class="calculation-grid">
-        {#each session.ids as id, index}
-          {@const card = session.config.cards.find(candidate => candidate.id === session!.moves[index])!}
-          <div><h3>{playerName(index)} · {characters[id!].short}</h3><p>{card.name}</p>
-            <dl>{#each AXES as axis, position}<div><dt>{axis}</dt><dd>{card.stats[position]} × {session.config.weights[session.trial][position]} = <b>{result.contributions[index][position]}</b></dd></div>{/each}</dl>
-            <p><strong>Totale: {result.scores[index]}</strong></p>
-          </div>
-        {/each}
-      </div>
-      <p>{result.winner === null ? 'Pari punti: nessuno spareggio. Il merge si fa comunque.' : `Vince ${playerName(result.winner)} con ${result.scores[result.winner]} punti: la somma più alta.`}</p>
+      <ScoreComparison
+        cards={session.moves.map(move => session!.config.cards.find(card => card.id === move)!)}
+        weights={session.config.weights[session.trial]}
+        activeAxes={session.config.activeAxes}
+        labels={[playerName(0), playerName(1)]}
+      />
       {#if session.mode === 'solo'}<p>{session.botLine}</p>{/if}
     </details>
     <div class="result-actions"><button class="mb-primary" onclick={() => send({ type: 'rematch' })}>Rivincita!</button><button class="mb-secondary" onclick={() => start(session!.mode)}>Cambia personaggi</button></div>
@@ -299,6 +303,7 @@
   .move-heading .instruction { margin-bottom: 0; }
   .move-scenario { border-top: 2px solid; padding-top: 14px; margin: 12px 0 24px; }
   .move-scenario > p { font-weight: 700; font-size: 15px; margin: 0 0 14px; }
+  .move-scenario > .scoring-hint { font-size: 12px; font-weight: 500; margin: 12px 0 0; }
   .mb-hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 28px 0; }
   .mb-handoff { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 560px; text-align: center; }
   .handoff-icon { display: grid; place-items: center; background: var(--comic-yellow); border: 3px solid; border-radius: 14px; font-size: 90px; line-height: 1; width: 150px; height: 140px; transform: rotate(-8deg); margin-bottom: 28px; box-shadow: 5px 5px 0; }
@@ -323,12 +328,6 @@
   .mb-merge p { font-size: 13px; margin: 0; }
   .result-details { margin: 24px 0; border-bottom: 2px solid; padding-bottom: 8px; }
   .result-details > p { font-size: 14px; }
-  .calculation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 24px; }
-  .calculation-grid h3 { font-size: 16px; margin: 0; }
-  .calculation-grid p { font-size: 13px; overflow-wrap: anywhere; }
-  .calculation-grid dl { font-size: 13px; }
-  .calculation-grid dl > div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid #b4c4bf; padding: 6px 0; }
-  .calculation-grid dd { margin: 0; }
   .result-actions { display: flex; gap: 16px; }
   .mb-exit { display: block; background: none; color: var(--comic-ink); border: 0; text-decoration: underline; text-underline-offset: 4px; font-size: 13px; padding: 14px 0; margin-top: 24px; }
   .mb-exit:hover:not(:disabled) { background: none; }
@@ -366,7 +365,6 @@
     .result-panel { padding: 20px 12px; }
     .mb-scoreboard { gap: 8px; }
     .mb-scoreboard b { font-size: 32px; }
-    .calculation-grid { grid-template-columns: 1fr; gap: 16px; }
     .result-actions { flex-direction: column; gap: 12px; }
     .mb-primary, .mb-secondary { width: 100%; }
   }

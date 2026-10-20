@@ -9,13 +9,13 @@ export function resolve(ids:number[],moves:string[],trial:number,config:MergeCon
  if(ids.length!==2||moves.length!==2||ids[0]===ids[1]||!config.judges.includes(trial)||ids.some(id=>!config.characters.includes(id))||moves.some((key,i)=>!config.assignments[ids[i]].includes(key)))throw Error('Battaglia non valida');
  const cards=moves.map(key=>config.cards.find(c=>c.id===key)!);
  if(cards.some(c=>!c||!c.active))throw Error('Carta non disponibile');
- const weights=config.weights[trial],outcome=compareCards(cards[0],cards[1],weights);
+ const weights=config.weights[trial],outcome=compareCards(cards[0],cards[1],weights,config.activeAxes);
  const sorted=[...ids].sort((a,b)=>a-b);
  const hybrid=merges[sorted.join('-')]??`${characters[sorted[0]].short} × ${characters[sorted[1]].short}`;
- const contributions=cards.map(c=>c.stats.map((n,i)=>n*weights[i]));
+ const contributions=cards.map(c=>c.stats.map((n,i)=>config.activeAxes.includes(i)?n*weights[i]:0));
  const differences=contributions[0].map((n,i)=>Math.abs(n-contributions[1][i]));
  const decisive=AXES.filter((_,i)=>differences[i]===Math.max(...differences)&&differences[i]>0).join(', ');
- const calculations=cards.map((c,i)=>`${c.name}: ${c.stats.map((n,j)=>`${n}×${weights[j]}`).join(' + ')} = ${outcome.scores[i]}`);
+ const calculations=cards.map((c,i)=>`${c.name}: ${config.activeAxes.map(axis=>`${c.stats[axis]}×${weights[axis]}`).join(' + ')} = ${outcome.scores[i]}`);
  const reason=`${calculations.join('. ')}. ${outcome.winner===null?'Pareggio: stesso punteggio, nessuno spareggio.':`Vince ${cards[outcome.winner].name}. Maggiore differenza su: ${decisive}.`}`;
  return {...outcome,contributions,calculations,reason,effect:'stack',gag:`${cards[0].name} contro ${cards[1].name}.`,hybrid,hybridGag:`${characters[sorted[0]].trait} ${characters[sorted[1]].trait} Due competenze nello stesso branch.`};
 }

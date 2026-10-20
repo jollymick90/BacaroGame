@@ -1,5 +1,24 @@
 # Merge Battle — Fumetto da Bacaro
 
+## Aggiornamento: parametri selezionabili e confronto dei punti
+
+Su richiesta successiva al redesign, il motore e la configurazione supportano ora `activeAxes`. Il default è `[0, 1]`: **Rapidità e Solidità**. Evidenza e Adattabilità sono assenti da pesi, carte, aiuto e confronto pubblico, e non influiscono sul totale o sui pareggi finché non vengono abilitate.
+
+In **Admin → Merge Battle → Parametri dello scontro** le checkbox permettono da uno a quattro parametri. Il salvataggio pubblico conserva la selezione; anteprime e partite già iniziate mantengono la propria copia. Simulatore, confronto e controllo del bilanciamento usano gli stessi parametri attivi.
+
+Le vecchie configurazioni v2 senza il campo ricevono il default a due in lettura, senza scritture automatiche. Valori e pesi degli esclusi restano salvati per la riattivazione. Il budget editoriale storico resta di 12 punti complessivi sui quattro valori: non vengono redistribuiti automaticamente. L’editor rende consultabili e modificabili gli esclusi in un dettaglio dedicato. Cambiare i parametri modifica gli esiti: il controllo del bilanciamento serve a valutare le carte con la nuova scelta.
+
+`ScoreComparison.svelte` mostra le carte affiancate: per ogni parametro **valore × peso = punti**, vantaggio della riga e totale. Il totale decide il vincitore; vincere più righe non è una regola di spareggio. Il confronto compare durante la battaglia e si può riaprire nel risultato. I nomi delle mosse identificano entrambe le colonne.
+
+Verifiche dell’aggiornamento: **16/16 test** del motore, validazione, snapshot e API; `npm run check` con **0 errori e 0 warning**; build completata con i soli avvisi Vercel già documentati sotto. La prova `scripts/test-merge-axes-browser.mjs` verifica l’admin (default legacy, minimo un parametro, salvataggio/ricarica, anteprima immutabile, simulatore) e **8 battaglie singolo/due giocatori** con selezioni `[0,1]`, `[1]`, `[1,3]`, `[0,1,2,3]`, a 390 e 320 px. Controllati assenza dei parametri esclusi, punteggi e nessun overflow/errore runtime. Screenshot ispezionati in `/tmp/merge-axes-moves.png`, `/tmp/merge-axes-comparison.png` e `/tmp/merge-axes-admin.png`.
+
+La prova browser usa login solo sugli emulatori demo, con guardia esplicita, e intercetta la configurazione per evitare scritture Firebase. Il test API usa route, validazione, cache e gateway reali con il solo I/O Firebase sostituito in memoria: verifica migrazione senza scritture, roundtrip della selezione, invalidazione della cache, revisione obsoleta e input non autorizzati/invalidi. Nessuna modifica a dati cloud. Review indipendente completata; aggiunti i nomi delle carte nel confronto dopo la segnalazione della revisione. Restano i limiti di verifica su dispositivi fisici e screen reader indicati sotto.
+
+Per ripetere il nuovo browser test con il server locale attivo: `TEST_ORIGIN=http://127.0.0.1:5187 node --experimental-strip-types scripts/test-merge-axes-browser.mjs`, impostando `PLAYWRIGHT_MODULE` se Playwright è disponibile fuori dal progetto.
+
+Le sezioni seguenti documentano il redesign iniziale; l’affermazione storica di motore invariato è superata da questo aggiornamento richiesto.
+
+
 Redesign implementato il 20 ottobre 2026 nell’applicazione reale. Nessun deploy eseguito.
 
 ## Risultato e perimetro

@@ -5,7 +5,7 @@ Una raccolta di piccoli giochi nello stesso progetto SvelteKit + TypeScript + Vi
 - **`/#/` — Game Center**: scegli Bug Hunter, Merge Battle, Bacarodex o Are You an AI?. Bacarodex mostra la disponibilità dei membri registrati; gli altri giochi non richiedono la registrazione. La radice `/` apre la home.
 - **`/#/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
 - **`/#/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
-- **`/#/merge-battle` — Merge Battle**: battaglie comiche single player o 1 vs 1 locale, senza backend.
+- **`/#/merge-battle` — Merge Battle**: battaglie illustrate single player o 1 vs 1 locale. Di default contano solo Rapidità e Solidità. In Admin → Merge Battle → Parametri dello scontro puoi attivare da uno a quattro parametri; quelli esclusi sono nascosti e non danno punti. Il confronto mostra valore × peso e totale delle due carte.
 - **`/#/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli, retino e cuori con quiz. Giocabile senza account; domande configurabili in admin.
 - **`/admin` — area membri Bacarodex**: solo gli account Google della lista autorizzata possono registrare se stessi, scegliere il Pokémon e ritirare la propria partecipazione. Include il QR scaricabile diretto a Bacarodex.
 

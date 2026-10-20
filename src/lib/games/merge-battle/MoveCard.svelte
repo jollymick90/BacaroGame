@@ -1,6 +1,6 @@
 <script lang="ts">
   import { AXES, type Card } from './cards';
-  let { card, index, onplay }: { card: Card; index: number; onplay: () => void } = $props();
+  let { card, index, activeAxes, onplay }: { card: Card; index: number; activeAxes: number[]; onplay: () => void } = $props();
   const componentId = $props.id();
 </script>
 
@@ -9,9 +9,9 @@
     <span class="card-top"><span>Mossa {index + 1}</span><b aria-hidden="true">{card.icon}</b></span>
     <strong class="card-name">{card.name}</strong>
     <span class="card-values" id={`${componentId}-values`}>
-      {#each AXES as axis, position}
+      {#each activeAxes as position}
         <span>
-          <span>{axis}</span>
+          <span>{AXES[position]}</span>
           <span class="meter" aria-hidden="true">
             {#each Array(6) as _, point}<i class:filled={point < card.stats[position]}></i>{/each}
           </span>
