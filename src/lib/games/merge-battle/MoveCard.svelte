@@ -1,16 +1,58 @@
 <script lang="ts">
- import {AXES,type Card} from './cards';
- let {card,accent,role,onplay}:{card:Card;accent:string;role:string;onplay:()=>void}=$props();
+  import { AXES, type Card } from './cards';
+  let { card, index, onplay }: { card: Card; index: number; onplay: () => void } = $props();
+  const componentId = $props.id();
 </script>
-<button class="mb-card" style:--card-accent={accent} onclick={onplay}>
- <span class="card-top"><span>MOSSA</span><span aria-hidden="true">⑂</span></span>
- <strong class="card-name">{card.name}</strong>
- <span class="card-art" aria-hidden="true"><svg viewBox="0 0 240 150"><path d="M25 150V100Q25 75 75 75T120 30V0M215 150V100Q215 75 165 75T120 30"/><circle cx="120" cy="30" r="7"/><circle cx="25" cy="125" r="5"/><circle cx="215" cy="125" r="5"/></svg><span>{card.icon}</span></span>
- <span class="card-role">{role}</span>
- {#if card.description}<span class="card-description">{card.description}</span>{/if}
- <span class="card-values">{#each AXES as axis,i}<span><span>{axis}</span><b>{card.stats[i]}</b></span>{/each}</span>
- <span class="card-bottom"><span>12 PUNTI / 4 ATTRIBUTI</span><strong>Gioca carta ↗</strong></span>
-</button>
+
+<article class="move">
+  <button class="mb-card" onclick={onplay} aria-label={`Gioca: ${card.name}`} aria-describedby={`${componentId}-values`}>
+    <span class="card-top"><span>Mossa {index + 1}</span><b aria-hidden="true">{card.icon}</b></span>
+    <strong class="card-name">{card.name}</strong>
+    <span class="card-values" id={`${componentId}-values`}>
+      {#each AXES as axis, position}
+        <span>
+          <span>{axis}</span>
+          <span class="meter" aria-hidden="true">
+            {#each Array(6) as _, point}<i class:filled={point < card.stats[position]}></i>{/each}
+          </span>
+          <b>{card.stats[position]}</b>
+        </span>
+      {/each}
+    </span>
+    <span class="card-bottom">Gioca questa carta <span aria-hidden="true">↗</span></span>
+  </button>
+  {#if card.description}
+    <details><summary>Dettagli della mossa</summary><p>{card.description}</p></details>
+  {/if}
+</article>
+
 <style>
- .mb-card{--ink:#252d37;display:flex;flex-direction:column;width:100%;min-width:0;position:relative;text-align:left;color:var(--ink);background:#fff9e9;border:3px solid var(--ink);border-radius:18px;padding:12px;box-shadow:0 5px 0 var(--ink),inset 0 0 0 4px #fffdf5;transition:transform .18s,box-shadow .18s;overflow:hidden;font-family:inherit;cursor:pointer}.mb-card:hover{transform:translateY(-5px);box-shadow:0 10px 0 var(--ink);background:#fffdf5}.mb-card:focus-visible{outline:4px solid #6742a6;outline-offset:5px}.card-top{display:flex;justify-content:space-between;align-items:center;font:700 13px var(--arcade-display);letter-spacing:2px;padding:3px 4px 9px}.card-top>span:last-child{font-size:20px;line-height:1}.card-name{display:flex;align-items:center;min-height:66px;font-size:19px;line-height:1.18;letter-spacing:-.5px;padding:4px 5px 12px;overflow-wrap:anywhere}.card-art{height:135px;flex-shrink:0;display:grid;place-items:center;background:var(--card-accent);border:2px solid var(--ink);border-radius:8px;position:relative;isolation:isolate;overflow:hidden}.card-art svg{position:absolute;inset:0;width:100%;height:100%;stroke:var(--ink);stroke-width:2;fill:var(--card-accent);opacity:.3}.card-art>span{font:700 70px monospace;z-index:1;filter:drop-shadow(3px 3px 0 #fff9e9)}.card-role{font:700 13px var(--arcade-display);letter-spacing:.5px;text-transform:uppercase;background:var(--ink);color:#fff9e9;padding:7px 8px;margin:0 5px;border-radius:0 0 5px 5px;align-self:start;max-width:calc(100% - 10px);overflow-wrap:anywhere}.card-description{font-size:14px;line-height:1.5;padding:12px 5px 0;overflow-wrap:anywhere}.card-values{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:auto;padding:16px 0 12px}.card-values>span{display:flex;align-items:center;justify-content:space-between;gap:5px;background:#eee8d6;border:1px solid #b6b5a5;border-radius:5px;padding:6px;font-size:13px}.card-values b{display:grid;place-items:center;min-width:25px;height:27px;border-radius:4px;background:var(--ink);color:#fff9e9;font-size:18px;font-variant-numeric:tabular-nums}.card-bottom{border-top:1px solid #b6b5a5;padding:11px 3px 2px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.card-bottom>span{font:12px var(--arcade-display);letter-spacing:.5px}.card-bottom>strong{font-size:14px}@media(prefers-reduced-motion:reduce){.mb-card{transition:none}.mb-card:hover{transform:none}}@media(max-width:600px){.card-name{min-height:0;padding-bottom:12px}.card-art{height:115px}.card-description{padding-top:10px}}
+  .move { min-width: 0; display: flex; flex-direction: column; }
+  .mb-card { display: flex; flex: 1; flex-direction: column; width: 100%; min-width: 0; border: 3px solid var(--comic-ink); border-radius: 8px; padding: 16px; background: var(--comic-paper); color: var(--comic-ink); text-align: left; box-shadow: 4px 5px 0 var(--comic-ink); transition: transform 150ms, box-shadow 150ms; }
+  .mb-card:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); background: #fffdf8; box-shadow: 5px 9px 0 var(--comic-ink); }
+  .mb-card:active:not(:disabled) { transform: translate(3px, 4px); box-shadow: 1px 1px 0 var(--comic-ink); }
+  .card-top { display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 12px; }
+  .card-top b { display: grid; place-items: center; border: 2px solid; border-radius: 50%; width: 38px; height: 38px; background: var(--comic-yellow); font-size: 25px; line-height: 1; }
+  .card-name { display: block; padding: 16px 0 22px; font: 800 22px/1.15 var(--comic-display); overflow-wrap: anywhere; }
+  .card-values { display: grid; gap: 8px; width: 100%; margin-top: auto; padding-bottom: 16px; }
+  .card-values > span { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+  .card-values > span > span:first-child { width: 80px; flex-shrink: 0; font-weight: 500; }
+  .meter { display: flex; flex: 1; gap: 3px; }
+  .meter i { height: 10px; flex: 1; border: 1px solid #92a7a3; border-radius: 1px; }
+  .meter .filled { background: var(--comic-teal); border-color: var(--comic-teal); }
+  .card-values b { font-size: 16px; width: 12px; text-align: right; }
+  .card-bottom { border-top: 2px solid var(--comic-ink); display: flex; width: 100%; justify-content: space-between; padding-top: 12px; font-size: 14px; }
+  details { margin: 12px 4px 0; font-size: 13px; }
+  summary { cursor: pointer; min-height: 44px; align-content: center; }
+  p { overflow-wrap: anywhere; margin-top: 0; }
+  @media (max-width: 700px) {
+    .mb-card { padding: 13px 16px; }
+    .card-name { font-size: 21px; padding: 8px 0 16px; }
+    .card-values { grid-template-columns: 1fr 1fr; gap: 6px 16px; padding-bottom: 12px; }
+    .card-values > span { justify-content: space-between; }
+    .meter { display: none; }
+    .card-values > span > span:first-child { width: auto; }
+    .card-top b { width: 30px; height: 30px; font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .mb-card { transition: none; } .mb-card:hover:not(:disabled) { transform: none; } }
 </style>

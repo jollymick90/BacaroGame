@@ -63,7 +63,7 @@
 </script>
 
 <svelte:head>{#if route === '#/'}<title>BacaroTech Game Center</title>{/if}</svelte:head>
-<div class="arcade-shell">
+<div class="arcade-shell" class:merge-comic={route === '#/merge-battle'}>
 {#if route !== '#/'}
   <div class="center-return"><a href="#/">← Torna al Game Center</a><span>BacaroTech</span></div>
 {/if}
@@ -79,6 +79,10 @@
 </div>
 
 <style>
+  .merge-comic { background: #fff6e5; color: #102f36; }
+  .merge-comic .center-return { border-color: #a4b8b5; }
+  .merge-comic .center-return span { color: #164e58; }
+  .merge-comic .center-return a:focus-visible { outline: 3px solid #006c86; outline-offset: 4px; }
   .center-return{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:auto;padding:12px 28px;border-bottom:1px solid var(--arcade-border);font-size:13px}
   .center-return a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-underline-offset:4px}.center-return span{font-size:12px;color:var(--arcade-muted)}
   .route-message{max-width:700px;padding:48px 20px;margin:auto}.route-message h1{font-size:32px}

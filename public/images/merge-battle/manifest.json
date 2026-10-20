@@ -1,0 +1,74 @@
+[
+  {
+    "id": 0,
+    "asset": "frontend",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_19-1.png",
+    "evidence": "Browser e componenti UI"
+  },
+  {
+    "id": 1,
+    "asset": "backend",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_21-2.png",
+    "evidence": "Server, cavo e chiave inglese"
+  },
+  {
+    "id": 2,
+    "asset": "full-stack",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_22-3.png",
+    "evidence": "Browser e database collegati"
+  },
+  {
+    "id": 3,
+    "asset": "platform",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_32_06-2.png",
+    "evidence": "Container, Kubernetes e strumenti"
+  },
+  {
+    "id": 4,
+    "asset": "sre",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_23-4.png",
+    "evidence": "Monitor, allarme e ricetrasmittente"
+  },
+  {
+    "id": 5,
+    "asset": "security",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_24-5.png",
+    "evidence": "Scudo e lucchetto"
+  },
+  {
+    "id": 6,
+    "asset": "qa",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_25-6.png",
+    "evidence": "Lente, bug e checklist"
+  },
+  {
+    "id": 7,
+    "asset": "database",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_27-7.png",
+    "evidence": "Database e query SELECT"
+  },
+  {
+    "id": 8,
+    "asset": "data-engineer",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_28-8.png",
+    "evidence": "Tubazione e flusso di blocchi dati"
+  },
+  {
+    "id": 9,
+    "asset": "data-scientist",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_29_29-9.png",
+    "evidence": "Esperimenti, provetta e laptop"
+  },
+  {
+    "id": 10,
+    "asset": "ml-engineer",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_32_04-1.png",
+    "evidence": "Rete neurale, server e cloud"
+  },
+  {
+    "id": 11,
+    "asset": "analytics",
+    "source": "Immagine ChatGPT 20 ott 2026, 18_32_07-3.png",
+    "evidence": "Dashboard e grafici"
+  }
+]
