@@ -95,7 +95,6 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null },
   resolve: { alias: {
     $lib: fileURLToPath(new URL('../src/lib', import.meta.url)),
-    'human-match': fileURLToPath(new URL('../node_modules/@vladmandic/human/src/face/match.ts', import.meta.url)),
   } },
   plugins: [{
     name: 'firebase-test-boundary',
@@ -466,4 +465,41 @@ test('legacy capture and data deletion invalidate the shared member list', async
   await data.DELETE(event('member@example.com', 'DELETE', { includeRegistration: true }));
   assert.notEqual(records.get('bacaroGameConfigurations/members-version').version, afterCapture);
   assert.equal((await cache.cachedMembers()).docs.length, 0);
+});
+
+
+test('MobileFace matching distinguishes small orthogonal vectors instead of false ambiguity', async () => {
+  const game = await server.ssrLoadModule('/src/lib/server/game.ts');
+  const first = registration();
+  first.embedding = Array(256).fill(0);
+  first.embedding[0] = 1;
+  const second = registration('other', true);
+  second.embedding = Array(256).fill(0);
+  second.embedding[2] = 1;
+  await members.POST(event('member@example.com', 'POST', first));
+  await members.POST(event('root@example.com', 'POST', second));
+  assert.equal((await game.matchPublic(first.embedding)).id, 'member');
+  const weakerPhoto = Array(256).fill(0);
+  weakerPhoto[0] = 0.55;
+  weakerPhoto[1] = Math.sqrt(1 - 0.55 ** 2);
+  assert.equal((await game.matchPublic(weakerPhoto)).id, 'member');
+  weakerPhoto[0] = 0.49;
+  weakerPhoto[1] = Math.sqrt(1 - 0.49 ** 2);
+  await assert.rejects(game.matchPublic(weakerPhoto), failure => {
+    assert.equal(failure.status, 422);
+    assert.match(failure.body.message, /soglia: 50/);
+    return true;
+  });
+});
+
+test('truly duplicate registrations remain ambiguous without revealing candidate identities', async () => {
+  const game = await server.ssrLoadModule('/src/lib/server/game.ts');
+  await members.POST(event('member@example.com', 'POST', registration()));
+  await members.POST(event('root@example.com', 'POST', registration('other', true)));
+  await assert.rejects(game.matchPublic(registration().embedding), failure => {
+    assert.equal(failure.status, 422);
+    assert.match(failure.body.message, /stessa persona/);
+    assert.ok(!failure.body.message.includes('member@example.com'));
+    return true;
+  });
 });

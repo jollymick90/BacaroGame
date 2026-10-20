@@ -40,9 +40,11 @@ async function authClient() {
       env.PUBLIC_FIREBASE_USE_EMULATORS === "true" &&
       env.PUBLIC_FIREBASE_PROJECT_ID.startsWith("demo-")
     )
-      connectAuthEmulator(initialized, "http://127.0.0.1:9099", {
-        disableWarnings: true,
-      });
+      connectAuthEmulator(
+        initialized,
+        env.PUBLIC_FIREBASE_AUTH_EMULATOR_URL || "http://127.0.0.1:9099",
+        { disableWarnings: true },
+      );
     // Il token serve solo a creare il cookie di sessione: non va conservato nel browser.
     await setPersistence(initialized, inMemoryPersistence);
   }

@@ -40,26 +40,33 @@ Il riferimento `../bacaro_interviste/svelte-firebase-bacarotechtech-interview` r
 
 ```sh
 npm ci
-cp .env.emulator.example .env
-npm run firebase:up
 npm run dev
 ```
 
-Apri http://localhost:5173 per il Game Center; per registrare membri apri http://localhost:5173/admin e crea un account **locale** dal login. Console Firebase locale: http://localhost:4000 (utenti Authentication e dati Firestore). Non servono credenziali Firebase, Java o Firebase CLI sul computer: sono nel container. Serve Docker con Compose v2.
+`npm run dev` (oppure `npm run dev:local`) prepara gli emulatori Firebase Docker, attende che siano pronti, crea un account locale se non esiste e avvia Vite con il progetto isolato `demo-bacarodex`. Su macOS avvia OrbStack o Docker Desktop se installato. Il primo avvio può richiedere qualche minuto per scaricare le immagini; quelli successivi riutilizzano la cache.
+
+Apri l'indirizzo mostrato da Vite, normalmente **http://127.0.0.1:5173**, e poi **`/admin`**. Account già predisposto:
+
+- Email: **`dev@bacarotech.local`**
+- Password: **`bacarodev123`**
+- Ruolo: **superadmin locale**
+
+Se cambi la password dell’account nella console emulatori, usa quella nuova: lo script conserva gli account esistenti e non reimposta le password.
+
+Premi **Accedi agli emulatori**, scegli Bacarodex e registra la tua foto e il Pokémon. Il database locale è indipendente dal sito pubblico: le registrazioni cloud non vengono importate. Il gioco mostra “Nessun membro…” finché non registri qualcuno in locale. Puoi anche creare altri account dal modulo di sviluppo; solo l'account predisposto ha il ruolo superadmin permanente locale.
+
+Non serve copiare o modificare `.env`: lo script imposta le variabili demo soltanto per il processo di sviluppo e ignora le credenziali cloud. Docker Compose legge esplicitamente `.env.emulator.example`, quindi un `.env` cloud non interferisce con l'avvio. Serve Docker con Compose v2; Java e Firebase CLI sono nel container. Le porte Auth/Firestore/UI sono pubblicate solo su 127.0.0.1. Porte dedicate: Auth **9199**, Firestore **8180**, console **4100**, websocket **9250**, per convivere con emulatori di altri progetti. Console Firebase locale: **http://127.0.0.1:4100**.
 
 ```sh
 npm run firebase:logs  # log del servizio
 npm run firebase:down  # arresto con esportazione dei dati
 npm run firebase:up    # riavvio con importazione dei dati salvati
+npm run dev:cloud      # Vite con le impostazioni .env, senza avvio automatico degli emulatori
 ```
 
-Il servizio usa gli emulatori ufficiali Authentication (9099) e Firestore (8080), con CLI fissata a 15.34.0, Node 22 e Java 21. Il primo build scarica immagini, CLI e binari ufficiali; gli avvii successivi riutilizzano l'immagine. Le porte sono pubblicate solo su 127.0.0.1. L'app SvelteKit gira sull'host e usa gli indirizzi già presenti nella configurazione locale. Non avviare contemporaneamente gli emulatori nativi sulle stesse porte.
+Chiudere Vite lascia gli emulatori attivi. I dati vengono esportati in `.firebase/emulator-data/export` all'arresto con `npm run firebase:down` e reimportati all'avvio. La cartella è ignorata da Git e dal contesto Docker: non cancellarla se vuoi conservare le registrazioni. Un arresto forzato può perdere le ultime modifiche. Dopo il riavvio può essere necessario accedere di nuovo.
 
-I dati vengono esportati in `.firebase/emulator-data/export` al normale arresto e reimportati all'avvio. La cartella è ignorata da Git e dal contesto Docker: può contenere dati biometrici dei volontari. Non cancellarla se vuoi conservare le registrazioni. Un arresto forzato (`kill -9`, crash o spegnimento) può perdere le modifiche successive all'ultima esportazione. Arresta con `npm run firebase:down`. Dopo il riavvio può essere necessario accedere di nuovo: gli account restano salvati, ma i vecchi token possono essere invalidati dall’emulatore.
-
-Il progetto `demo-bacarodex` è locale e non contatta Firebase cloud. La modalità emulatori è abilitata solo in sviluppo. `.env` non viene incorporato nell'immagine Docker. Non usare fotografie di terzi senza consenso.
-
-In alternativa, senza Docker: `npm run emulators` (richiede Node 22 e Java 21 sull'host) e `npm run dev` in un secondo terminale. Questa variante nativa resta senza esportazione automatica.
+`npm run dev:cloud` è il comando esplicito per lavorare sul Firebase reale configurato nel `.env` (con `PUBLIC_FIREBASE_USE_EMULATORS=false`, credenziali Admin e segreto del gioco). Build e deploy continuano a usare le proprie variabili cloud; la configurazione demo e il relativo account non vengono abilitati in produzione.
 
 ```sh
 npm run check
@@ -115,13 +122,15 @@ Ritirare il consenso elimina la registrazione e impedisce nuove scansioni/rispos
 
 QR → pagina `/#/bacarodex` → nuova foto di un membro consenziente → estrazione locale con Human → confronto server → quattro Pokémon → risposta → cattura salvata sul dispositivo. Nessuna identità Firebase anonima o account viene creato per il giocatore.
 
-Il server usa il modulo ufficiale `src/face/match.ts` di Human 3.3.6, incluso tramite alias Vite `human-match`, senza caricare TensorFlow nativo o modelli di inferenza sul server. Il confronto è quello di `human.match.similarity`. Soglia **0.60** e margine **0.08** in `src/lib/server/game.ts`, da calibrare con foto reali; [documentazione Human](https://github.com/vladmandic/human/wiki/Embedding). Similarità non significa probabilità certa.
+Il server confronta i descrittori MobileFace a 256 valori tramite similarità coseno, indipendente dalla loro ampiezza, in `src/lib/server/face-match.ts`. La soglia è **0.50** e il margine minimo tra i primi due candidati è **0.08**. Questo evita la falsa parità introdotta dalla normalizzazione predefinita di `human.match.similarity` su vettori di scala diversa: in un test riproducibile restituiva 1 sia per vettori identici sia per vettori ortogonali. Due registrazioni realmente troppo vicine restano ambigue; il messaggio mostra il distacco senza rivelarne l'identità. Soglia e margine vanno calibrati con foto reali: il punteggio non è una probabilità di identità né una percentuale di accuratezza. Non serve registrarsi nuovamente: i descrittori esistenti restano compatibili.
 
 Il quiz restituisce quattro opzioni e un token AES-256-GCM cifrato/autenticato, valido cinque minuti, che non rivela membro o soluzione. Nome e Pokémon associato sono restituiti solo alla risposta corretta; un tentativo viene rifiutato se il membro è eliminato o registrato di nuovo. Le risposte errate sono ripetibili. I distrattori vengono da PokéAPI, non dagli altri membri, quindi basta un membro.
 
 Le catture sono uniche per ID del membro e salvate in `localStorage` (`bacarodex-guest-captures-v1`): sopravvivono al refresh, ma non si sincronizzano tra telefoni/browser. Pulsante per azzerarle. Non sono conservati foto o descrittori nella collezione. La precedente collezione legata all’account non viene importata nel gioco pubblico.
 
 ## Foto, asset e limiti
+
+Dopo aver scattato o caricato una foto, **Mostra punti del volto** visualizza il riquadro e i landmark FaceMesh effettivamente rilevati. La funzione è disponibile sia nella registrazione sia nel gioco. **Vedi embedding del volto (256 valori)** espande il descrittore numerico dello scatto: i punti mostrano la geometria, mentre il descrittore riassume le caratteristiche usate nel confronto. L'analisi si avvia su richiesta, resta sul dispositivo e non aggiunge punti o fotografie alle richieste al server. Nascondere i punti, rimuovere/cambiare la foto o uscire elimina l'anteprima.
 
 Foto temporanee in RAM, massimo 1024 px prima dell’inferenza. Camera con pulsante, solo video, frontale/posteriore, chiusura al cambio sezione/background; upload alternativo. HTTPS o localhost richiesti per la camera.
 

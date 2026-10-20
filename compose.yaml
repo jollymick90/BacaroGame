@@ -4,10 +4,10 @@ services:
       context: .
       dockerfile: docker/firebase/Dockerfile
     ports:
-      - "127.0.0.1:4000:4000"
-      - "127.0.0.1:8080:8080"
-      - "127.0.0.1:9099:9099"
-      - "127.0.0.1:9150:9150"
+      - "127.0.0.1:4100:4100"
+      - "127.0.0.1:8180:8180"
+      - "127.0.0.1:9199:9199"
+      - "127.0.0.1:9250:9250"
     volumes:
       - ./.firebase/emulator-data:/data
     init: true

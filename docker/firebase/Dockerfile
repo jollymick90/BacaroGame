@@ -13,5 +13,5 @@ COPY docker/firebase/firebase.json ./firebase.json
 COPY firestore.rules ./firestore.rules
 COPY docker/firebase/start.sh /usr/local/bin/start-emulators
 RUN chmod +x /usr/local/bin/start-emulators
-EXPOSE 4000 8080 9099
+EXPOSE 4100 8180 9199 9250
 ENTRYPOINT ["/usr/local/bin/start-emulators"]

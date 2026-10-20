@@ -1,3 +1,35 @@
+## Avvio locale automatico — 20 ottobre 2026
+
+- Causa del blocco locale: flag emulatori abbinato a un project ID cloud, senza chiave Admin e segreto del gioco; Docker non avviato. Il `.env` conteneva anche righe JavaScript non valide per il parser di Docker Compose.
+- `npm run dev` ora esegue `scripts/dev-local.mjs`: verifica Docker, avvia OrbStack/Docker Desktop su macOS se necessario, prepara Firebase con Compose e attende la salute del container. Vite riceve una configurazione demo completa tramite il solo ambiente del processo; il `.env` originale non viene modificato.
+- `scripts/local-environment.mjs` forza progetto `demo-bacarodex`, host loopback dedicati Auth 9199/Firestore 8180/console 4100/websocket 9250 e account `dev@bacarotech.local` / `bacarodev123` come superadmin locale. Il provisioning dell'account usa soltanto Auth Emulator e non sovrascrive account già esistenti. Nessun seed di volti o import dal cloud.
+- Comandi Compose con `--env-file .env.emulator.example`, così non interpretano il `.env` cloud. `npm run dev:cloud` conserva l'avvio Vite basato sul `.env`; build e deploy restano separati dal bootstrap locale.
+- `npm run test:local`: verifica isolamento dalla configurazione cloud, account creato soltanto sul loopback e avvio ripetibile senza sovrascrivere utenti esistenti. Smoke locale con emulatori reali tramite `scripts/test-local-browser.mjs`: login, ruolo superadmin, registrazione abilitata e gioco disponibile. Verificate anche le porte pubblicate dalla console Firebase (9199/8180/9250), coerenti con client e server.
+
+---
+
+## Aggiornamento riconoscimento e anteprima — 20 ottobre 2026
+
+Questa sezione aggiorna il comportamento descritto nel resoconto storico sottostante.
+
+- Segnalazione: “Corrispondenza ambigua” nel gioco dopo una registrazione. Non sono stati letti né modificati documenti biometrici cloud per la diagnosi e non è stata acquisita la foto originale dell'utente.
+- Difetto riprodotto nel matcher precedente con descrittori sintetici a 256 valori: `[1,0,…]` e `[0,1,…]` ottenevano entrambi similarità 1 rispetto al primo vettore, come il vettore identico. Il clamp della funzione generica nascondeva differenze reali.
+- Correzione: similarità coseno in `src/lib/server/face-match.ts`, soglia 0.50 richiesta e margine 0.08 conservato. Vettori identici restano simili, vettori ortogonali non vengono più confusi, la scala positiva del descrittore non influenza il confronto. Le parità reali e le registrazioni duplicate continuano a essere rifiutate; messaggi distinti per foto sotto soglia e ambiguità. Punteggi numerici non equivalgono a probabilità o accuratezza.
+- Nessuna modifica all'estrattore MobileFace, al formato dei 256 valori o alla versione del modello. Le registrazioni esistenti restano leggibili senza migrazioni. Eliminato l'alias Vite del vecchio matcher, ora inutilizzato. Inferenza esclusivamente nel browser, senza TensorFlow nativo lato server.
+- Anteprima: `Photo.svelte` è condiviso da registrazione e gioco. Il nuovo `FaceInspector.svelte` espone un pulsante per il riquadro/landmark effettivi dello scatto e un dettaglio espandibile con i 256 valori. SVG allineato alle dimensioni effettive di inferenza e al contenimento della foto; nessun punto inventato.
+- `face-analysis.ts` copia i risultati prima di rilasciare le reference dell'istanza Human e serializza le richieste al rilevatore condiviso. La pulizia avviene anche quando la rilevazione fallisce. Cambio/rimozione foto e smontaggio invalidano le anteprime in corso. Nessun nuovo endpoint, salvataggio o log dei dati di analisi.
+
+### Verifiche e limiti
+
+- `npm run test:recognition`: 8 test, incluse similarità, soglia 0.50, margine, input invalidi, copia delle coordinate, dimensioni di inferenza, serializzazione e pulizia dopo errore.
+- `npm run test:superadmins`: 28 test su API reali e persistenza Firebase sostituita in memoria. Nuove regressioni: due vettori prima falsamente ambigui, match univoco a 0.55, rifiuto sotto soglia e rifiuto di duplicati autentici senza esporre identità.
+- `scripts/test-face-preview-browser.mjs`: Chrome desktop e viewport mobile; registrazione e gioco con foto e rilevatore sintetici. Verificati overlay, 256 valori, nascondimento, rimozione durante l'analisi e payload che contengono solo i campi già previsti, senza foto o landmark.
+- Modelli Human reali caricati nel browser e analisi ripetuta di un canvas senza volto: entrambe le richieste correttamente rifiutate, con possibilità di riprovare.
+- `npm run check`: nessun errore o warning Svelte. `npm run build`: riuscita; solo i precedenti avvisi di tracing Vercel per metadataResolver/supports-color. Nessuna dipendenza TensorFlow nativa aggiunta al server.
+- Rimane da provare il caso originale dell'utente con nuove foto volontarie sul dispositivo reale: i test sintetici dimostrano il difetto corretto, non garantiscono il riconoscimento di ogni fotografia. L'ambiguità può ancora essere corretta in presenza di registrazioni della stessa persona o di candidati realmente troppo vicini. Nessun deploy eseguito.
+
+---
+
 # Migrazione SvelteKit + Firebase — 15 ottobre 2026
 
 ## Realizzato
