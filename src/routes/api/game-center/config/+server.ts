@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import type { GameCenterConfiguration } from '$lib/game-center/configuration';
-import { DEFAULT_QUESTIONS } from '$lib/games/bug-hunter/questions';
+import { DEFAULT_QUESTION_CONFIG } from '$lib/games/bug-hunter/questions';
 import { getBugHunterConfiguration } from '$lib/server/bug-hunter-configuration';
 import { getMergeConfiguration } from '$lib/server/merge-configuration';
 import { gameConfigured } from '$lib/server/game';
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async event => {
     configured: gameConfigured(),
     mergeBattle: merge.status === 'fulfilled' ? merge.value.config : null,
     mergeError,
-    bugHunter: hunter.status === 'fulfilled' ? hunter.value.config : { questions: DEFAULT_QUESTIONS },
+    bugHunter: hunter.status === 'fulfilled' ? hunter.value.config : DEFAULT_QUESTION_CONFIG,
   };
   return privateJson(configuration);
 };

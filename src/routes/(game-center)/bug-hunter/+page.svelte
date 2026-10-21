@@ -5,4 +5,4 @@
   let { data }: PageProps = $props();
 </script>
 
-<BugHunter questions={data.configuration.bugHunter.questions} />
+<BugHunter questions={data.configuration.bugHunter.questions} runSettings={data.configuration.bugHunter.run} />

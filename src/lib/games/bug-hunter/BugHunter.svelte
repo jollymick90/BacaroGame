@@ -4,6 +4,9 @@
   import { createPresentationClock } from './presentation-clock';
   import { bugs } from './content';
   import CaptureCounter from './CaptureCounter.svelte';
+  import TutorialGuide from './TutorialGuide.svelte';
+  import RunReview from './RunReview.svelte';
+  import { DEFAULT_RUN_SETTINGS, type RunSettings } from './run-settings';
   import HeartQuestionDialog from './HeartQuestion.svelte';
   import { DEFAULT_QUESTIONS, type HeartQuestion } from './questions';
   import type { mountRunner, Snapshot } from './scene';
@@ -15,11 +18,15 @@
   let game: ReturnType<typeof mountRunner> | undefined;
   let ready = $state(false),
     error = $state(false);
-  let { questions = DEFAULT_QUESTIONS }: { questions?: HeartQuestion[] } = $props();
+  let { questions = DEFAULT_QUESTIONS, runSettings = DEFAULT_RUN_SETTINGS }: { questions?: HeartQuestion[]; runSettings?: RunSettings } = $props();
   let questionBag: HeartQuestion[] = [];
   let currentQuestion = $state<HeartQuestion | null>(null);
   let hud = $state<Snapshot>({
     phase: 'intro',
+    finishReason: null,
+    stats: { missed: 0, collisions: 0, healed: 0, powers: [0, 0, 0, 0] },
+    progress: null,
+    tutorial: null,
     health: 3,
     distance: 0,
     caught: 0,
@@ -62,6 +69,7 @@
               error = true;
               currentQuestion = null;
             },
+            runSettings,
           );
           ready = true;
         } catch (e) {
@@ -84,7 +92,7 @@
   $effect(() => {
     if (!error && hud.phase === 'question' && !currentQuestion) {
       if (!questionBag.length) {
-        questionBag = [...questions];
+        questionBag = hud.tutorial ? [questions[0] ?? DEFAULT_QUESTIONS[0]] : [...questions];
         for (let index = questionBag.length - 1; index > 0; index--) {
           const other = Math.floor(Math.random() * (index + 1));
           [questionBag[index], questionBag[other]] = [questionBag[other], questionBag[index]];
@@ -105,6 +113,24 @@
     if (!devFrozen) host.focus({ preventScroll: true });
   }
 
+  function openTutorial() {
+    if (devFrozen) return;
+    currentQuestion = null;
+    questionBag = [];
+    game?.startTutorial();
+  }
+  function exitTutorial() {
+    if (devFrozen) return;
+    currentQuestion = null;
+    questionBag = [];
+    game?.exitTutorial();
+  }
+  function replayTutorial() {
+    if (devFrozen) return;
+    currentQuestion = null;
+    questionBag = [];
+    game?.replayTutorial();
+  }
   function start() {
     if (devFrozen) return;
     currentQuestion = null;
@@ -160,9 +186,11 @@
         <button class="bh-go" disabled={!ready} onclick={start}
           >{ready ? 'Inizia' : 'Prepariamo il retino…'}</button
         >
+        <button class="bh-learn" disabled={!ready} onclick={openTutorial}>Come si gioca</button>
         <div class="bh-instructions">
           <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
           <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
+          <p>Prima percorri {runSettings.distanceGoal} metri, poi cattura altri {runSettings.bugGoal} bug: ti aspetta la review finale.</p>
           <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
           <details><summary>Abilità automatiche</summary><p>5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
         </div>
@@ -175,7 +203,7 @@
             >{'♥'.repeat(hud.health)}{'♡'.repeat(3 - hud.health)}</span
           >
         </div>
-        <button aria-label="Pausa" onclick={() => control('pause')} disabled={hud.phase === 'over' || hud.phase === 'question'}
+        <button aria-label="Pausa" onclick={() => control('pause')} disabled={!!hud.tutorial || hud.phase === 'over' || hud.phase === 'question'}
           >Ⅱ</button
         >
         <CaptureCounter
@@ -186,7 +214,23 @@
           oninspect={() => host.focus({ preventScroll: true })}
         />
       </div>
-      {#if hud.phase === 'running'}
+      {#if hud.progress && !hud.tutorial && hud.phase !== 'over'}
+        <div class="bh-objective" aria-label="Obiettivo della corsa">
+          {#if hud.progress.stage === 'distance'}1/2 · {Math.min(hud.distance, hud.progress.distanceGoal)}/{hud.progress.distanceGoal} m
+          {:else}2/2 · {hud.progress.bugsInFinalStage}/{hud.progress.bugGoal} bug{/if}
+        </div>
+      {/if}
+      {#if hud.tutorial}
+        <TutorialGuide
+          state={hud.tutorial}
+          phase={hud.phase}
+          production={hud.collection[2]}
+          onnext={() => game?.nextTutorial()}
+          onreplay={replayTutorial}
+          onexit={exitTutorial}
+          onplay={start}
+        />
+      {:else if hud.phase === 'running'}
         {#if hud.shield > 0 || hud.slow > 0 || hud.double > 0 || hud.healReady}
           <div class="bh-abilities" aria-label="Abilità attive">
             {#if hud.shield > 0}<p>Scudo {Math.ceil(hud.shield)} s</p>{/if}
@@ -210,13 +254,14 @@
           >
         </div>
       {:else if hud.phase === 'over'}<div class="bh-overlay bh-results">
-          <h1 tabindex="-1">Fine della corsa.</h1>
+          <h1 tabindex="-1">{hud.finishReason === 'goal' ? 'Corsa completata!' : 'Fine della corsa.'}</h1>
           <p>
             <strong>{hud.caught} bug catturati · {hud.score} punti · {hud.distance} metri</strong
             ><br />{hud.caught
               ? 'Almeno questi non scappano. Crediamo.'
               : 'Il retino era nuovo. Facciamo un altro giro?'}
           </p>
+          <RunReview stats={hud.stats} caught={hud.caught} completed={hud.finishReason === 'goal'} />
           <div class="bh-collection">
             {#each bugs as bug, i}<div class:bh-missing={!hud.collection[i]}>
                 <span style:background={`#${bug.color.toString(16)}`} aria-hidden="true"
@@ -236,7 +281,7 @@
     {/if}
   </div>
   {#if currentQuestion && !error}
-    <HeartQuestionDialog question={currentQuestion} clock={presentationClock} frozen={devFrozen}
+    <HeartQuestionDialog tutorial={!!hud.tutorial} question={currentQuestion} clock={presentationClock} frozen={devFrozen}
       ondevfreeze={devAvailable ? toggleDevFreeze : undefined}
       onanswer={(correct) => game?.resolveHeart(correct)}
       oncontinue={() => finishQuestion(true)}
@@ -258,6 +303,15 @@
   .dev-frozen :global(*), .dev-frozen :global(*::before), .dev-frozen :global(*::after), .dev-frozen :global(dialog::backdrop) {
     animation-play-state: paused !important;
     transition: none !important;
+  }
+  .bh-objective {
+    position: absolute;
+    top: 108px;
+    left: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #30264e;
+    text-shadow: 0 1px #fff4d7;
   }
   .bh-abilities {
     position: absolute;
@@ -343,6 +397,16 @@
   .bh-intro p {
     font-size: 20px;
     line-height: 1.4;
+  }
+  .bh-learn {
+    min-height: 48px;
+    margin: 12px 0 0 12px;
+    padding: 10px 16px;
+    border: 2px solid #46328b;
+    border-radius: 12px;
+    background: #fff4d7;
+    color: #46328b;
+    font-weight: 800;
   }
   .bh-go {
     background: var(--arcade-mint);

@@ -24,6 +24,8 @@ Il certificato umano o robot si può scaricare come PDF A4 con il logo ufficiale
 
 ## Bug Hunter
 
+La corsa ha due obiettivi consecutivi: prima **1.000 metri**, poi **20 bug aggiuntivi**. Raggiungendoli si conclude con la review finale; esaurire le vite termina prima e mostra comunque la review. I valori predefiniti sono modificabili in **Admin → Bug Hunter → Obiettivi della corsa** e salvati nel documento di configurazione già esistente. Il personaggio è il polipo Bacaro 3D, con occhiali, tentacoli, retino e barattolo.
+
 Tre vite: ogni bug mancato o urto costa una vita, con un massimo di una penalità per riga. Dopo un urto, due secondi di protezione dagli altri ostacoli; i bug persi nelle righe successive continuano a costare vite. Corri verso gli insetti, cambia corsia e salta quelli in aria o le barriere che occupano tutte le corsie. La velocità aumenta ogni 20 secondi attivi di 2 a partire da 8, senza limite massimo; pausa, quiz e background congelano la simulazione. Oltre velocità 16 le nuove righe sono più distanziate per mantenere leggibile il percorso.
 
 Un cuore lampeggiante compare dopo le prime quattro righe e poi ogni sei righe, senza ostacoli. Se hai meno di tre vite, raccoglierlo mette in pausa la corsa e apre una domanda semplice a tre risposte, senza timer. Una risposta corretta recupera una vita (massimo tre); errore, salto della domanda o cuore ignorato non tolgono vite. Dopo ogni risposta, giusta o sbagliata, il messaggio scompare gradualmente e un conto alla rovescia di tre secondi riavvia la corsa automaticamente; Escape o “Resta in pausa” interrompono la ripresa automatica. Passare in background durante il conto alla rovescia lascia il gioco in pausa. A vite piene il cuore non interrompe il gioco. Il lampeggio lento rispetta la preferenza di movimento ridotto.
@@ -33,6 +35,10 @@ In **Admin → Bug Hunter** puoi modificare le 20 domande iniziali, aggiungerne 
 Il riepilogo delle catture mostra solo la specie appena presa e si chiude insieme al volo verso il barattolo (circa 1,1 secondi); poi resta una piccola icona a forma di barattolo. Toccandola si aprono o chiudono i dettagli con conteggi e cariche delle abilità.
 
 Le abilità si attivano automaticamente: 5 Heisenbug attraversano gli ostacoli per 8 s, 3 Regression recuperano una vita (massimo 3, oppure una cura pronta), 3 Production rallentano il mondo al 60% per 6 s, 4 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie ridotte rendono le abilità disponibili più spesso durante la corsa. Nessun account necessario per giocare.
+
+### Come si gioca
+
+Dall'intro di Bug Hunter apri **Come si gioca** per un tutorial in cinque passaggi nella scena 3D reale: il tuo vero lavoro da developer, un bug lasciato scappare, un urto con caffè/monitor/tastiere, tre Production che attivano il rallentamento e il quiz del cuore per recuperare una vita. Le dimostrazioni sono automatiche e ripetibili con **Rivedi**; **Avanti** si abilita dopo la dimostrazione. Nell'ultimo passaggio rispondi al quiz: una risposta sbagliata non penalizza e permette di riprovare. La risposta corretta recupera una vita e abilita **Gioca**. Puoi uscire in qualunque momento. La partita successiva riparte con tre vite, zero catture e nessun potere della demo.
 
 ### Freeze locale per lo sviluppo
 

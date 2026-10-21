@@ -1,7 +1,7 @@
 import { GAME_COLLECTIONS } from '$lib/firebase/collections';
 import { firebaseConfigured } from '$lib/firebase/firebase-admin.server';
 import { gameDocument } from '$lib/firebase/game-collections.server';
-import { DEFAULT_QUESTIONS, validateQuestionConfig } from '$lib/games/bug-hunter/questions';
+import { DEFAULT_QUESTION_CONFIG, validateQuestionConfig } from '$lib/games/bug-hunter/questions';
 import { createTtlCache } from './ttl-cache';
 import { withConfigurationTimeout } from './configuration-timeout';
 
@@ -17,7 +17,7 @@ export function readRevision(value: unknown): number {
 }
 
 export async function readBugHunterConfiguration() {
-  const defaults = { config: { questions: DEFAULT_QUESTIONS }, revision: 0, persisted: false };
+  const defaults = { config: validateQuestionConfig(DEFAULT_QUESTION_CONFIG), revision: 0, persisted: false };
   if (!firebaseConfigured()) {
     return defaults;
   }

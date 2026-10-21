@@ -95,7 +95,7 @@ test('ten minutes of generated route keep increasing speed with bounded rows', (
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  const r = new Runner(rng);
+  const r = new Runner(rng, null);
   r.start();
   for (let i = 0; i < 12000; i++) {
     // Hold the safe lane until the obstacle plane has passed, even after pickup.
@@ -113,4 +113,19 @@ test('ten minutes of generated route keep increasing speed with bounded rows', (
   assert.ok(speedWithoutSlowdown >= 66);
   assert.equal(r.rows.length, 8);
   assert.ok(r.caught > 200);
+});
+
+test('missing a bug after hitting its row counts both events with one life penalty', () => {
+  const r = new Runner(() => 0.5);
+  r.start();
+  const row = r.rows[0];
+  row.lane = 1;
+  row.z = 0;
+  row.obstacles = [{ lane: 0, kind: 0, hit: false }];
+  r.update(0.01);
+  row.z = 1.5;
+  r.update(0.01);
+  assert.equal(r.health, 2);
+  assert.equal(r.stats.collisions, 1);
+  assert.equal(r.stats.missed, 1);
 });

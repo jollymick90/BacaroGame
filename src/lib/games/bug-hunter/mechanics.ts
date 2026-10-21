@@ -1,3 +1,5 @@
+import { DEFAULT_RUN_SETTINGS, type RunSettings } from './run-settings.ts';
+
 // Stationary runner, approaching world; all timers use active simulation time.
 export const LANE = 2.5;
 export const GAP = 23;
@@ -59,8 +61,23 @@ export type RunnerEvent =
   | { type: 'ability'; kind: number }
   | { type: 'speed'; speed: number };
 
+export type RunStats = {
+  missed: number;
+  collisions: number;
+  healed: number;
+  powers: number[];
+};
+export type RunProgress = RunSettings & {
+  stage: 'distance' | 'bugs' | 'complete';
+  bugsInFinalStage: number;
+};
+
 export class Runner {
   phase: Phase = 'intro';
+  finishReason: 'lives' | 'goal' | null = null;
+  stats: RunStats = { missed: 0, collisions: 0, healed: 0, powers: [0, 0, 0, 0] };
+  private runSettings: RunSettings | null;
+  private checkpointCaught: number | null = null;
   health = 3;
   distance = 0;
   time = 0;
@@ -83,11 +100,26 @@ export class Runner {
   rng: () => number;
   onEvent: (event: RunnerEvent) => void = () => {};
 
-  constructor(rng: () => number = Math.random) {
+  constructor(rng: () => number = Math.random, settings: RunSettings | null = DEFAULT_RUN_SETTINGS) {
     this.rng = rng;
+    this.runSettings = settings ? { ...settings } : null;
     this.reset();
   }
+  get progress(): RunProgress | null {
+    if (!this.runSettings) return null;
+    let stage: RunProgress['stage'] = 'distance';
+    if (this.checkpointCaught !== null) stage = 'bugs';
+    if (this.finishReason === 'goal') stage = 'complete';
+    return {
+      ...this.runSettings,
+      stage,
+      bugsInFinalStage: this.checkpointCaught === null ? 0 : this.caught - this.checkpointCaught,
+    };
+  }
   reset() {
+    this.finishReason = null;
+    this.checkpointCaught = null;
+    this.stats = { missed: 0, collisions: 0, healed: 0, powers: [0, 0, 0, 0] };
     this.health = 3;
     this.distance = 0;
     this.time = 0;
@@ -108,7 +140,8 @@ export class Runner {
     this.speed = 8;
     this.rows = Array.from({ length: 8 }, (_, index) => makeRow(index, this.rng));
   }
-  start() {
+  start(settings: RunSettings | null = this.runSettings) {
+    this.runSettings = settings ? { ...settings } : null;
     this.reset();
     this.phase = 'running';
   }
@@ -120,7 +153,11 @@ export class Runner {
   }
   resolveHeart(correct: boolean) {
     if (this.phase !== 'question') return false;
-    if (correct) this.health = Math.min(3, this.health + 1);
+    if (correct) {
+      const recovered = Math.min(1, 3 - this.health);
+      this.health += recovered;
+      this.stats.healed += recovered;
+    }
     // Stay paused for feedback; the UI resumes after its countdown or Continue.
     this.phase = 'paused';
     return true;
@@ -134,11 +171,14 @@ export class Runner {
   loseLife(reason: 'hit' | 'miss', row?: Row) {
     if (this.phase !== 'running' || row?.penalized) return;
     if (row) row.penalized = true;
+    if (reason === 'hit') this.stats.collisions++;
     this.health--;
     if (this.health === 0) {
       this.phase = 'over';
+      this.finishReason = 'lives';
     } else if (this.healReady) {
       this.health++;
+      this.stats.healed++;
       this.healReady = false;
     }
     this.onEvent({ type: reason });
@@ -154,10 +194,13 @@ export class Runner {
     this.charges[kind]++;
     if (this.charges[kind] < ABILITY_THRESHOLDS[kind]) return;
     this.charges[kind] = 0;
+    this.stats.powers[kind]++;
     if (kind === 0) this.shield = 8;
     if (kind === 1) {
-      if (this.health < 3) this.health++;
-      else this.healReady = true;
+      if (this.health < 3) {
+        this.health++;
+        this.stats.healed++;
+      } else this.healReady = true;
     }
     if (kind === 2) this.slow = 6;
     if (kind === 3) this.double = 10;
@@ -229,7 +272,10 @@ export class Runner {
       if (this.phase !== 'running') break;
       if (row.z > 1.4 && !row.caught && !row.missed) {
         row.missed = true;
-        if (!row.heart) this.loseLife('miss', row);
+        if (!row.heart) {
+          this.stats.missed++;
+          this.loseLife('miss', row);
+        }
       }
       if (this.phase !== 'running') break;
       if (row.z > 8) {
@@ -238,6 +284,15 @@ export class Runner {
         const spacing = GAP * Math.max(1, baseSpeed / 16);
         next.z = Math.min(-12, ...this.rows.map((candidate) => candidate.z)) - spacing;
         Object.assign(row, next);
+      }
+    }
+    if (this.phase === 'running' && this.runSettings) {
+      if (this.checkpointCaught === null && this.distance >= this.runSettings.distanceGoal) {
+        this.checkpointCaught = this.caught;
+      }
+      if (this.checkpointCaught !== null && this.caught - this.checkpointCaught >= this.runSettings.bugGoal) {
+        this.phase = 'over';
+        this.finishReason = 'goal';
       }
     }
   }

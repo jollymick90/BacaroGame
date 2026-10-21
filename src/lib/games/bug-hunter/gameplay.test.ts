@@ -220,3 +220,47 @@ test('abilities unlock after 5 Heisenbug, 3 Regression, 3 Production and 4 Featu
     assert.equal(game.charges[kind], 0);
   }
 });
+
+test('a normal run ends after its distance checkpoint and additional bug goal', () => {
+  const game = new Runner(() => 0.5, { distanceGoal: 100, bugGoal: 3 });
+  game.start();
+  game.rows = [];
+  game.distance = 99.9;
+  game.caught = 7;
+  game.update(0.05);
+  assert.equal(game.progress?.stage, 'bugs');
+  assert.equal(game.progress?.bugsInFinalStage, 0);
+  capture(game, 0);
+  capture(game, 0);
+  assert.equal(game.phase, 'running');
+  capture(game, 0);
+  assert.equal(game.phase, 'over');
+  assert.equal(game.finishReason, 'goal');
+  const finalTime = game.time;
+  game.update(10);
+  assert.equal(game.time, finalTime);
+  game.start();
+  assert.equal(game.finishReason, null);
+  assert.equal(game.progress?.stage, 'distance');
+  assert.equal(game.progress?.bugsInFinalStage, 0);
+});
+
+test('review statistics track real mistakes, powers and recovery and reset each game', () => {
+  const game = runner();
+  const missed = makeRow(0);
+  missed.lane = 1;
+  missed.z = 2;
+  game.rows = [missed];
+  game.update(0.01);
+  game.hit();
+  assert.equal(game.stats.missed, 1);
+  assert.equal(game.stats.collisions, 1);
+  game.phase = 'question';
+  game.resolveHeart(true);
+  assert.equal(game.stats.healed, 1);
+  game.resume();
+  for (let index = 0; index < 3; index++) capture(game, 2);
+  assert.equal(game.stats.powers[2], 1);
+  game.start();
+  assert.deepEqual(game.stats, { missed: 0, collisions: 0, healed: 0, powers: [0, 0, 0, 0] });
+});

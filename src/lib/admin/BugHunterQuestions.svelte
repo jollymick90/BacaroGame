@@ -3,6 +3,8 @@
   import { onMount, tick } from 'svelte';
   import { DEFAULT_QUESTIONS, validateQuestionConfig, type QuestionConfig } from '$lib/games/bug-hunter/questions';
 
+  import { RUN_SETTINGS_LIMITS } from '$lib/games/bug-hunter/run-settings';
+
   let draft = $state<QuestionConfig>(validateQuestionConfig({ questions: DEFAULT_QUESTIONS }));
   let revision = $state(0);
   let saved = $state('');
@@ -39,8 +41,8 @@
       saved = JSON.stringify(loaded);
       expandedId = loaded.questions[0].id;
       status = data.persisted
-        ? 'Domande pubblicate caricate.'
-        : '20 domande predefinite. Saranno pubblicate solo quando premi Salva domande.';
+        ? 'Configurazione pubblicata caricata.'
+        : '20 domande predefinite. Saranno pubblicate solo quando premi Salva configurazione.';
     } catch (error) {
       failure = error instanceof Error ? error.message : 'Caricamento delle domande non riuscito.';
     } finally {
@@ -69,7 +71,7 @@
       revision = data.revision;
       saved = JSON.stringify(published);
       void invalidate('game-center:configuration');
-      status = 'Domande salvate. Saranno usate alle prossime aperture di Bug Hunter.';
+      status = 'Configurazione salvata. Saranno usate alle prossime aperture di Bug Hunter.';
     } catch (error) {
       failure = error instanceof Error ? error.message : 'Salvataggio non riuscito. Le modifiche sono conservate.';
     } finally {
@@ -109,13 +111,21 @@
 </script>
 
 <section class="question-bank" aria-labelledby="question-bank-title">
-  <h2 id="question-bank-title">Domande dei cuori</h2>
+  <h2 id="question-bank-title">Bug Hunter: corsa e domande</h2>
   <p>Quando un giocatore raccoglie un cuore, una risposta corretta gli restituisce una vita. Usa domande semplici di informatica, con una sola risposta corretta.</p>
   <p class="count">{draft.questions.length} / 100 domande · tre risposte per domanda</p>
   {#if loading}<p role="status">Caricamento delle domande…</p>{/if}
 
   <fieldset class="editor" disabled={loading || saving || !saved}>
     <legend class="visually-hidden">Modifica le domande di Bug Hunter</legend>
+    <div class="fields run-settings">
+      <h3>Obiettivi della corsa</h3>
+      <p>Prima raggiungi la distanza, poi catturi il numero di bug aggiuntivi indicato.</p>
+      <label for="run-distance-goal">Distanza obiettivo (metri)</label>
+      <input id="run-distance-goal" type="number" bind:value={draft.run.distanceGoal} min={RUN_SETTINGS_LIMITS.distanceGoal.minimum} max={RUN_SETTINGS_LIMITS.distanceGoal.maximum} step="1" required />
+      <label for="run-bug-goal">Bug aggiuntivi dopo la distanza</label>
+      <input id="run-bug-goal" type="number" bind:value={draft.run.bugGoal} min={RUN_SETTINGS_LIMITS.bugGoal.minimum} max={RUN_SETTINGS_LIMITS.bugGoal.maximum} step="1" required />
+    </div>
     {#each draft.questions as question, index (question.id)}
       <details class="question" open={question.id === expandedId}>
         <summary>
@@ -153,7 +163,7 @@
     {#if failure}<p class="error" role="alert">{failure}</p>{/if}
     {#if validation && saved}<p class="error" role="status">{validation}</p>{/if}
     <div class="actions">
-      <button type="button" disabled={loading || saving || !saved || !!validation || (!dirty && revision > 0)} onclick={save}>{saving ? 'Salvataggio…' : 'Salva domande'}</button>
+      <button type="button" disabled={loading || saving || !saved || !!validation || (!dirty && revision > 0)} onclick={save}>{saving ? 'Salvataggio…' : 'Salva configurazione'}</button>
       <button type="button" class="secondary" disabled={loading || saving} onclick={reload}>Ricarica domande pubblicate</button>
     </div>
     {#if confirmReload}

@@ -1,3 +1,5 @@
+import { DEFAULT_RUN_SETTINGS, validateRunSettings, type RunSettings } from './run-settings.ts';
+
 export type HeartQuestion = {
   id: string;
   prompt: string;
@@ -6,7 +8,7 @@ export type HeartQuestion = {
   explanation: string;
 };
 
-export type QuestionConfig = { questions: HeartQuestion[] };
+export type QuestionConfig = { questions: HeartQuestion[]; run: RunSettings };
 
 export const DEFAULT_QUESTIONS: HeartQuestion[] = [
   {
@@ -195,5 +197,10 @@ export function validateQuestionConfig(value: unknown): QuestionConfig {
     }
     return { id, prompt, answers: [answers[0], answers[1], answers[2]], correctIndex, explanation };
   });
-  return { questions };
+  const run = Object.hasOwn(value, 'run')
+    ? validateRunSettings(value.run)
+    : { ...DEFAULT_RUN_SETTINGS };
+  return { questions, run };
 }
+
+export const DEFAULT_QUESTION_CONFIG: QuestionConfig = validateQuestionConfig({ questions: DEFAULT_QUESTIONS });

@@ -3,13 +3,14 @@
   import { createPresentationClock, type PresentationClock, type PresentationTimer } from './presentation-clock';
   import type { HeartQuestion } from './questions';
 
-  let { question, onanswer, oncontinue, onskip, clock = createPresentationClock(), frozen = false, ondevfreeze } = $props<{
+  let { question, onanswer, oncontinue, onskip, clock = createPresentationClock(), frozen = false, tutorial = false, ondevfreeze } = $props<{
     question: HeartQuestion;
     onanswer: (correct: boolean) => void;
     oncontinue: () => void;
     onskip: () => void;
     clock?: PresentationClock;
     frozen?: boolean;
+    tutorial?: boolean;
     ondevfreeze?: () => void;
   }>();
   let dialog: HTMLDialogElement;
@@ -85,7 +86,7 @@
       <p>{question.explanation}</p>
     </div>
     <div class="countdown">
-      <p id="heart-countdown" role="status">La corsa riparte tra <strong>{countdown}</strong></p>
+      <p id="heart-countdown" role="status">{tutorial ? 'Torni al tutorial tra' : 'La corsa riparte tra'} <strong>{countdown}</strong></p>
       <button class="skip" onclick={skip}>Resta in pausa</button>
     </div>
   {:else}

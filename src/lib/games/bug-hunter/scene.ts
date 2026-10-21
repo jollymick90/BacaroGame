@@ -1,11 +1,18 @@
 import * as T from 'three';
 import { isLocalRunnerDevelopment } from './dev-mode';
-import { Runner, LANE, type Phase } from './mechanics';
-import { hunter, insect, obstacle, sphere, heartPickup } from './models';
+import { RunnerTutorial, type TutorialSnapshot } from './tutorial';
+import { Runner, LANE, type Phase, type RunStats, type RunProgress } from './mechanics';
+import { insect, obstacle, sphere, heartPickup } from './models';
 import { bugs } from './content';
 import { createVeniceEnvironment } from './venice-environment';
+import { octopusHunter } from './octopus-hunter';
+import { DEFAULT_RUN_SETTINGS, type RunSettings } from './run-settings';
 export type Snapshot = {
   phase: Phase;
+  finishReason: 'lives' | 'goal' | null;
+  stats: RunStats;
+  progress: RunProgress | null;
+  tutorial: TutorialSnapshot | null;
   health: number;
   distance: number;
   caught: number;
@@ -23,8 +30,14 @@ export type Snapshot = {
 };
 // Scene/camera/hemisphere setup and scrolling-world architecture adapted from
 // gift-secret-santa/.../starship-run/game.ts. Lifecycle, pools and input scoped here.
-export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, onError: () => void) {
-  const engine = new Runner();
+export function mountRunner(
+  host: HTMLElement,
+  output: (s: Snapshot) => void,
+  onError: () => void,
+  runSettings: RunSettings = DEFAULT_RUN_SETTINGS,
+) {
+  const engine = new Runner(Math.random, runSettings);
+  let tutorial: RunnerTutorial | null = null;
   let devFrozen = false;
   let devBackgrounded = false;
   const scene = new T.Scene();
@@ -51,7 +64,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   sun.shadow.camera.top = 12;
   sun.shadow.camera.bottom = -10;
   scene.add(sun);
-  const player = hunter();
+  const player = octopusHunter();
   scene.add(player.root);
   const environment = createVeniceEnvironment();
   scene.add(environment.root);
@@ -101,6 +114,10 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   function emit() {
     output({
       phase: engine.phase,
+      finishReason: engine.finishReason,
+      progress: engine.progress,
+      stats: { ...engine.stats, powers: [...engine.stats.powers] },
+      tutorial: tutorial?.snapshot() ?? null,
       health: engine.health,
       distance: Math.floor(engine.distance),
       caught: engine.caught,
@@ -118,6 +135,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     });
   }
   engine.onEvent = (event) => {
+    tutorial?.onEvent(event);
     messageTone = 'neutral';
     if (event.type === 'capture') {
       messageTone = 'positive';
@@ -164,7 +182,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   window.addEventListener('resize', resize);
   resize();
   function action(type: 'left' | 'right' | 'jump' | 'pause') {
-    if (devFrozen) return;
+    if (devFrozen || tutorial) return;
     if (type === 'pause') {
       if (engine.phase === 'running') engine.pause();
       else if (engine.phase === 'paused' && !document.hidden) engine.resume();
@@ -260,6 +278,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     const running = engine.phase === 'running';
     if (running) {
       engine.update(dt);
+      tutorial?.update();
       elapsed += dt;
       capture = Math.max(0, capture - dt / 1.1);
       impact = Math.max(0, impact - dt);
@@ -269,9 +288,9 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       tiles[i].position.z = 6 - i * 16 + (engine.distance % 16);
     environment.update(engine.distance, elapsed, reduced);
     player.root.position.x = engine.x;
-    player.animate(elapsed, engine.y, capture, impact > 0, engine.phase === 'over', reduced);
+    player.animate(elapsed, engine.y, capture, impact > 0, engine.finishReason === 'lives', reduced);
     player.root.visible =
-      engine.invulnerable <= 0 || reduced || Math.floor(engine.time * 8) % 2 === 0;
+      (!!tutorial && engine.phase === 'paused') || engine.invulnerable <= 0 || reduced || Math.floor(engine.time * 8) % 2 === 0;
     for (let i = 0; i < views.length; i++) {
       const row = engine.rows[i],
         v = views[i];
@@ -381,7 +400,36 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     renderer.domElement.remove();
     scene.clear();
   }
+  function resetTutorialVisuals() {
+    capture = 0;
+    impact = 0;
+    message = '';
+    last = 0;
+    emit();
+  }
   return {
+    startTutorial() {
+      if (devFrozen || disposed) return;
+      tutorial = new RunnerTutorial(engine);
+      resetTutorialVisuals();
+    },
+    nextTutorial() {
+      if (devFrozen || !tutorial) return;
+      tutorial.next();
+      resetTutorialVisuals();
+    },
+    replayTutorial() {
+      if (devFrozen || !tutorial) return;
+      tutorial.replay();
+      resetTutorialVisuals();
+    },
+    exitTutorial() {
+      if (devFrozen) return;
+      tutorial = null;
+      engine.reset();
+      engine.phase = 'intro';
+      resetTutorialVisuals();
+    },
     setDevFrozen(value: boolean) {
       if (!isLocalRunnerDevelopment() || disposed || devFrozen === value) return;
       devFrozen = value;
@@ -401,7 +449,8 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     },
     start() {
       if (devFrozen) return;
-      engine.start();
+      tutorial = null;
+      engine.start(runSettings);
       capture = 0;
       impact = 0;
       messageTone = 'neutral';
@@ -415,6 +464,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       if (devFrozen) return false;
       const resolved = engine.resolveHeart(correct);
       if (resolved) {
+        tutorial?.resolveHeart(correct);
         messageTone = correct ? 'positive' : 'neutral';
         message = correct ? 'Risposta giusta: una vita recuperata ♥' : 'Nessuna vita persa. Il prossimo cuore ti aspetta!';
         messageUntil = engine.time + 3;

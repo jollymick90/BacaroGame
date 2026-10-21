@@ -60,3 +60,22 @@ test('accepts the bank boundaries and every answer position', () => {
   const questions = Array.from({ length: 100 }, (_, index) => ({ ...config().questions[0], id: `q-${index}` }));
   assert.equal(validateQuestionConfig({ questions }).questions.length, 100);
 });
+
+
+test('normalizes legacy banks with independent default run settings', () => {
+  const input = config();
+  const parsed = validateQuestionConfig(input);
+  assert.deepEqual(parsed.run, { distanceGoal: 1000, bugGoal: 20 });
+  parsed.run.bugGoal = 5;
+  assert.equal(validateQuestionConfig(input).run.bugGoal, 20);
+  assert.equal('run' in input, false);
+});
+
+test('accepts explicit run boundaries and rejects invalid run settings', () => {
+  for (const run of [{ distanceGoal: 100, bugGoal: 1 }, { distanceGoal: 10000, bugGoal: 100 }]) {
+    assert.deepEqual(validateQuestionConfig({ ...config(), run }).run, run);
+  }
+  for (const run of [null, [], {}, { distanceGoal: 1000 }, { distanceGoal: 99, bugGoal: 20 }, { distanceGoal: 10001, bugGoal: 20 }, { distanceGoal: 1000, bugGoal: 0 }, { distanceGoal: 1000, bugGoal: 101 }, { distanceGoal: 100.5, bugGoal: 20 }, { distanceGoal: 1000, bugGoal: 1.5 }, { distanceGoal: '1000', bugGoal: 20 }, { distanceGoal: NaN, bugGoal: 20 }, { distanceGoal: Infinity, bugGoal: 20 }]) {
+    assert.throws(() => validateQuestionConfig({ ...config(), run }));
+  }
+});
