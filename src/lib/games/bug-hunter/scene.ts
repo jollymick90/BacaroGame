@@ -1,8 +1,8 @@
 import * as T from 'three';
 import { Runner, LANE, type Phase } from './mechanics';
 import { hunter, insect, obstacle, sphere, heartPickup } from './models';
-import { createBox as box } from './primitives';
 import { bugs } from './content';
+import { createVeniceEnvironment } from './venice-environment';
 export type Snapshot = {
   phase: Phase;
   health: number;
@@ -24,8 +24,8 @@ export type Snapshot = {
 export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, onError: () => void) {
   const engine = new Runner();
   const scene = new T.Scene();
-  scene.background = new T.Color(0x9fe5ed);
-  scene.fog = new T.Fog(0x9fe5ed, 35, 130);
+  scene.background = new T.Color(0xb8dde0);
+  scene.fog = new T.Fog(0xb8dde0, 55, 155);
   const renderer = new T.WebGLRenderer({
     antialias: true,
     alpha: false,
@@ -37,7 +37,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   const camera = new T.PerspectiveCamera(58, 1, 0.1, 180);
   camera.position.set(0, 5.8, 9);
   camera.lookAt(0, 1, -14);
-  scene.add(new T.HemisphereLight(0xfff4d7, 0x8e91ca, 2.4));
+  scene.add(new T.HemisphereLight(0xfff4d7, 0x538b89, 2.4));
   const sun = new T.DirectionalLight(0xffe7c2, 2.5);
   sun.position.set(-8, 14, 8);
   sun.castShadow = true;
@@ -49,26 +49,14 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   scene.add(sun);
   const player = hunter();
   scene.add(player.root);
+  const environment = createVeniceEnvironment();
+  scene.add(environment.root);
   const tiles: T.Group[] = [];
   for (let i = 0; i < 10; i++) {
-    const tile = new T.Group();
+    const tile = environment.createTrackTile();
     tile.position.z = 6 - i * 16;
-    tile.add(box(8, 0.2, 16, 0xffd6b1, 0, -0.14, 0));
-    for (const x of [-1.25, 1.25]) tile.add(box(0.055, 0.025, 12, 0xfff8de, x, 0, 0));
-    for (const x of [-4.3, 4.3]) tile.add(box(0.5, 0.4, 16, 0x8d80cf, x, 0, 0));
     scene.add(tile);
     tiles.push(tile);
-  }
-  const buildings: T.Group[] = [];
-  for (let i = 0; i < 18; i++) {
-    const b = new T.Group();
-    const side = i % 2 ? 1 : -1;
-    b.position.set(side * (7 + (i % 3) * 1.5), 0, -i * 8);
-    const h = 2 + (i % 4);
-    b.add(box(2, h, 2, [0xa894df, 0x6bc7c0, 0xfca98c][i % 3], 0, h / 2, 0));
-    for (let k = 0; k < 3; k++) b.add(box(1.4, 0.15, 0.05, 0xe9ffd5, 0, 0.7 + k * 0.65, 1.03));
-    scene.add(b);
-    buildings.push(b);
   }
   const views = engine.rows.map(() => {
     const heart = heartPickup();
@@ -262,8 +250,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     } else if (engine.phase === 'intro' && !reduced) elapsed += dt * 0.3;
     for (let i = 0; i < tiles.length; i++)
       tiles[i].position.z = 6 - i * 16 + (engine.distance % 16);
-    for (let i = 0; i < buildings.length; i++)
-      buildings[i].position.z = 8 - ((i * 8 - (engine.distance % 144) + 144) % 144);
+    environment.update(engine.distance, elapsed, reduced);
     player.root.position.x = engine.x;
     player.animate(elapsed, engine.y, capture, impact > 0, engine.phase === 'over', reduced);
     player.root.visible =
@@ -328,7 +315,10 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
         p.scale.setScalar(capture);
       }
     } else for (const p of sparks) p.visible = false;
-    camera.position.x = reduced ? 0 : engine.x * 0.08;
+    // Use the existing camera translation for natural depth-dependent parallax.
+    // Damping is visual only: lane movement and collision positions are untouched.
+    const cameraTargetX = reduced ? 0 : engine.x * 0.08;
+    camera.position.x = reduced ? 0 : T.MathUtils.damp(camera.position.x, cameraTargetX, 9, dt);
     renderer.render(scene, camera);
     if (now - lastUi > 100) {
       emit();
@@ -355,6 +345,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       materials = new Set<T.Material>(),
       textures = new Set<T.Texture>();
     scene.traverse((o) => {
+      if (o instanceof T.InstancedMesh) o.dispose();
       if (o instanceof T.Mesh) {
         geometries.add(o.geometry);
         for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
