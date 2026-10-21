@@ -44,8 +44,10 @@ try {
     });
     assert.equal(await page.getByRole('heading', { name: 'In pausa.' }).count(), 0, 'switching tabs preserves the frozen frame');
     await freeze.click();
+    await page.getByRole('button', { name: 'Riprendi', exact: true }).click();
     await page.getByRole('region', { name: 'Bug catturati' }).waitFor({ state: 'detached', timeout: 3500 });
     assert.equal(await freeze.getAttribute('aria-pressed'), 'false');
+    await page.getByRole('button', { name: 'Pausa', exact: true }).click();
     await page.getByRole('button', { name: 'Riprendi', exact: true }).waitFor();
     assert.deepEqual(errors, []);
     console.log('Local DEV: O/o and F8 freeze exact canvas and capture timers, button resumes, normal pause preserved PASS');

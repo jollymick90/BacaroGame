@@ -32,6 +32,7 @@
     healReady: false,
     speed: 8,
     message: '',
+    messageTone: 'neutral',
     capture: 0,
   });
   onMount(() => {
@@ -163,7 +164,7 @@
           <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
           <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
           <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
-          <details><summary>Abilità automatiche</summary><p>50 Heisenbug: scudo per 8 s. 25 Regression: una vita in più. 30 Production: rallentamento per 6 s. 40 Feature: punti doppi per 10 s.</p></details>
+          <details><summary>Abilità automatiche</summary><p>5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
         </div>
       </div>
     {:else}
@@ -178,7 +179,7 @@
           >Ⅱ</button
         >
         <CaptureCounter
-          clock={presentationClock}
+          capture={hud.capture}
           caught={hud.caught}
           collection={hud.collection}
           charges={hud.charges}
@@ -194,7 +195,7 @@
             {#if hud.healReady}<p>Una cura pronta ♥</p>{/if}
           </div>
         {/if}
-        <div class="bh-feedback" role="status">{hud.message}</div>
+        <div class="bh-feedback" data-tone={hud.messageTone} role="status">{hud.message}</div>
         <div class="bh-controls">
           <button aria-label="Spostati a sinistra" onclick={() => control('left')}>←</button><button
             aria-label="Salta"
@@ -260,7 +261,8 @@
   }
   .bh-abilities {
     position: absolute;
-    top: 150px;
+    top: auto;
+    bottom: 100px;
     left: 12px;
     display: grid;
     gap: 4px;
@@ -280,7 +282,8 @@
   }
   @media (max-height: 450px) {
     .bh-abilities {
-      top: 130px;
+      top: auto;
+      bottom: 80px;
       font-size: 12px;
       padding: 4px;
     }
@@ -399,15 +402,30 @@
     font-size: 25px;
   }
   .bh-feedback {
+    --event-outline: #46328b;
     position: absolute;
-    top: 112px;
-    left: 15%;
-    right: 15%;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 800;
-    text-shadow: 1px 1px #fff;
+    top: 132px;
+    left: 12px;
+    width: min(300px, calc(50% - 24px));
+    text-align: left;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+    color: #fff4d7;
+    -webkit-text-stroke: 1px var(--event-outline);
+    paint-order: stroke fill;
+    text-shadow: -1px -1px 0 var(--event-outline), 1px -1px 0 var(--event-outline),
+      -1px 1px 0 var(--event-outline), 1px 1px 0 var(--event-outline);
     pointer-events: none;
+  }
+  .bh-feedback[data-tone='positive'] {
+    color: #c6ffd1;
+    --event-outline: #175c35;
+  }
+  .bh-feedback[data-tone='negative'] {
+    color: #ffc4c4;
+    --event-outline: #801b2d;
   }
   .bh-controls {
     position: absolute;
@@ -548,9 +566,7 @@
       font-size: 23px;
     }
     .bh-feedback {
-      left: 10%;
-      right: 10%;
-      font-size: 13px;
+      font-size: 20px;
     }
     .bh-overlay {
       padding: 20px 16px;
@@ -617,8 +633,8 @@
       min-width: 54px;
     }
     .bh-feedback {
-      top: 85px;
-      font-size: 13px;
+      top: 112px;
+      font-size: 18px;
     }
   }
 </style>

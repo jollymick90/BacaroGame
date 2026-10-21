@@ -108,7 +108,9 @@ test('ten minutes of generated route keep increasing speed with bounded rows', (
   }
   assert.equal(r.health, 3);
   assert.equal(r.phase, 'running');
-  assert.ok(r.speed >= 66);
+  // More frequent Production bonuses can still be active at the end of the run.
+  const speedWithoutSlowdown = r.slow > 0 ? r.speed / 0.6 : r.speed;
+  assert.ok(speedWithoutSlowdown >= 66);
   assert.equal(r.rows.length, 8);
   assert.ok(r.caught > 200);
 });

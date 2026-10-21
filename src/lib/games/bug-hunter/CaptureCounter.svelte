@@ -1,44 +1,41 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { createPresentationClock, type PresentationClock } from './presentation-clock';
   import { bugs } from './content';
   import { ABILITY_THRESHOLDS } from './mechanics';
 
-  let { caught, collection, charges, oninspect, clock = createPresentationClock() } = $props<{
+  let { caught, capture, collection, charges, oninspect } = $props<{
     caught: number;
+    capture: number;
     collection: number[];
     charges: number[];
     oninspect: () => void;
-    clock?: PresentationClock;
   }>();
-  let automatic = $state(false);
+  let dismissed = $state(false);
   let pinned = $state(false);
   let highlighted = $state(-1);
   let previousCollection = [0, 0, 0, 0];
   const totalCaught = $derived(caught);
+  const automatic = $derived(capture > 0 && highlighted >= 0 && !dismissed);
   const expanded = $derived(automatic || pinned);
 
   $effect(() => {
     const total = totalCaught;
     untrack(() => {
       if (total === 0) {
-        automatic = false;
+        dismissed = false;
         pinned = false;
         highlighted = -1;
       } else {
         highlighted = collection.findIndex((count: number, index: number) => count > previousCollection[index]);
-        automatic = true;
+        dismissed = false;
       }
       previousCollection = [...collection];
     });
-    if (total === 0) return;
-    const timer = clock.schedule(() => { automatic = false; }, 2400);
-    return () => clock.cancel(timer);
   });
 
   function toggle(event: MouseEvent) {
     const wasExpanded = expanded;
-    automatic = false;
+    dismissed = true;
     pinned = !wasExpanded;
     if (event.detail > 0) oninspect();
   }
@@ -61,6 +58,7 @@
       <strong>{caught} bug al sicuro</strong>
       <div class="species">
         {#each bugs as bug, index}
+          {#if pinned || highlighted === index}
           <div
             class:highlighted={highlighted === index}
             data-captured={highlighted === index}
@@ -73,6 +71,7 @@
             </div>
             <strong>× {collection[index]}</strong>
           </div>
+          {/if}
         {/each}
       </div>
     </section>
@@ -110,7 +109,8 @@
     position: absolute;
     top: 54px;
     right: 0;
-    width: min(210px, calc(100vw - 32px));
+    width: max-content;
+    max-width: calc(100vw - 32px);
     box-sizing: border-box;
     padding: 7px;
     border: 1px solid #46328ba6;
@@ -124,7 +124,7 @@
   .species { display: grid; gap: 2px; margin-top: 4px; }
   .species > div { display: flex; align-items: center; gap: 5px; padding: 3px; border-radius: 7px; }
   .species > div.highlighted { background: color-mix(in srgb, var(--bug-color) 45%, transparent); box-shadow: inset 2px 0 #46328b; }
-  .species > div > div { flex: 1; }
+  .species > div > div { min-width: 0; }
   .species b { font-size: 12px; }
   .species small { display: block; margin-top: 0; font-size: 10px; }
   .swatch { width: 18px; text-align: center; font-size: 16px; color: #30264e; }

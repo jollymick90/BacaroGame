@@ -85,7 +85,7 @@ test('special rows require jumping and are reachable at speed sixteen', () => {
 });
 test('regression heals or stores exactly one cure and never resurrects', () => {
   const game = runner();
-  for (let i = 0; i < 25; i++) capture(game, 1);
+  for (let i = 0; i < 3; i++) capture(game, 1);
   assert.equal(game.healReady, true);
   game.hit();
   assert.equal(game.health, 3);
@@ -98,13 +98,13 @@ test('regression heals or stores exactly one cure and never resurrects', () => {
 });
 test('abilities activate at thresholds, freeze in pause and do not multiply charges', () => {
   const game = runner();
-  for (let i = 0; i < 50; i++) capture(game, 0);
+  for (let i = 0; i < 5; i++) capture(game, 0);
   assert.equal(game.shield, 8);
   game.hit();
   assert.equal(game.health, 3);
-  for (let i = 0; i < 30; i++) capture(game, 2);
+  for (let i = 0; i < 3; i++) capture(game, 2);
   assert.equal(game.slow, 6);
-  for (let i = 0; i < 40; i++) capture(game, 3);
+  for (let i = 0; i < 4; i++) capture(game, 3);
   assert.equal(game.double, 10);
   const score = game.score;
   capture(game, 1);
@@ -202,5 +202,21 @@ test('high speed cannot tunnel through a bug, obstacle or heart between frames',
     if (kind === 'bug') assert.equal(game.caught, 1);
     if (kind === 'obstacle') assert.equal(game.health, 1);
     if (kind === 'heart') assert.equal(game.phase, 'question');
+  }
+});
+
+test('abilities unlock after 5 Heisenbug, 3 Regression, 3 Production and 4 Feature captures', () => {
+  const thresholds = [5, 3, 3, 4];
+  for (let kind = 0; kind < thresholds.length; kind++) {
+    const game = runner();
+    const activations: number[] = [];
+    game.onEvent = event => {
+      if (event.type === 'ability') activations.push(event.kind);
+    };
+    for (let count = 0; count < thresholds[kind] - 1; count++) capture(game, kind);
+    assert.deepEqual(activations, []);
+    capture(game, kind);
+    assert.deepEqual(activations, [kind]);
+    assert.equal(game.charges[kind], 0);
   }
 });

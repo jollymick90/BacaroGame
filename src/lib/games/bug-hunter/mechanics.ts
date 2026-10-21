@@ -2,7 +2,7 @@
 export const LANE = 2.5;
 export const GAP = 23;
 export const JUMP_TIME = 0.85;
-export const ABILITY_THRESHOLDS = [50, 25, 30, 40];
+export const ABILITY_THRESHOLDS = [5, 3, 3, 4];
 export type Phase = 'intro' | 'running' | 'paused' | 'question' | 'over';
 export type Obstacle = { lane: number; kind: number; hit: boolean };
 export type Row = {

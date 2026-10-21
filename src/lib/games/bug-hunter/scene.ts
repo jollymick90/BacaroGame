@@ -18,6 +18,7 @@ export type Snapshot = {
   healReady: boolean;
   speed: number;
   message: string;
+  messageTone: 'positive' | 'negative' | 'neutral';
   capture: number;
 };
 // Scene/camera/hemisphere setup and scrolling-world architecture adapted from
@@ -93,6 +94,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     impact = 0,
     message = '',
     messageUntil = 0;
+  let messageTone: Snapshot['messageTone'] = 'neutral';
   const origin = new T.Vector3(),
     destination = new T.Vector3(),
     netPosition = new T.Vector3();
@@ -111,16 +113,20 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       healReady: engine.healReady,
       speed: engine.speed,
       message,
+      messageTone,
       capture,
     });
   }
   engine.onEvent = (event) => {
+    messageTone = 'neutral';
     if (event.type === 'capture') {
+      messageTone = 'positive';
       capture = 1;
       flyKind = event.kind;
       origin.set(event.row.lane * LANE, event.row.height, event.row.z);
       message = `${bugs[event.kind].name} catturato! ${bugs[event.kind].quote}`;
     } else if (event.type === 'ability') {
+      messageTone = 'positive';
       message = [
         'Heisenbug: ostacoli attraversabili per 8 s!',
         'Regression: una vita recuperata o pronta!',
@@ -130,8 +136,10 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     } else if (event.type === 'speed') {
       message = `Si accelera! Velocità ${event.speed}`;
     } else if (event.type === 'heart') {
+      messageTone = 'positive';
       message = 'Un cuore trovato! Una risposta giusta per recuperare una vita.';
     } else {
+      messageTone = 'negative';
       impact = 0.6;
       message =
         event.type === 'miss' ? 'Bug scappato: una vita in meno.' : 'Ops. Quel caffè era portante.';
@@ -396,6 +404,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       engine.start();
       capture = 0;
       impact = 0;
+      messageTone = 'neutral';
       message = 'Prendi ogni bug: se scappa perdi una vita. Salta quelli in aria!';
       messageUntil = 5;
       emit();
@@ -406,6 +415,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
       if (devFrozen) return false;
       const resolved = engine.resolveHeart(correct);
       if (resolved) {
+        messageTone = correct ? 'positive' : 'neutral';
         message = correct ? 'Risposta giusta: una vita recuperata ♥' : 'Nessuna vita persa. Il prossimo cuore ti aspetta!';
         messageUntil = engine.time + 3;
         emit();

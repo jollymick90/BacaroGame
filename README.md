@@ -30,9 +30,9 @@ Un cuore lampeggiante compare dopo le prime quattro righe e poi ogni sei righe, 
 
 In **Admin → Bug Hunter** puoi modificare le 20 domande iniziali, aggiungerne altre (massimo 100), scegliere la risposta corretta e la spiegazione, oppure rimuoverle (ne deve restare almeno una). Premi **Salva domande** per pubblicare. Le modifiche vengono caricate alla prossima apertura del gioco; in caso di rete assente o configurazione non disponibile il gioco usa le 20 domande integrate. Le domande vengono estratte senza ripetizioni fino a esaurimento del gruppo.
 
-Il riepilogo delle catture appare per circa 2,4 secondi a ogni cattura, evidenziando la specie appena presa; poi resta una piccola icona a forma di barattolo. Toccandola si aprono o chiudono i dettagli con conteggi e cariche delle abilità.
+Il riepilogo delle catture mostra solo la specie appena presa e si chiude insieme al volo verso il barattolo (circa 1,1 secondi); poi resta una piccola icona a forma di barattolo. Toccandola si aprono o chiudono i dettagli con conteggi e cariche delle abilità.
 
-Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli per 8 s, 25 Regression recuperano una vita (massimo 3, oppure una cura pronta), 30 Production rallentano il mondo al 60% per 6 s, 40 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie premiano le partite lunghe: con una specie ogni quattro righe, il primo bonus richiede diversi minuti. Nessun account necessario per giocare.
+Le abilità si attivano automaticamente: 5 Heisenbug attraversano gli ostacoli per 8 s, 3 Regression recuperano una vita (massimo 3, oppure una cura pronta), 3 Production rallentano il mondo al 60% per 6 s, 4 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie ridotte rendono le abilità disponibili più spesso durante la corsa. Nessun account necessario per giocare.
 
 ### Freeze locale per lo sviluppo
 
