@@ -121,7 +121,7 @@ export class Runner {
   resolveHeart(correct: boolean) {
     if (this.phase !== 'question') return false;
     if (correct) this.health = Math.min(3, this.health + 1);
-    // Stay paused for feedback. Only the player's explicit Continue resumes the run.
+    // Stay paused for feedback; the UI resumes after its countdown or Continue.
     this.phase = 'paused';
     return true;
   }

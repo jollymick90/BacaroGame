@@ -33,7 +33,10 @@ try {
     await page.getByRole('button', { name: 'Spostati a destra' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.waitFor({ timeout: 60000 });
-    await page.getByRole('heading', { name: question.prompt }).waitFor();
+    await page.getByRole('heading', { name: question.prompt }).waitFor().catch(async error => {
+      console.error('Unexpected quiz content:', await dialog.innerText());
+      throw error;
+    });
     const frozenHud = await page.locator('.bh-hud').innerText();
     await page.waitForTimeout(500);
     assert.equal(await page.locator('.bh-hud').innerText(), frozenHud);
@@ -49,8 +52,17 @@ try {
     await dialog.getByRole('button', { name: mobile ? 'Un cavo' : 'Un algoritmo', exact: true }).click();
     const expectedHealth = mobile ? 2 : 3;
     await page.getByLabel(`${expectedHealth} possibilità rimaste`).waitFor();
-    assert.equal(await dialog.locator('.answers button:disabled').count(), 3);
-    assert.match(await dialog.getByRole('status').innerText(), mobile ? /Nessuna vita persa/ : /Una vita recuperata/);
+    if (mobile) {
+      assert.equal(await dialog.locator('.answers button:disabled').count(), 3);
+      assert.match(await dialog.locator('.feedback').innerText(), /Nessuna vita persa/);
+    } else {
+      await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor({ timeout: 2000 });
+      assert.match(await dialog.locator('.feedback').innerText(), /Una vita recuperata/);
+      assert.equal(await page.getByRole('heading', { name: 'In pausa.' }).count(), 0);
+      await dialog.getByText('La corsa riparte tra 2', { exact: false }).waitFor();
+      assert.equal(await dialog.locator('.feedback').evaluate(element => getComputedStyle(element).opacity), '0');
+      await dialog.getByText('La corsa riparte tra 1', { exact: false }).waitFor();
+    }
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     if (mobile) {
       // Escape from feedback must close the quiz but keep the run paused.
@@ -59,15 +71,14 @@ try {
       await page.getByRole('button', { name: 'Riprendi', exact: true }).waitFor();
       await page.getByRole('button', { name: 'Riprendi', exact: true }).click();
     } else {
-      await dialog.getByRole('button', { name: 'Continua la corsa' }).click();
-      await dialog.waitFor({ state: 'detached' });
+      await dialog.waitFor({ state: 'detached', timeout: 2500 });
     }
     await page.getByRole('button', { name: 'Salta', exact: true }).waitFor();
     await page.getByRole('button', { name: 'Pausa', exact: true }).click();
     await page.getByRole('link', { name: 'Torna al Game Center', exact: true }).click();
     await page.locator('.bh-stage canvas').waitFor({ state: 'detached' });
     assert.deepEqual(errors, []);
-    console.log(`${mobile ? 'Mobile' : 'Desktop'}: real heart pickup, frozen quiz, focus trap, ${mobile ? 'wrong answer/Escape' : 'heal/continue'}, cleanup PASS`);
+    console.log(`${mobile ? 'Mobile' : 'Desktop'}: real heart pickup, frozen quiz, focus trap, ${mobile ? 'wrong answer/Escape' : 'heal/countdown/automatic resume'}, cleanup PASS`);
     await page.close();
   }
   const offline = await browser.newPage();

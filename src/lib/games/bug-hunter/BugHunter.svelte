@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { bugs } from './content';
-  import { ABILITY_THRESHOLDS } from './mechanics';
+  import CaptureCounter from './CaptureCounter.svelte';
   import HeartQuestionDialog from './HeartQuestion.svelte';
   import { DEFAULT_QUESTIONS, type HeartQuestion } from './questions';
   import type { mountRunner, Snapshot } from './scene';
@@ -78,7 +78,7 @@
     // Resolve a skipped question too; a second resolution cannot grant another life.
     game?.resolveHeart(false);
     currentQuestion = null;
-    if (resume && hud.phase === 'paused') game?.action('pause');
+    if (resume && !document.hidden && hud.phase === 'paused') game?.action('pause');
     host.focus({ preventScroll: true });
   }
   function control(type: 'left' | 'right' | 'jump' | 'pause') {
@@ -133,26 +133,22 @@
         <button aria-label="Pausa" onclick={() => control('pause')} disabled={hud.phase === 'over' || hud.phase === 'question'}
           >Ⅱ</button
         >
-        <div class="bh-jar" class:bh-pop={hud.capture > 0}>
-          <span aria-hidden="true">🫙</span><b data-testid="bug-count">{hud.caught}</b><small
-            >bug al sicuro</small
-          >
-        </div>
+        <CaptureCounter
+          caught={hud.caught}
+          collection={hud.collection}
+          charges={hud.charges}
+          oninspect={() => host.focus({ preventScroll: true })}
+        />
       </div>
       {#if hud.phase === 'running'}
-        <div class="bh-abilities" aria-label="Carica abilità automatiche">
-          {#each bugs as bug, index}
-            <div>
-              <b>{bug.name.replace(' Bug', '')}</b><span
-                >{hud.charges[index]}/{ABILITY_THRESHOLDS[index]}</span
-              >
-            </div>
-          {/each}
-          {#if hud.shield > 0}<p>Scudo {Math.ceil(hud.shield)} s</p>{/if}
-          {#if hud.slow > 0}<p>Rallentamento {Math.ceil(hud.slow)} s</p>{/if}
-          {#if hud.double > 0}<p>Punti ×2 · {Math.ceil(hud.double)} s</p>{/if}
-          {#if hud.healReady}<p>Una cura pronta ♥</p>{/if}
-        </div>
+        {#if hud.shield > 0 || hud.slow > 0 || hud.double > 0 || hud.healReady}
+          <div class="bh-abilities" aria-label="Abilità attive">
+            {#if hud.shield > 0}<p>Scudo {Math.ceil(hud.shield)} s</p>{/if}
+            {#if hud.slow > 0}<p>Rallentamento {Math.ceil(hud.slow)} s</p>{/if}
+            {#if hud.double > 0}<p>Punti ×2 · {Math.ceil(hud.double)} s</p>{/if}
+            {#if hud.healReady}<p>Una cura pronta ♥</p>{/if}
+          </div>
+        {/if}
         <div class="bh-feedback" role="status">{hud.message}</div>
         <div class="bh-controls">
           <button aria-label="Spostati a sinistra" onclick={() => control('left')}>←</button><button
@@ -160,7 +156,7 @@
             onclick={() => control('jump')}>Salta ↑</button
           ><button aria-label="Spostati a destra" onclick={() => control('right')}>→</button>
         </div>
-      {:else if hud.phase === 'paused'}<div class="bh-overlay">
+      {:else if hud.phase === 'paused' && !currentQuestion}<div class="bh-overlay">
           <h1 tabindex="-1">In pausa.</h1>
           <p>I bug aspettano. Stranamente educati.</p>
           <button class="bh-go" onclick={() => control('pause')}>Riprendi</button><a href="/"
@@ -214,11 +210,6 @@
     padding: 8px;
     pointer-events: none;
   }
-  .bh-abilities > div {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-  }
   .bh-abilities p {
     margin: 0;
     font-weight: bold;
@@ -232,9 +223,6 @@
       top: 130px;
       font-size: 12px;
       padding: 4px;
-    }
-    .bh-abilities > div {
-      gap: 5px;
     }
   }
 
@@ -318,6 +306,7 @@
   }
   .bh-hud {
     position: absolute;
+    z-index: 1;
     top: 18px;
     left: 20px;
     right: 20px;
@@ -348,30 +337,6 @@
     height: 48px;
     padding: 0;
     font-size: 25px;
-  }
-  .bh-jar {
-    display: grid;
-    grid-template-columns: auto auto;
-    align-items: center;
-    background: #fff4d7e8;
-    border: 2px solid #46328b;
-    border-radius: 16px;
-    padding: 8px 12px;
-    transition: transform 0.2s;
-  }
-  .bh-jar > span {
-    font-size: 32px;
-  }
-  .bh-jar b {
-    font-size: 30px;
-  }
-  .bh-jar small {
-    grid-column: span 2;
-    font-size: 13px;
-  }
-  .bh-pop {
-    transform: scale(1.1);
-    background: #ffdf6f;
   }
   .bh-feedback {
     position: absolute;
@@ -409,6 +374,7 @@
   }
   .bh-overlay {
     position: absolute;
+    z-index: 2;
     inset: 0;
     display: flex;
     flex-direction: column;
@@ -587,13 +553,6 @@
     .bh-feedback {
       top: 85px;
       font-size: 13px;
-    }
-    .bh-jar {
-      padding: 4px 8px;
-    }
-    .bh-jar > span,
-    .bh-jar b {
-      font-size: 22px;
     }
   }
 </style>
