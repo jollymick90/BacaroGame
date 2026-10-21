@@ -190,7 +190,7 @@
         <div class="bh-instructions">
           <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
           <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
-          <p>Parti come developer: a {runSettings.distanceGoal} metri diventi il polipo Bacaro! Poi cattura altri {runSettings.bugGoal} bug per arrivare alla review finale.</p>
+          <p>Parti come developer: a {runSettings.distanceGoal} metri attraversa la barriera premio e raccogli il polipo Bacaro! Occupa tutte le corsie e non si può saltare: attraversandola ti trasformi. Poi cattura altri {runSettings.bugGoal} bug per arrivare alla review finale.</p>
           <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
           <details><summary>Abilità automatiche</summary><p>5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
         </div>

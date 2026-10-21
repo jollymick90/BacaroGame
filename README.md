@@ -24,7 +24,7 @@ Il certificato umano o robot si può scaricare come PDF A4 con il logo ufficiale
 
 ## Bug Hunter
 
-La corsa ha due obiettivi consecutivi: prima **600 metri**, poi **20 bug aggiuntivi**. Raggiungendoli si conclude con la review finale; esaurire le vite termina prima e mostra comunque la review. I valori predefiniti sono modificabili in **Admin → Bug Hunter → Obiettivi della corsa** e salvati nel documento di configurazione già esistente. Si parte developer e al traguardo della distanza si diventa il polipo Bacaro 3D, con occhiali, tentacoli, retino e barattolo.
+La corsa ha due obiettivi consecutivi: prima **400 metri**, poi **20 bug aggiuntivi**. Raggiungendoli si conclude con la review finale; esaurire le vite termina prima e mostra comunque la review. I valori predefiniti sono modificabili in **Admin → Bug Hunter → Obiettivi della corsa** e salvati nel documento di configurazione già esistente. Si parte developer e al traguardo della distanza si attraversa una barriera premio verde con il polipo: occupa tutte le corsie, non si può saltare e trasforma nel polipo Bacaro 3D, con occhiali, tentacoli, retino e barattolo.
 
 Tre vite: ogni bug mancato o urto costa una vita, con un massimo di una penalità per riga. Dopo un urto, due secondi di protezione dagli altri ostacoli; i bug persi nelle righe successive continuano a costare vite. Corri verso gli insetti, cambia corsia e salta quelli in aria o le barriere che occupano tutte le corsie. La velocità aumenta gradualmente di 0,1 al secondo attivo a partire da 8, senza limite massimo; pausa, quiz e background congelano la simulazione. Oltre velocità 16 le nuove righe sono più distanziate per mantenere leggibile il percorso.
 

@@ -70,6 +70,28 @@ export function mountRunner(
   scene.add(developer.root, octopus.root);
   octopus.root.visible = false;
   let transformed = false;
+  // A full-width, full-height pickup: changing lane or jumping cannot avoid it.
+  const transformationGate = new T.Group();
+  const gateMaterial = new T.MeshPhongMaterial({
+    color: 0x00e5a3,
+    transparent: true,
+    opacity: 0.24,
+    side: T.DoubleSide,
+    depthWrite: false,
+  });
+  const gatePanel = new T.Mesh(new T.BoxGeometry(LANE * 3 + 1, 7, 0.18), gateMaterial);
+  gatePanel.position.y = 3.5;
+  transformationGate.add(gatePanel);
+  const gateEdges = new T.LineSegments(
+    new T.EdgesGeometry(gatePanel.geometry),
+    new T.LineBasicMaterial({ color: 0x00e5a3 }),
+  );
+  gateEdges.position.copy(gatePanel.position);
+  transformationGate.add(gateEdges);
+  const rewardMascot = octopusHunter();
+  rewardMascot.root.position.y = 1.8;
+  transformationGate.add(rewardMascot.root);
+  scene.add(transformationGate);
   const environment = createVeniceEnvironment();
   scene.add(environment.root);
   const tiles: T.Group[] = [];
@@ -291,9 +313,16 @@ export function mountRunner(
     for (let i = 0; i < tiles.length; i++)
       tiles[i].position.z = 6 - i * 16 + (engine.distance % 16);
     environment.update(engine.distance, elapsed, reduced);
+    const gateDistance = runSettings.distanceGoal - engine.distance;
+    transformationGate.visible = !tutorial && !transformed && gateDistance >= 0 && gateDistance < 85;
+    transformationGate.position.z = -gateDistance;
+    if (transformationGate.visible) {
+      rewardMascot.animate(elapsed, 1.8, 0, false, false, reduced);
+    }
     const shouldTransform = !tutorial && engine.distance >= runSettings.distanceGoal;
     if (shouldTransform !== transformed) {
       transformed = shouldTransform;
+      transformationGate.visible = false;
       player.root.visible = false;
       player = transformed ? octopus : developer;
       if (transformed) {

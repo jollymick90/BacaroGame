@@ -18,7 +18,12 @@ try {
     await openGame(page,origin,'/bug-hunter');
     await page.getByRole('button',{name:'Inizia',exact:true}).click();
     assert.match(await page.getByLabel('Obiettivo della corsa').innerText(),/1\/2/);
+    await page.waitForFunction(()=>Number(document.querySelector('.bh-hud small')?.textContent.split(' ')[0])>=80,{},{timeout:30000});
+    await page.screenshot({path:`/tmp/bug-reward-gate-${viewport.width}.png`});
+    await page.waitForFunction(()=>Number(document.querySelector('.bh-hud small')?.textContent.split(' ')[0])>=96);
+    await page.keyboard.press('Space');
     await page.waitForFunction(()=>document.querySelector('.bh-objective')?.textContent.includes('2/2'),{},{timeout:30000});
+    await page.getByText(/Sei diventato il polipo Bacaro!/).waitFor();
     // Every seeded pickup is centered. Row five is airborne: use real jump input.
     await page.waitForFunction(()=>Number(document.querySelector('.bh-hud small')?.textContent.split(' ')[0])>=121);
     await page.keyboard.press('Space');

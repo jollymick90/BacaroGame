@@ -98,7 +98,7 @@ test('public GET supplies defaults without Firebase or writes and also for a mis
     const response = await route.GET(event('GET', undefined, false));
     const data = await response.json();
     assert.equal(data.config.questions.length, 20);
-    assert.deepEqual(data.config.run, { distanceGoal: 600, bugGoal: 20 });
+    assert.deepEqual(data.config.run, { distanceGoal: 400, bugGoal: 20 });
     assert.equal(data.revision, 0);
     assert.equal(data.persisted, false);
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
@@ -109,7 +109,7 @@ test('public GET supplies defaults without Firebase or writes and also for a mis
 test('saving publishes immediately, preserves stable question IDs and hides writer metadata', async () => {
   const response = await route.PUT(event('PUT', { config: config(), revision: 0 }));
   const saved = await response.json();
-  assert.deepEqual(saved, { config: { ...config(), run: { distanceGoal: 600, bugGoal: 20 } }, revision: 1, persisted: true });
+  assert.deepEqual(saved, { config: { ...config(), run: { distanceGoal: 400, bugGoal: 20 } }, revision: 1, persisted: true });
   assert.equal(records.get(configPath).updatedBy, 'member');
   const loaded = await (await route.GET(event())).json();
   assert.deepEqual(loaded, saved);
@@ -160,7 +160,7 @@ test('public GET skips session access lookup and PUT rechecks access through the
 test('legacy persisted banks normalize without writes and settings share revision-controlled persistence', async () => {
   records.set(configPath, { config: config(), revision: 4, updatedBy: 'legacy' });
   const legacy = await (await route.GET(event())).json();
-  assert.deepEqual(legacy.config.run, { distanceGoal: 600, bugGoal: 20 });
+  assert.deepEqual(legacy.config.run, { distanceGoal: 400, bugGoal: 20 });
   assert.equal('run' in records.get(configPath).config, false);
   const updated = { ...config(), run: { distanceGoal: 2500, bugGoal: 35 } };
   const published = await (await route.PUT(event('PUT', { config: updated, revision: 4 }))).json();
