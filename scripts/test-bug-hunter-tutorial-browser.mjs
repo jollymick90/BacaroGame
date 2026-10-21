@@ -16,8 +16,7 @@ try {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await mockGameConfiguration(page, () => ({bugHunter:{questions:[question]}}));
-    await openGame(page, origin, '/bug-hunter');
-    await page.getByRole('button',{name:'Come si gioca',exact:true}).click();
+    await openGame(page, origin, '/bug-hunter', {automaticTutorial:true});
     const guide = page.getByRole('region',{name:'Il tuo vero lavoro'});
     await guide.waitFor();
     assert.match(await guide.innerText(), /lo scopo della tua vita non è fare feature ma catturare bug/);
@@ -45,6 +44,16 @@ try {
     await page.getByRole('button',{name:'Pausa',exact:true}).click();
     await page.getByRole('button',{name:'Riprendi',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await openGame(page, origin, '/bug-hunter', {automaticTutorial:true});
+    await page.getByRole('button',{name:'Salta e non mostrare più',exact:true}).click();
+    await page.getByRole('button',{name:'Pausa',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>localStorage.getItem('bug-hunter:skip-tutorial')), 'true');
+    await openGame(page, origin, '/bug-hunter', {automaticTutorial:true});
+    await page.getByRole('button',{name:'Inizia',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Come si gioca',exact:true}).click();
+    await guide.waitFor();
+    await page.getByRole('button',{name:'Esci dal tutorial',exact:true}).click();
+    await page.getByRole('button',{name:'Inizia',exact:true}).waitFor();
     assert.deepEqual(errors,[]);
     await page.close();
     console.log(`Tutorial ${viewport.width}x${viewport.height}: miss, collision, power, heart and clean game start PASS`);

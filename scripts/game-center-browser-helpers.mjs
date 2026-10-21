@@ -11,7 +11,10 @@ export async function mockGameConfiguration(page, overrides = () => ({})) {
   } }));
 }
 
-export async function openGame(page, origin, path) {
+export async function openGame(page, origin, path, { automaticTutorial = false } = {}) {
+  if (!automaticTutorial) {
+    await page.addInitScript(() => localStorage.setItem('bug-hunter:skip-tutorial', 'true'));
+  }
   // Enter via client navigation so fixtures intercept load's fetch; initial SSR
   // requests are deliberately covered separately with the real backend.
   await page.goto(`${origin}/qr`);

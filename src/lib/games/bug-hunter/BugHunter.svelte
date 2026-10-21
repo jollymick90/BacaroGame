@@ -72,6 +72,13 @@
             runSettings,
           );
           ready = true;
+          let tutorialDismissed = false;
+          try {
+            tutorialDismissed = localStorage.getItem('bug-hunter:skip-tutorial') === 'true';
+          } catch {
+            // Storage can be unavailable; the tutorial remains accessible.
+          }
+          if (!tutorialDismissed) openTutorial();
         } catch (e) {
           console.error('Bug Hunter initialization failed', e);
           error = true;
@@ -118,6 +125,15 @@
     currentQuestion = null;
     questionBag = [];
     game?.startTutorial();
+  }
+  function skipTutorial() {
+    if (devFrozen) return;
+    try {
+      localStorage.setItem('bug-hunter:skip-tutorial', 'true');
+    } catch {
+      // Skipping still starts the game when persistence is unavailable.
+    }
+    start();
   }
   function exitTutorial() {
     if (devFrozen) return;
@@ -187,13 +203,7 @@
           >{ready ? 'Inizia' : 'Prepariamo il retino…'}</button
         >
         <button class="bh-learn" disabled={!ready} onclick={openTutorial}>Come si gioca</button>
-        <div class="bh-instructions">
-          <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
-          <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
-          <p>Parti come developer: a {runSettings.distanceGoal} metri attraversa la barriera premio e raccogli il polipo Bacaro! Occupa tutte le corsie e non si può saltare: attraversandola ti trasformi. Poi cattura altri {runSettings.bugGoal} bug per arrivare alla review finale.</p>
-          <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
-          <details><summary>Abilità automatiche</summary><p>5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
-        </div>
+
       </div>
     {:else}
       <div class="bh-hud">
@@ -221,7 +231,7 @@
         </div>
       {/if}
       {#if hud.tutorial}
-        <TutorialGuide
+        <TutorialGuide runSettings={runSettings} onskip={skipTutorial}
           state={hud.tutorial}
           phase={hud.phase}
           production={hud.collection[2]}
@@ -379,13 +389,10 @@
     max-width: 470px;
     pointer-events: none;
   }
-  .bh-intro button, .bh-intro details {
+  .bh-intro button {
     pointer-events: auto;
   }
   .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
-  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
-  .bh-instructions p:last-child { margin-bottom: 0; }
-  .bh-instructions summary { font-size: 14px; font-weight: 700; }
   .bh-intro h1 {
     font-size: clamp(42px, 7vw, 78px);
     letter-spacing: -3px;
@@ -422,14 +429,6 @@
   }
   .bh-go:hover {
     background: #67ffd1;
-  }
-  .bh-intro .bh-instructions {
-    font-size: 12px;
-    line-height: 1.7;
-    background: #fff4d7f5;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 20px;
   }
   .bh-hud {
     position: absolute;
@@ -607,18 +606,11 @@
       max-width: none;
     }
     .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
-  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
-  .bh-instructions p:last-child { margin-bottom: 0; }
-  .bh-instructions summary { font-size: 14px; font-weight: 700; }
   .bh-intro h1 {
       font-size: 52px;
     }
     .bh-intro p {
       font-size: 16px;
-    }
-    .bh-intro .bh-instructions {
-      font-size: 13px;
-      margin-top: 15px;
     }
     .bh-hud {
       left: 12px;
@@ -656,9 +648,6 @@
       max-width: 45%;
     }
     .bh-intro { max-height: 92%; overflow-y: auto; pointer-events: auto; padding: 0 6px 10px; }
-  .bh-instructions p { font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
-  .bh-instructions p:last-child { margin-bottom: 0; }
-  .bh-instructions summary { font-size: 14px; font-weight: 700; }
   .bh-intro h1 {
       font-size: 42px;
       margin: 10px 0;
@@ -670,13 +659,6 @@
       font-size: 15px;
       min-height: 44px;
       padding: 8px 18px;
-    }
-    .bh-intro .bh-instructions {
-      font-size: 13px;
-      padding: 8px;
-    }
-    .bh-intro .bh-instructions {
-      margin-top: 12px;
     }
     .bh-results {
       justify-content: flex-start;

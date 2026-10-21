@@ -1,8 +1,11 @@
 <script lang="ts">
   import { TUTORIAL_STEPS, type TutorialSnapshot } from './tutorial';
+  import type { RunSettings } from './run-settings';
   import type { Phase } from './mechanics';
 
-  let { state, phase, production, onnext, onreplay, onexit, onplay } = $props<{
+  let { state, phase, production, onnext, onreplay, onexit, onplay, onskip, runSettings } = $props<{
+    runSettings: RunSettings;
+    onskip: () => void;
     state: TutorialSnapshot;
     phase: Phase;
     production: number;
@@ -30,9 +33,13 @@
     <span>Come si gioca · {index + 1}/{TUTORIAL_STEPS.length}</span>
     <button class="exit" onclick={onexit}>Esci dal tutorial</button>
   </div>
+  <button class="skip" onclick={onskip}>Salta e non mostrare più</button>
   <h2 id="tutorial-title" bind:this={heading} tabindex="-1">{step.title}</h2>
   <p>{step.text}</p>
   {#if stepId === 'welcome'}
+    <p>Parti come developer. A {runSettings.distanceGoal} metri attraversi la barriera premio con il polipo: occupa tutte le corsie e non si può saltare. Diventi il polipo Bacaro, poi catturi altri {runSettings.bugGoal} bug e arrivi alla review finale.</p>
+    <p class="hint">La velocità aumenta gradualmente. Hai tre vite: ogni bug mancato o urto costa una vita.</p>
+    <details><summary>Abilità automatiche</summary><p class="hint">5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
     <p class="hint">Qui guardi e impari. In partita: ← → / A D per cambiare corsia, ↑ / W / spazio per saltare. Su telefono, scorri o usa i pulsanti.</p>
   {:else if stepId === 'ability'}
     <p class="progress" role="status">Production {Math.min(production, 3)}/3 → rallentamento</p>
@@ -96,6 +103,8 @@
     font-size: 14px;
     cursor: pointer;
   }
+  .skip { width: 100%; margin-top: 10px; }
+  summary { cursor: pointer; font-size: 14px; }
   button.primary { background: #00e5a3; color: #15151b; font-weight: 800; }
   button:disabled { opacity: 0.45; cursor: default; }
   button.exit { padding: 4px 6px; background: transparent; font-size: 12px; }
