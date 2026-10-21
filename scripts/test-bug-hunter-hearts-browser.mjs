@@ -73,7 +73,7 @@ try {
     const expectedHealth = mobile ? 2 : 3;
     await page.getByLabel(`${expectedHealth} possibilità rimaste`).waitFor();
     if (mobile) {
-      assert.equal(await dialog.locator('.answers button:disabled').count(), 3);
+      await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor();
       assert.match(await dialog.locator('.feedback').innerText(), /Nessuna vita persa/);
     } else {
       await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor({ timeout: 2000 });
@@ -90,11 +90,8 @@ try {
     }
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     if (mobile) {
-      // Escape from feedback must close the quiz but keep the run paused.
-      await page.keyboard.press('Escape');
-      await dialog.waitFor({ state: 'detached' });
-      await page.getByRole('button', { name: 'Riprendi', exact: true }).waitFor();
-      await page.getByRole('button', { name: 'Riprendi', exact: true }).click();
+      await dialog.waitFor({ state: 'detached', timeout: 4500 });
+      await page.getByLabel('2 possibilità rimaste').waitFor();
     } else {
       await dialog.waitFor({ state: 'detached', timeout: 2500 });
     }
@@ -103,7 +100,7 @@ try {
     await page.getByRole('link', { name: 'Torna al Game Center', exact: true }).click();
     await page.locator('.bh-stage canvas').waitFor({ state: 'detached' });
     assert.deepEqual(errors, []);
-    console.log(`${mobile ? 'Mobile' : 'Desktop'}: real heart pickup, frozen quiz, focus trap, ${mobile ? 'wrong answer/Escape' : 'heal/countdown/automatic resume'}, cleanup PASS`);
+    console.log(`${mobile ? 'Mobile' : 'Desktop'}: real heart pickup, frozen quiz, focus trap, ${mobile ? 'wrong answer/countdown/automatic resume' : 'heal/countdown/automatic resume'}, cleanup PASS`);
     await page.close();
   }
   const offline = await browser.newPage();

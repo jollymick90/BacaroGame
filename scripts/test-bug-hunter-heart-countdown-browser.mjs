@@ -5,6 +5,7 @@ const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:5173';
 const browser = await chromium.launch({ channel: 'chrome' });
 
 try {
+  for (const answerCorrect of [false, true]) {
   for (const scenario of ['success', 'reduced-motion', 'landscape', 'escape', 'hidden', 'unmount']) {
     const page = await browser.newPage({
       viewport: scenario === 'landscape' ? { width: 667, height: 375 } : { width: 390, height: 844 },
@@ -39,8 +40,8 @@ try {
       window.heartTest = { state, dispose: () => unmount(instance) };
     });
     const dialog = page.getByRole('dialog');
-    await dialog.getByRole('button', { name: 'Questa', exact: true }).click();
-    await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor();
+    await dialog.getByRole('button', { name: answerCorrect ? 'Questa' : 'Non questa', exact: true }).click();
+    await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor({ timeout: 1500 });
     if (scenario === 'landscape' || scenario === 'success') {
       const bounds = await dialog.getByRole('button', { name: 'Resta in pausa' }).boundingBox();
       assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= page.viewportSize().height);
@@ -57,17 +58,18 @@ try {
     await page.clock.runFor(2000);
     assert.equal(await page.evaluate(() => window.heartTest.state.continued), 0);
     if (['success', 'reduced-motion', 'landscape'].includes(scenario)) {
-      assert.equal(await dialog.locator('.success-feedback').evaluate(element => getComputedStyle(element).visibility), 'hidden');
+      assert.equal(await dialog.locator('.result-feedback').evaluate(element => getComputedStyle(element).visibility), 'hidden');
     }
     await page.clock.runFor(2000);
     const state = await page.evaluate(() => window.heartTest.state);
-    assert.deepEqual(state.answers, [true], 'heal callback fires once');
+    assert.deepEqual(state.answers, [answerCorrect], 'answer callback fires once');
     assert.equal(state.continued, ['success', 'reduced-motion', 'landscape'].includes(scenario) ? 1 : 0);
     assert.equal(state.skipped, ['escape', 'hidden'].includes(scenario) ? 1 : 0);
     assert.equal(await page.locator('dialog[open]').count(), 0);
     assert.deepEqual(errors, []);
     await page.close();
-    console.log(`Heart countdown: ${scenario} PASS`);
+    console.log(`Heart countdown: ${answerCorrect ? 'correct' : 'wrong'} / ${scenario} PASS`);
+  }
   }
 } finally {
   await browser.close();

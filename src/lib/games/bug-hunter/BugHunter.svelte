@@ -402,7 +402,10 @@
     font-size: 25px;
   }
   .bh-feedback {
-    --event-outline: #46328b;
+    background: #23232e;
+    border: 2px solid #b9a1fb;
+    padding: 12px;
+    border-radius: 24px;
     position: absolute;
     top: 132px;
     left: 12px;
@@ -412,20 +415,18 @@
     line-height: 1.25;
     font-weight: 900;
     overflow-wrap: anywhere;
-    color: #fff4d7;
-    -webkit-text-stroke: 1px var(--event-outline);
-    paint-order: stroke fill;
-    text-shadow: -1px -1px 0 var(--event-outline), 1px -1px 0 var(--event-outline),
-      -1px 1px 0 var(--event-outline), 1px 1px 0 var(--event-outline);
+    color: #f6f3ea;
+    text-shadow: none;
     pointer-events: none;
   }
+  .bh-feedback:empty { display: none; }
   .bh-feedback[data-tone='positive'] {
-    color: #c6ffd1;
-    --event-outline: #175c35;
+    background: #23232ef5;
+    border-color: #00e5a3;
+    border-radius: 20px;
   }
   .bh-feedback[data-tone='negative'] {
-    color: #ffc4c4;
-    --event-outline: #801b2d;
+    color: #ff9abd;
   }
   .bh-controls {
     position: absolute;

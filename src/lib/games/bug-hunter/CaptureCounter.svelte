@@ -112,24 +112,23 @@
     width: max-content;
     max-width: calc(100vw - 32px);
     box-sizing: border-box;
-    padding: 7px;
-    border: 1px solid #46328ba6;
     border-radius: 12px;
     background: #fff4d7d9;
     color: #30264e;
     box-shadow: 0 3px 10px #30264e18;
     font-size: 12px;
   }
+  section > strong { display: block; text-align: center; }
   section.automatic { background: #fff4d7ad; }
   .species { display: grid; gap: 2px; margin-top: 4px; }
   .species > div { display: flex; align-items: center; gap: 5px; padding: 3px; border-radius: 7px; }
-  .species > div.highlighted { background: color-mix(in srgb, var(--bug-color) 45%, transparent); box-shadow: inset 2px 0 #46328b; }
+  .species > div.highlighted { background: color-mix(in srgb, var(--bug-color) 45%, transparent); }
   .species > div > div { min-width: 0; }
   .species b { font-size: 12px; }
   .species small { display: block; margin-top: 0; font-size: 10px; }
   .swatch { width: 18px; text-align: center; font-size: 16px; color: #30264e; }
   @media (max-height: 450px) {
-    section { top: 50px; padding: 5px; }
+    section { top: 50px; }
     .species { gap: 2px; margin-top: 4px; }
     .species > div { padding: 2px 3px; }
   }

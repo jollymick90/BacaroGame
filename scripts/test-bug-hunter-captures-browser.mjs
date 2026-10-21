@@ -30,7 +30,8 @@ try {
     assert.equal(await details.locator('.species > div').count(), 1, 'automatic panel only shows captured species');
     const message = page.locator('.bh-feedback');
     assert.equal(await message.getAttribute('data-tone'), 'positive');
-    assert.equal(await message.evaluate(element => getComputedStyle(element).color), 'rgb(198, 255, 209)');
+    assert.equal(await message.evaluate(element => getComputedStyle(element).color), 'rgb(246, 243, 234)');
+    assert.equal(await message.evaluate(element => getComputedStyle(element).borderColor), 'rgb(0, 229, 163)');
     const messageBounds = await message.boundingBox();
     const panelBounds = await details.boundingBox();
     assert.ok(messageBounds.x + messageBounds.width <= panelBounds.x, 'event message stays left of the capture panel');
@@ -54,7 +55,9 @@ try {
     await details.waitFor({ state: 'detached' });
     await page.screenshot({ path: `/tmp/bug-captures-${mobile ? 'mobile' : 'desktop'}.png` });
     await page.locator('.bh-feedback[data-tone="negative"]').waitFor();
-    assert.equal(await message.evaluate(element => getComputedStyle(element).color), 'rgb(255, 196, 196)');
+    assert.equal(await message.evaluate(element => getComputedStyle(element).color), 'rgb(255, 154, 189)');
+    assert.equal(await message.evaluate(element => getComputedStyle(element).borderColor), 'rgb(185, 161, 251)');
+    assert.equal(await message.evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(35, 35, 46)');
     await page.screenshot({ path: `/tmp/bug-event-loss-${mobile ? 'mobile' : 'desktop'}.png` });
     assert.deepEqual(errors, []);
     await page.close();

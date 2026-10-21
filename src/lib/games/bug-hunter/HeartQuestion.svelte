@@ -34,7 +34,7 @@
 
   function visibilityChanged() {
     // Never resume into an unseen course after switching tab or locking a phone.
-    if (!frozen && document.hidden && selected !== null && correct) skip();
+    if (!frozen && document.hidden && selected !== null) skip();
   }
 
   onMount(() => {
@@ -51,11 +51,9 @@
     if (selected !== null) return;
     selected = index;
     onanswer(correct);
-    if (correct) {
-      // Also hide without CSS animation (global reduced-motion styles disable it).
-      feedbackTimer = clock.schedule(() => { feedbackHidden = true; }, 900);
-      countdownTimer = clock.schedule(tickCountdown, 1000);
-    }
+    // Also hide without CSS animation (global reduced-motion styles disable it).
+    feedbackTimer = clock.schedule(() => { feedbackHidden = true; }, 900);
+    countdownTimer = clock.schedule(tickCountdown, 1000);
   }
 
   function tickCountdown() {
@@ -74,15 +72,16 @@
   }
 </script>
 
-<dialog bind:this={dialog} class:heart-success={selected !== null && correct}
+<dialog bind:this={dialog} class:heart-result={selected !== null}
   aria-labelledby="heart-title"
-  aria-describedby={selected !== null && correct ? 'heart-countdown' : 'heart-instructions'}
+  aria-describedby={selected !== null ? 'heart-countdown' : 'heart-instructions'}
   oncancel={(event) => { event.preventDefault(); if (!frozen) skip(); }}>
   <div class="quiz-content" inert={frozen}>
-  {#if selected !== null && correct}
-    <div class="feedback success-feedback" class:hidden={feedbackHidden}>
-      <span class="heart" aria-hidden="true">♥</span>
-      <h2 id="heart-title">Una vita recuperata! ♥</h2>
+  {#if selected !== null}
+    <div class="feedback result-feedback" class:hidden={feedbackHidden}>
+      <span class="heart" aria-hidden="true">{correct ? '♥' : '♡'}</span>
+      <h2 id="heart-title">{correct ? 'Una vita recuperata! ♥' : 'Questa volta niente cuore.'}</h2>
+      {#if !correct}<p>Nessuna vita persa.</p>{/if}
       <p>{question.explanation}</p>
     </div>
     <div class="countdown">
@@ -104,15 +103,7 @@
         </button>
       {/each}
     </div>
-    {#if selected !== null}
-      <div class="feedback" role="status">
-        <strong>{correct ? 'Una vita recuperata! ♥' : 'Questa volta niente cuore. Nessuna vita persa.'}</strong>
-        <p>{question.explanation}</p>
-      </div>
-      <button class="continue" onclick={continueRun}>Continua la corsa</button>
-    {:else}
-      <button class="skip" onclick={skip}>Salta la domanda e resta in pausa</button>
-    {/if}
+    <button class="skip" onclick={skip}>Salta la domanda e resta in pausa</button>
   {/if}
   </div>
   {#if ondevfreeze}
@@ -150,41 +141,41 @@
     touch-action: pan-y;
   }
   dialog::backdrop { background: #11111bd9; }
-  dialog.heart-success {
+  dialog.heart-result {
     border: 0;
     padding: 8px;
     background: transparent;
     box-shadow: none;
     overflow: visible;
   }
-  dialog.heart-success::backdrop {
+  dialog.heart-result::backdrop {
     animation: clear-backdrop 800ms ease-out forwards;
   }
-  .success-feedback, .countdown {
+  .result-feedback, .countdown {
     padding: 20px;
     border: 2px solid #00e5a3;
     border-radius: 20px;
     background: #23232ef5;
     text-align: center;
   }
-  .success-feedback {
+  .result-feedback {
     pointer-events: none;
-    animation: hide-success 350ms ease-in 550ms forwards;
+    animation: hide-feedback 350ms ease-in 550ms forwards;
   }
-  .success-feedback.hidden { opacity: 0; visibility: hidden; }
+  .result-feedback.hidden { opacity: 0; visibility: hidden; }
   .countdown { width: fit-content; margin: 16px auto 0; }
   .countdown p { margin: 0 0 12px; }
   .countdown strong { display: block; font-size: 52px; line-height: 1.2; color: #6fffd4; }
-  @keyframes hide-success {
+  @keyframes hide-feedback {
     to { opacity: 0; transform: translateY(-12px); }
   }
   @keyframes clear-backdrop {
     to { background: #11111b20; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .success-feedback { animation: hide-success-still 1ms linear 700ms forwards; }
-    @keyframes hide-success-still { to { opacity: 0; } }
-    dialog.heart-success::backdrop { animation-duration: 1ms; }
+    .result-feedback { animation: hide-feedback-still 1ms linear 700ms forwards; }
+    @keyframes hide-feedback-still { to { opacity: 0; } }
+    dialog.heart-result::backdrop { animation-duration: 1ms; }
   }
   .heart { color: #ff80a5; font-size: 40px; line-height: 1; }
   .eyebrow { color: #ff9abd; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
@@ -213,22 +204,20 @@
   .result { font-size: 13px; color: #6fffd4; }
   .feedback { margin: 18px 0; }
   .feedback p { color: #c9c9d8; }
-  .continue { width: 100%; text-align: center; background: #00e5a3; color: #15151b; font-weight: 800; }
-  .continue:hover:not(:disabled) { background: #67ffd1; }
   .skip { width: 100%; background: transparent; text-align: center; font-size: 14px; }
   @media (max-height: 500px) {
     dialog { padding: 16px; }
     .heart, .eyebrow { display: none; }
-    dialog.heart-success[open] {
+    dialog.heart-result[open] {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 12px;
       width: min(660px, calc(100vw - 24px));
     }
-    .success-feedback, .countdown { margin: 0; padding: 12px; }
-    .success-feedback h2 { font-size: 22px; }
-    .success-feedback p { font-size: 14px; }
+    .result-feedback, .countdown { margin: 0; padding: 12px; }
+    .result-feedback h2 { font-size: 22px; }
+    .result-feedback p { font-size: 14px; }
     .countdown strong { font-size: 36px; }
     .answers { margin: 14px 0; gap: 8px; }
   }
