@@ -80,7 +80,7 @@ test('shared config deduplicates reads, reflects admin saves, expires and isolat
   assert.deepEqual(reads.sort(), ['bug-hunter', 'merge-battle']);
   assert.deepEqual(initial.mergeBattle.activeAxes, [0, 1]);
   assert.equal(initial.bugHunter.questions.length, 20);
-  assert.deepEqual(initial.bugHunter.run, { distanceGoal: 1000, bugGoal: 20 });
+  assert.deepEqual(initial.bugHunter.run, { distanceGoal: 600, bugGoal: 20 });
   await publicConfig();
   assert.equal(reads.length, 2);
 
@@ -107,7 +107,7 @@ test('shared config deduplicates reads, reflects admin saves, expires and isolat
   assert.equal(degraded.mergeBattle, null);
   assert.match(degraded.mergeError, /Riferimento:/);
   assert.equal(degraded.bugHunter.questions.length, 20);
-  assert.deepEqual(degraded.bugHunter.run, { distanceGoal: 1000, bugGoal: 20 });
+  assert.deepEqual(degraded.bugHunter.run, { distanceGoal: 600, bugGoal: 20 });
   assert.equal(degraded.configured, true, 'one failed configuration must not disable Bacarodex');
   assert.equal(logs.length, 2);
   failed.clear();
@@ -124,7 +124,7 @@ test('shared config deduplicates reads, reflects admin saves, expires and isolat
   const timedOut = await waiting;
   assert.equal(timedOut.mergeBattle, null);
   assert.equal(timedOut.bugHunter.questions.length, 20);
-  assert.deepEqual(timedOut.bugHunter.run, { distanceGoal: 1000, bugGoal: 20 });
+  assert.deepEqual(timedOut.bugHunter.run, { distanceGoal: 600, bugGoal: 20 });
   stalled.clear();
   assert.deepEqual((await publicConfig()).mergeBattle.activeAxes, [1, 3], 'timed-out reads do not keep the cache pending');
 });

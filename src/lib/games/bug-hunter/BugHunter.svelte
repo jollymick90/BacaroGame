@@ -190,7 +190,7 @@
         <div class="bh-instructions">
           <p>← → / A D: cambia corsia · ↑ / W / spazio: salta.<br />Su telefono: scorri o usa i tre pulsanti.</p>
           <p>Tre vite. Perdi una vita per ogni bug mancato o urto. Salta i bug in aria e le barriere.</p>
-          <p>Prima percorri {runSettings.distanceGoal} metri, poi cattura altri {runSettings.bugGoal} bug: ti aspetta la review finale.</p>
+          <p>Parti come developer: a {runSettings.distanceGoal} metri diventi il polipo Bacaro! Poi cattura altri {runSettings.bugGoal} bug per arrivare alla review finale.</p>
           <p>La velocità cresce ogni 20 secondi. Ti manca una vita? Prendi un cuore lampeggiante e rispondi a una domanda semplice per recuperarla.</p>
           <details><summary>Abilità automatiche</summary><p>5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
         </div>
@@ -216,7 +216,7 @@
       </div>
       {#if hud.progress && !hud.tutorial && hud.phase !== 'over'}
         <div class="bh-objective" aria-label="Obiettivo della corsa">
-          {#if hud.progress.stage === 'distance'}1/2 · {Math.min(hud.distance, hud.progress.distanceGoal)}/{hud.progress.distanceGoal} m
+          {#if hud.progress.stage === 'distance'}1/2 · Polipo a {hud.progress.distanceGoal} m · {Math.min(hud.distance, hud.progress.distanceGoal)}/{hud.progress.distanceGoal} m
           {:else}2/2 · {hud.progress.bugsInFinalStage}/{hud.progress.bugGoal} bug{/if}
         </div>
       {/if}

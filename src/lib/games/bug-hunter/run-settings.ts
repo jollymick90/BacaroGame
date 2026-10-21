@@ -4,7 +4,7 @@ export type RunSettings = {
 };
 
 export const DEFAULT_RUN_SETTINGS: RunSettings = {
-  distanceGoal: 1000,
+  distanceGoal: 600,
   bugGoal: 20,
 };
 

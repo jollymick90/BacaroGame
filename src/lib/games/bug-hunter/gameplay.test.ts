@@ -15,17 +15,20 @@ function capture(game: Runner, kind: number) {
   game.rows = [row];
   game.update(0.001);
 }
-test('speed keeps increasing every twenty active seconds beyond sixteen', () => {
+test('speed increases continuously without a twenty-second jump', () => {
   const game = runner();
+  game.time = 9.99;
+  game.update(0.01);
+  assert.equal(game.speed, 9);
   game.time = 19.99;
   game.update(0.02);
-  assert.equal(game.speed, 10);
+  assert.ok(Math.abs(game.speed - 10.001) < 0.00001);
   game.time = 100;
   game.update(0.01);
-  assert.equal(game.speed, 18);
+  assert.ok(Math.abs(game.speed - 18.001) < 0.00001);
   game.time = 600;
   game.update(0.01);
-  assert.equal(game.speed, 68);
+  assert.ok(Math.abs(game.speed - 68.001) < 0.00001);
   game.pause();
   game.update(5);
   assert.equal(game.time, 600.01);
@@ -118,7 +121,7 @@ test('abilities activate at thresholds, freeze in pause and do not multiply char
   game.rows = [];
   game.update(0.05);
   assert.ok(game.slow < before[1]);
-  assert.equal(game.speed, 4.8);
+  assert.ok(Math.abs(game.speed - (8 + game.time / 10) * 0.6) < 0.00001);
   for (let i = 0; i < 210; i++) game.update(0.05);
   assert.equal(game.double, 0);
 });

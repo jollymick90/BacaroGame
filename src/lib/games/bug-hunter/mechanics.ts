@@ -216,7 +216,7 @@ export class Runner {
     this.slow = Math.max(0, this.slow - dt);
     this.double = Math.max(0, this.double - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
-    const baseSpeed = 8 + level * 2;
+    const baseSpeed = 8 + this.time / 10;
     this.speed = baseSpeed;
     if (this.slow > 0) this.speed *= 0.6;
     if (level > previousLevel) this.onEvent({ type: 'speed', speed: baseSpeed });

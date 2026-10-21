@@ -65,7 +65,7 @@ test('accepts the bank boundaries and every answer position', () => {
 test('normalizes legacy banks with independent default run settings', () => {
   const input = config();
   const parsed = validateQuestionConfig(input);
-  assert.deepEqual(parsed.run, { distanceGoal: 1000, bugGoal: 20 });
+  assert.deepEqual(parsed.run, { distanceGoal: 600, bugGoal: 20 });
   parsed.run.bugGoal = 5;
   assert.equal(validateQuestionConfig(input).run.bugGoal, 20);
   assert.equal('run' in input, false);

@@ -49,7 +49,7 @@ test('three identical Production bugs unlock a real power, not a UI-only animati
   assert.deepEqual(runner.collection, [0, 0, 3, 0]);
   assert.equal(runner.charges[2], 0);
   assert.ok(runner.slow > 0);
-  assert.equal(runner.speed, 4.8);
+  assert.ok(Math.abs(runner.speed - (8 + runner.time / 10) * 0.6) < 0.00001);
   assert.equal(tutorial.snapshot().complete, true);
 });
 

@@ -2,7 +2,7 @@ import * as T from 'three';
 import { isLocalRunnerDevelopment } from './dev-mode';
 import { RunnerTutorial, type TutorialSnapshot } from './tutorial';
 import { Runner, LANE, type Phase, type RunStats, type RunProgress } from './mechanics';
-import { insect, obstacle, sphere, heartPickup } from './models';
+import { insect, obstacle, sphere, heartPickup, hunter } from './models';
 import { bugs } from './content';
 import { createVeniceEnvironment } from './venice-environment';
 import { octopusHunter } from './octopus-hunter';
@@ -64,8 +64,12 @@ export function mountRunner(
   sun.shadow.camera.top = 12;
   sun.shadow.camera.bottom = -10;
   scene.add(sun);
-  const player = octopusHunter();
-  scene.add(player.root);
+  const developer = hunter();
+  const octopus = octopusHunter();
+  let player: ReturnType<typeof octopusHunter> = developer;
+  scene.add(developer.root, octopus.root);
+  octopus.root.visible = false;
+  let transformed = false;
   const environment = createVeniceEnvironment();
   scene.add(environment.root);
   const tiles: T.Group[] = [];
@@ -152,7 +156,7 @@ export function mountRunner(
         'Feature: punti doppi per 10 s!',
       ][event.kind];
     } else if (event.type === 'speed') {
-      message = `Si accelera! Velocità ${event.speed}`;
+      message = `Si accelera! Velocità ${event.speed.toFixed(1)}`;
     } else if (event.type === 'heart') {
       messageTone = 'positive';
       message = 'Un cuore trovato! Una risposta giusta per recuperare una vita.';
@@ -287,6 +291,18 @@ export function mountRunner(
     for (let i = 0; i < tiles.length; i++)
       tiles[i].position.z = 6 - i * 16 + (engine.distance % 16);
     environment.update(engine.distance, elapsed, reduced);
+    const shouldTransform = !tutorial && engine.distance >= runSettings.distanceGoal;
+    if (shouldTransform !== transformed) {
+      transformed = shouldTransform;
+      player.root.visible = false;
+      player = transformed ? octopus : developer;
+      if (transformed) {
+        capture = 1;
+        messageTone = 'positive';
+        message = `${runSettings.distanceGoal} metri! Sei diventato il polipo Bacaro! Ora cattura altri ${runSettings.bugGoal} bug.`;
+        messageUntil = engine.time + 4;
+      }
+    }
     player.root.position.x = engine.x;
     player.animate(elapsed, engine.y, capture, impact > 0, engine.finishReason === 'lives', reduced);
     player.root.visible =
