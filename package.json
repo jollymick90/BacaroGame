@@ -15,7 +15,7 @@
     "firebase:down": "docker compose --env-file .env.emulator.example down",
     "firebase:logs": "docker compose --env-file .env.emulator.example logs -f firebase",
     "test:merge-battle": "node --experimental-strip-types --test src/lib/games/merge-battle/online.test.ts src/lib/games/merge-battle/engine.test.ts src/lib/games/merge-battle/config.test.ts src/lib/games/merge-battle/cards.test.ts src/lib/games/merge-battle/wheel.test.ts tests/merge-axes-api.test.mjs",
-    "test:bug-hunter": "node --experimental-strip-types --test src/lib/games/bug-hunter/mechanics.test.ts src/lib/games/bug-hunter/gameplay.test.ts src/lib/games/bug-hunter/questions.test.ts tests/bug-hunter-config-api.test.mjs",
+    "test:bug-hunter": "node --experimental-strip-types --test src/lib/games/bug-hunter/presentation-clock.test.ts src/lib/games/bug-hunter/mechanics.test.ts src/lib/games/bug-hunter/gameplay.test.ts src/lib/games/bug-hunter/questions.test.ts tests/bug-hunter-config-api.test.mjs",
     "check:collections": "node --experimental-strip-types scripts/check-firestore-collections.mjs",
     "test:collections": "node --experimental-strip-types --test src/lib/firebase/collections.test.ts scripts/check-firestore-collections.test.mjs",
     "test:superadmins": "node --experimental-strip-types --test src/lib/server/admin-policy.test.ts tests/superadmins-api.test.mjs",

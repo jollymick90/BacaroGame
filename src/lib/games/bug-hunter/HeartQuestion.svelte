@@ -1,24 +1,28 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createPresentationClock, type PresentationClock, type PresentationTimer } from './presentation-clock';
   import type { HeartQuestion } from './questions';
 
-  let { question, onanswer, oncontinue, onskip } = $props<{
+  let { question, onanswer, oncontinue, onskip, clock = createPresentationClock(), frozen = false, ondevfreeze } = $props<{
     question: HeartQuestion;
     onanswer: (correct: boolean) => void;
     oncontinue: () => void;
     onskip: () => void;
+    clock?: PresentationClock;
+    frozen?: boolean;
+    ondevfreeze?: () => void;
   }>();
   let dialog: HTMLDialogElement;
   let selected = $state<number | null>(null);
   const correct = $derived(selected === question.correctIndex);
   let countdown = $state(3);
   let feedbackHidden = $state(false);
-  let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
-  let countdownTimer: ReturnType<typeof setInterval> | undefined;
+  let feedbackTimer: PresentationTimer | undefined;
+  let countdownTimer: PresentationTimer | undefined;
 
   function stopCountdown() {
-    clearInterval(countdownTimer);
-    clearTimeout(feedbackTimer);
+    clock.cancel(countdownTimer);
+    clock.cancel(feedbackTimer);
     countdownTimer = undefined;
   }
 
@@ -30,7 +34,7 @@
 
   function visibilityChanged() {
     // Never resume into an unseen course after switching tab or locking a phone.
-    if (document.hidden && selected !== null && correct) skip();
+    if (!frozen && document.hidden && selected !== null && correct) skip();
   }
 
   onMount(() => {
@@ -49,12 +53,18 @@
     onanswer(correct);
     if (correct) {
       // Also hide without CSS animation (global reduced-motion styles disable it).
-      feedbackTimer = setTimeout(() => { feedbackHidden = true; }, 900);
-      countdownTimer = setInterval(() => {
-        countdown -= 1;
-        if (countdown === 0) continueRun();
-      }, 1000);
+      feedbackTimer = clock.schedule(() => { feedbackHidden = true; }, 900);
+      countdownTimer = clock.schedule(tickCountdown, 1000);
     }
+  }
+
+  function tickCountdown() {
+    countdown -= 1;
+    if (countdown === 0) {
+      continueRun();
+      return;
+    }
+    countdownTimer = clock.schedule(tickCountdown, 1000);
   }
 
   function skip() {
@@ -67,7 +77,8 @@
 <dialog bind:this={dialog} class:heart-success={selected !== null && correct}
   aria-labelledby="heart-title"
   aria-describedby={selected !== null && correct ? 'heart-countdown' : 'heart-instructions'}
-  oncancel={(event) => { event.preventDefault(); skip(); }}>
+  oncancel={(event) => { event.preventDefault(); if (!frozen) skip(); }}>
+  <div class="quiz-content" inert={frozen}>
   {#if selected !== null && correct}
     <div class="feedback success-feedback" class:hidden={feedbackHidden}>
       <span class="heart" aria-hidden="true">♥</span>
@@ -103,9 +114,27 @@
       <button class="skip" onclick={skip}>Salta la domanda e resta in pausa</button>
     {/if}
   {/if}
+  </div>
+  {#if ondevfreeze}
+    <button class="dev-freeze" aria-pressed={frozen} onclick={ondevfreeze}>
+      DEV · {frozen ? 'Sblocca frame' : 'Congela frame'} · O / F8
+    </button>
+  {/if}
 </dialog>
 
 <style>
+  .quiz-content { display: contents; }
+  .dev-freeze {
+    position: fixed;
+    right: 12px;
+    bottom: 100px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px dashed #ffcf70;
+    background: #15151be6;
+    color: #ffcf70;
+    font-size: 12px;
+  }
   dialog {
     box-sizing: border-box;
     width: min(540px, calc(100vw - 24px));

@@ -14,7 +14,8 @@ const question = {
   explanation: 'Un algoritmo descrive i passi da seguire.',
 };
 try {
-  for (const mobile of [false, true]) {
+  for (const scenario of ['desktop', 'mobile', 'background']) {
+    const mobile = scenario !== 'desktop';
     const page = await browser.newPage({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
       isMobile: mobile,
@@ -49,6 +50,25 @@ try {
       ), true);
     }
     await page.screenshot({ path: `/tmp/bug-heart-${mobile ? 'mobile' : 'desktop'}.png` });
+    if (scenario === 'background') {
+      await page.keyboard.press('F8');
+      await page.evaluate(() => {
+        Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+        document.dispatchEvent(new Event('visibilitychange'));
+        Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+        document.dispatchEvent(new Event('visibilitychange'));
+        delete document.hidden;
+      });
+      await dialog.locator('#heart-title').waitFor();
+      await dialog.getByRole('button', { name: /DEV · Sblocca frame/ }).click();
+      await dialog.waitFor({ state: 'detached' });
+      await page.getByRole('button', { name: 'Riprendi', exact: true }).waitFor();
+      await page.waitForTimeout(500);
+      assert.equal(await dialog.count(), 0, 'unanswered quiz does not reopen after thaw');
+      await page.close();
+      console.log('Frozen unanswered quiz: background preserves frame, thaw leaves paused without reopening PASS');
+      continue;
+    }
     await dialog.getByRole('button', { name: mobile ? 'Un cavo' : 'Un algoritmo', exact: true }).click();
     const expectedHealth = mobile ? 2 : 3;
     await page.getByLabel(`${expectedHealth} possibilità rimaste`).waitFor();
@@ -58,6 +78,11 @@ try {
     } else {
       await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor({ timeout: 2000 });
       assert.match(await dialog.locator('.feedback').innerText(), /Una vita recuperata/);
+      await page.keyboard.press('F8');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(1200);
+      await dialog.getByText('La corsa riparte tra 3', { exact: false }).waitFor();
+      await dialog.getByRole('button', { name: /DEV · Sblocca frame/ }).click();
       assert.equal(await page.getByRole('heading', { name: 'In pausa.' }).count(), 0);
       await dialog.getByText('La corsa riparte tra 2', { exact: false }).waitFor();
       assert.equal(await dialog.locator('.feedback').evaluate(element => getComputedStyle(element).opacity), '0');

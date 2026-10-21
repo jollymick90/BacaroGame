@@ -1,13 +1,15 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { createPresentationClock, type PresentationClock } from './presentation-clock';
   import { bugs } from './content';
   import { ABILITY_THRESHOLDS } from './mechanics';
 
-  let { caught, collection, charges, oninspect } = $props<{
+  let { caught, collection, charges, oninspect, clock = createPresentationClock() } = $props<{
     caught: number;
     collection: number[];
     charges: number[];
     oninspect: () => void;
+    clock?: PresentationClock;
   }>();
   let automatic = $state(false);
   let pinned = $state(false);
@@ -30,8 +32,8 @@
       previousCollection = [...collection];
     });
     if (total === 0) return;
-    const timer = setTimeout(() => { automatic = false; }, 2400);
-    return () => clearTimeout(timer);
+    const timer = clock.schedule(() => { automatic = false; }, 2400);
+    return () => clock.cancel(timer);
   });
 
   function toggle(event: MouseEvent) {
@@ -55,7 +57,7 @@
     <span class="sr-only" data-testid="bug-count">{caught}</span>
   </button>
   {#if expanded}
-    <section id="bug-capture-details" aria-label="Bug catturati">
+    <section id="bug-capture-details" class:automatic={automatic && !pinned} aria-label="Bug catturati">
       <strong>{caught} bug al sicuro</strong>
       <div class="species">
         {#each bugs as bug, index}
@@ -92,7 +94,7 @@
     cursor: pointer;
   }
   .capture-toggle:hover:not(:disabled) { background: #ffdf6f; }
-  .capture-toggle.recent { background: #ffdf6f; }
+  .capture-toggle.recent { background: #ffdf6fbd; }
   .capture-toggle:focus-visible { outline: 3px solid #46328b; outline-offset: 4px; }
   .sr-only {
     position: absolute;
@@ -106,28 +108,29 @@
   }
   section {
     position: absolute;
-    top: 58px;
+    top: 54px;
     right: 0;
-    width: min(250px, calc(100vw - 32px));
+    width: min(210px, calc(100vw - 32px));
     box-sizing: border-box;
-    padding: 12px;
-    border: 2px solid #46328b;
-    border-radius: 16px;
-    background: #fff4d7f5;
+    padding: 7px;
+    border: 1px solid #46328ba6;
+    border-radius: 12px;
+    background: #fff4d7d9;
     color: #30264e;
-    box-shadow: 0 5px 18px #30264e24;
-    font-size: 14px;
+    box-shadow: 0 3px 10px #30264e18;
+    font-size: 12px;
   }
-  .species { display: grid; gap: 4px; margin-top: 8px; }
-  .species > div { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 10px; }
-  .species > div.highlighted { background: var(--bug-color); box-shadow: inset 3px 0 #46328b; }
+  section.automatic { background: #fff4d7ad; }
+  .species { display: grid; gap: 2px; margin-top: 4px; }
+  .species > div { display: flex; align-items: center; gap: 5px; padding: 3px; border-radius: 7px; }
+  .species > div.highlighted { background: color-mix(in srgb, var(--bug-color) 45%, transparent); box-shadow: inset 2px 0 #46328b; }
   .species > div > div { flex: 1; }
-  .species b { font-size: 13px; }
-  .species small { display: block; margin-top: 2px; font-size: 11px; }
-  .swatch { width: 24px; text-align: center; font-size: 20px; color: #30264e; }
+  .species b { font-size: 12px; }
+  .species small { display: block; margin-top: 0; font-size: 10px; }
+  .swatch { width: 18px; text-align: center; font-size: 16px; color: #30264e; }
   @media (max-height: 450px) {
-    section { top: 52px; padding: 8px; font-size: 12px; }
+    section { top: 50px; padding: 5px; }
     .species { gap: 2px; margin-top: 4px; }
-    .species > div { padding: 3px 6px; }
+    .species > div { padding: 2px 3px; }
   }
 </style>

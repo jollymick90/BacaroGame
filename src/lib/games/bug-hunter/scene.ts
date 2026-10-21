@@ -1,4 +1,5 @@
 import * as T from 'three';
+import { isLocalRunnerDevelopment } from './dev-mode';
 import { Runner, LANE, type Phase } from './mechanics';
 import { hunter, insect, obstacle, sphere, heartPickup } from './models';
 import { bugs } from './content';
@@ -23,6 +24,8 @@ export type Snapshot = {
 // gift-secret-santa/.../starship-run/game.ts. Lifecycle, pools and input scoped here.
 export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, onError: () => void) {
   const engine = new Runner();
+  let devFrozen = false;
+  let devBackgrounded = false;
   const scene = new T.Scene();
   scene.background = new T.Color(0xb8dde0);
   scene.fog = new T.Fog(0xb8dde0, 55, 155);
@@ -146,12 +149,14 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     camera.aspect = w / h;
     camera.fov = w < h ? 68 : 58;
     camera.updateProjectionMatrix();
+    if (devFrozen) renderer.render(scene, camera);
   }
   const observer = new ResizeObserver(resize);
   observer.observe(host);
   window.addEventListener('resize', resize);
   resize();
   function action(type: 'left' | 'right' | 'jump' | 'pause') {
+    if (devFrozen) return;
     if (type === 'pause') {
       if (engine.phase === 'running') engine.pause();
       else if (engine.phase === 'paused' && !document.hidden) engine.resume();
@@ -215,12 +220,16 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   host.addEventListener('pointercancel', cancel);
   const visibility = () => {
     if (document.hidden) {
+      if (devFrozen) {
+        devBackgrounded = true;
+        return;
+      }
       engine.pause();
       cancelAnimationFrame(raf);
       raf = 0;
       last = 0;
       emit();
-    } else if (!raf && !disposed) raf = requestAnimationFrame(frame);
+    } else if (!raf && !disposed && !devFrozen) raf = requestAnimationFrame(frame);
   };
   document.addEventListener('visibilitychange', visibility);
   const motion = () => {
@@ -236,7 +245,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
   };
   renderer.domElement.addEventListener('webglcontextlost', lost);
   function frame(now: number) {
-    if (disposed) return;
+    if (disposed || devFrozen) return;
     raf = 0;
     const dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
     last = now;
@@ -365,7 +374,25 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     scene.clear();
   }
   return {
+    setDevFrozen(value: boolean) {
+      if (!isLocalRunnerDevelopment() || disposed || devFrozen === value) return;
+      devFrozen = value;
+      last = 0;
+      if (value) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        cancel();
+      } else {
+        if (devBackgrounded) {
+          engine.pause();
+          emit();
+          devBackgrounded = false;
+        }
+        if (!document.hidden && !raf) raf = requestAnimationFrame(frame);
+      }
+    },
     start() {
+      if (devFrozen) return;
       engine.start();
       capture = 0;
       impact = 0;
@@ -376,6 +403,7 @@ export function mountRunner(host: HTMLElement, output: (s: Snapshot) => void, on
     },
     action,
     resolveHeart(correct: boolean) {
+      if (devFrozen) return false;
       const resolved = engine.resolveHeart(correct);
       if (resolved) {
         message = correct ? 'Risposta giusta: una vita recuperata ♥' : 'Nessuna vita persa. Il prossimo cuore ti aspetta!';

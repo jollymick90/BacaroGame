@@ -34,6 +34,12 @@ Il riepilogo delle catture appare per circa 2,4 secondi a ogni cattura, evidenzi
 
 Le abilità si attivano automaticamente: 50 Heisenbug attraversano gli ostacoli per 8 s, 25 Regression recuperano una vita (massimo 3, oppure una cura pronta), 30 Production rallentano il mondo al 60% per 6 s, 40 Feature danno punti doppi per 10 s. Le catture fisiche e le cariche non vengono raddoppiate. Le soglie premiano le partite lunghe: con una specie ogni quattro righe, il primo bonus richiede diversi minuti. Nessun account necessario per giocare.
 
+### Freeze locale per lo sviluppo
+
+Su Bug Hunter, con Vite in modalità sviluppo aperto su `localhost`, `127.0.0.1` o `[::1]`, appare il pulsante **DEV · Congela frame · O / F8**. Premilo, oppure usa **O** o **F8**, per fermare il frame corrente senza mostrare la pausa: si congelano scena 3D, messaggi, pannello catture, animazioni e countdown del cuore. Premi nuovamente O, F8 o **Sblocca frame** per ripartire senza recuperare il tempo trascorso. Il pulsante è disponibile anche nel quiz. I controlli di gioco sono disabilitati durante il freeze; un cambio di scheda conserva il frame congelato e lascia il gioco in pausa quando lo sblocchi.
+
+Questa funzione è esclusa dalle build di produzione, anche se aperte su localhost, e non viene attivata su host pubblici del server di sviluppo.
+
 ## Invita a giocare con il QR
 
 Dalla home scegli **“Invita”**, oppure apri **`/qr`** sul sito pubblicato. La pagina raccoglie un grande QR in bianco e nero, la condivisione nativa quando supportata, la copia del link e il download PNG. La copia viene confermata solo quando riesce; annullare la condivisione non mostra un errore. Il codice apre la home pubblica del Game Center sullo stesso dominio e non richiede login. L'indirizzo deriva dal sito aperto, senza includere query, credenziali o percorsi amministrativi: per invitare altri dispositivi aprire la pagina sull'indirizzo HTTPS pubblico o su un indirizzo di rete raggiungibile, non su localhost.

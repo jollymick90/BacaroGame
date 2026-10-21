@@ -1,10 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { isLocalRunnerDevelopment } from './dev-mode';
+  import { createPresentationClock } from './presentation-clock';
   import { bugs } from './content';
   import CaptureCounter from './CaptureCounter.svelte';
   import HeartQuestionDialog from './HeartQuestion.svelte';
   import { DEFAULT_QUESTIONS, type HeartQuestion } from './questions';
   import type { mountRunner, Snapshot } from './scene';
+  const presentationClock = createPresentationClock();
+  let devAvailable = $state(false);
+  let devFrozen = $state(false);
+  let devBackgrounded = false;
   let host: HTMLDivElement;
   let game: ReturnType<typeof mountRunner> | undefined;
   let ready = $state(false),
@@ -30,6 +36,20 @@
   });
   onMount(() => {
     let cancelled = false;
+    devAvailable = isLocalRunnerDevelopment();
+    function freezeShortcut(event: KeyboardEvent) {
+      const freezeKey = event.key === 'F8' || event.key.toLowerCase() === 'o';
+      if (!freezeKey || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+      event.preventDefault();
+      toggleDevFreeze();
+    }
+    function devVisibility() {
+      if (document.hidden && devFrozen) devBackgrounded = true;
+    }
+    if (devAvailable) {
+      window.addEventListener('keydown', freezeShortcut);
+      document.addEventListener('visibilitychange', devVisibility);
+    }
     void import('./scene')
       .then(({ mountRunner }) => {
         if (cancelled) return;
@@ -53,6 +73,9 @@
       });
     return () => {
       cancelled = true;
+      window.removeEventListener('keydown', freezeShortcut);
+      document.removeEventListener('visibilitychange', devVisibility);
+      presentationClock.dispose();
       game?.dispose();
       game = undefined;
     };
@@ -69,7 +92,20 @@
       currentQuestion = questionBag.pop()!;
     }
   });
+  function toggleDevFreeze() {
+    if (!devAvailable || !ready || error) return;
+    devFrozen = !devFrozen;
+    game?.setDevFrozen(devFrozen);
+    if (!devFrozen && devBackgrounded) {
+      if (currentQuestion) finishQuestion(false);
+      devBackgrounded = false;
+    }
+    presentationClock.setFrozen(devFrozen);
+    if (!devFrozen) host.focus({ preventScroll: true });
+  }
+
   function start() {
+    if (devFrozen) return;
     currentQuestion = null;
     questionBag = [];
     game?.start();
@@ -93,9 +129,17 @@
     content="Un retino contro il caos. Corri, salta e cattura quattro specie di bug in un mondo 3D cartoon."
   /></svelte:head
 >
-<main class="bh-page">
+<main class="bh-page" class:dev-frozen={devFrozen}>
+  {#if devAvailable && ready && !error}
+    <div class="bh-dev-tools">
+      <button aria-pressed={devFrozen} onclick={toggleDevFreeze}>
+        DEV · {devFrozen ? 'Sblocca frame' : 'Congela frame'} · O / F8
+      </button>
+    </div>
+  {/if}
   <div
     class="bh-stage"
+    inert={devFrozen}
     class:bh-menu={hud.phase !== 'running'}
     bind:this={host}
     tabindex="-1"
@@ -134,6 +178,7 @@
           >Ⅱ</button
         >
         <CaptureCounter
+          clock={presentationClock}
           caught={hud.caught}
           collection={hud.collection}
           charges={hud.charges}
@@ -156,7 +201,7 @@
             onclick={() => control('jump')}>Salta ↑</button
           ><button aria-label="Spostati a destra" onclick={() => control('right')}>→</button>
         </div>
-      {:else if hud.phase === 'paused' && !currentQuestion}<div class="bh-overlay">
+      {:else if hud.phase === 'paused' && !currentQuestion}<div class="bh-overlay bh-pause">
           <h1 tabindex="-1">In pausa.</h1>
           <p>I bug aspettano. Stranamente educati.</p>
           <button class="bh-go" onclick={() => control('pause')}>Riprendi</button><a href="/"
@@ -190,7 +235,8 @@
     {/if}
   </div>
   {#if currentQuestion && !error}
-    <HeartQuestionDialog question={currentQuestion}
+    <HeartQuestionDialog question={currentQuestion} clock={presentationClock} frozen={devFrozen}
+      ondevfreeze={devAvailable ? toggleDevFreeze : undefined}
       onanswer={(correct) => game?.resolveHeart(correct)}
       oncontinue={() => finishQuestion(true)}
       onskip={() => finishQuestion(false)} />
@@ -198,6 +244,20 @@
 </main>
 
 <style>
+  .bh-dev-tools { position: fixed; right: 12px; bottom: 100px; z-index: 10; }
+  .bh-dev-tools button {
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px dashed #ffcf70;
+    border-radius: 8px;
+    background: #15151be6;
+    color: #ffcf70;
+    font-size: 12px;
+  }
+  .dev-frozen :global(*), .dev-frozen :global(*::before), .dev-frozen :global(*::after), .dev-frozen :global(dialog::backdrop) {
+    animation-play-state: paused !important;
+    transition: none !important;
+  }
   .bh-abilities {
     position: absolute;
     top: 150px;
@@ -388,6 +448,11 @@
     overflow: auto;
     touch-action: pan-y;
   }
+  .bh-pause {
+    background: transparent;
+    color: #30264e;
+    text-shadow: 0 1px 2px #fff4d7;
+  }
   .bh-overlay h1 {
     font-size: clamp(28px, 4vw, 45px);
     line-height: 1;
@@ -407,6 +472,7 @@
     align-items: center;
     font-weight: bold;
   }
+  .bh-pause a { color: #46328b; }
   .bh-collection {
     width: 100%;
     max-width: 480px;
