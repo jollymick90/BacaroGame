@@ -2,6 +2,7 @@
   import { onDestroy, tick } from 'svelte';
   import Fighter from './Fighter.svelte';
   import { characters } from './catalog';
+  import { nearestCharacter, rotationDelta } from './wheel';
 
   let { cast, taken, onchoose }: {
     cast: typeof characters;
@@ -12,6 +13,19 @@
   let selected = $state<number | null>(null);
   let rotation = $state(0);
   let spinning = $state(false);
+  let dragging = $state(false);
+  let gesture: {
+    pointerId: number;
+    x: number;
+    y: number;
+    centerX: number;
+    centerY: number;
+    angle: number;
+    rotation: number;
+    visibleRotation: number;
+    selected: number | null;
+  } | null = null;
+  let suppressClick = false;
   let confirmButton: HTMLButtonElement;
   let wheel: HTMLDivElement;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -24,8 +38,10 @@
     rotation += turns * 360 + remaining;
   }
 
-  function select(id: number) {
-    if (spinning || taken.includes(id)) return;
+  function select(id: number, event: MouseEvent) {
+    if (spinning || dragging || taken.includes(id)) return;
+    // A drag starting on a character must not become a selection click on release.
+    if (suppressClick && event.detail !== 0) return;
     selected = id;
     turnTo(id);
   }
@@ -38,7 +54,7 @@
   }
 
   function spin() {
-    if (spinning || !available.length) return;
+    if (spinning || dragging || !available.length) return;
     const winner = available[Math.floor(Math.random() * available.length)];
     selected = null;
     spinning = true;
@@ -48,6 +64,69 @@
       return;
     }
     timer = setTimeout(() => { void finishSpin(winner.id); }, 2200);
+  }
+
+  function beginDrag(event: PointerEvent) {
+    if (spinning || gesture || !event.isPrimary || event.button !== 0) return;
+    suppressClick = false;
+    const bounds = wheel.getBoundingClientRect();
+    const centerX = bounds.left + bounds.width / 2;
+    const centerY = bounds.top + bounds.height / 2;
+    if (Math.hypot(event.clientX - centerX, event.clientY - centerY) < 20) return;
+
+    // A new gesture can interrupt the short settling animation at its visible angle.
+    const orbit = wheel.querySelector<HTMLElement>('.orbit')!;
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(orbit).transform);
+    const visibleAngle = Math.atan2(matrix.b, matrix.a) * 180 / Math.PI;
+    gesture = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      centerX,
+      centerY,
+      angle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
+      rotation,
+      visibleRotation: rotation + rotationDelta(rotation, visibleAngle),
+      selected,
+    };
+  }
+
+  function drag(event: PointerEvent) {
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const distance = Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y);
+    if (!dragging && distance < 6) return;
+    if (Math.hypot(event.clientX - gesture.centerX, event.clientY - gesture.centerY) < 20) return;
+    event.preventDefault();
+    if (!dragging) {
+      dragging = true;
+      suppressClick = true;
+      rotation = gesture.visibleRotation;
+      wheel.setPointerCapture(event.pointerId);
+    }
+    const angle = Math.atan2(event.clientY - gesture.centerY, event.clientX - gesture.centerX) * 180 / Math.PI;
+    rotation += rotationDelta(gesture.angle, angle);
+    gesture.angle = angle;
+    selected = nearestCharacter(rotation, cast.map(character => character.id), taken)?.id ?? null;
+  }
+
+  function endDrag(event: PointerEvent, cancelled = false) {
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    const previous = gesture;
+    gesture = null;
+    if (dragging) {
+      if (cancelled) {
+        rotation = previous.rotation;
+        selected = previous.selected;
+      } else {
+        const nearest = nearestCharacter(rotation, cast.map(character => character.id), taken);
+        if (nearest) {
+          rotation = nearest.rotation;
+          selected = nearest.id;
+        }
+      }
+    }
+    dragging = false;
+    if (wheel.hasPointerCapture(event.pointerId)) wheel.releasePointerCapture(event.pointerId);
   }
 
   function moveFocus(event: KeyboardEvent, index: number) {
@@ -71,8 +150,28 @@
   onDestroy(() => clearTimeout(timer));
 </script>
 
+<svelte:window
+  onpointermove={drag}
+  onpointerup={event => endDrag(event)}
+  onpointercancel={event => endDrag(event, true)}
+/>
+
 <div class="selection-layout">
-  <div class="wheel" bind:this={wheel} class:spinning style:--rotation={`${rotation}deg`} aria-busy={spinning}>
+  <div
+    class="wheel"
+    bind:this={wheel}
+    class:spinning
+    class:dragging
+    style:--rotation={`${rotation}deg`}
+    role="group"
+    aria-label="Ruota dei personaggi"
+    aria-busy={spinning || dragging}
+    onpointerdown={beginDrag}
+    onlostpointercapture={event => {
+      // Touch starts with implicit capture on a child. Ignore its handoff to the wheel.
+      if (event.target === wheel) endDrag(event, true);
+    }}
+  >
     <span class="pointer" aria-hidden="true">▼</span>
     <div class="orbit" role="group" aria-label="Personaggi disponibili">
       {#each cast as character, index}
@@ -87,7 +186,7 @@
           aria-label={character.name}
           aria-pressed={selected === character.id}
           title={taken.includes(character.id) ? `${character.name} · scelto da Player 1` : character.name}
-          onclick={() => select(character.id)}
+          onclick={event => select(character.id, event)}
           onkeydown={event => moveFocus(event, index)}
         >
           <Fighter id={character.id} size="small" eager />
@@ -104,16 +203,16 @@
   <div class="selection-controls">
     <div class="selection-status" role="status" aria-live="polite" aria-atomic="true">
       {#if chosen}<h2>{chosen.name}</h2><p>Il tuo Polpodev è pronto.</p>
-      {:else}<h2>{spinning ? 'La fortuna sta scegliendo…' : 'Scegli tu. O tenta la fortuna.'}</h2><p>Tocca un Polpodev oppure gira la ruota.</p>{/if}
+      {:else}<h2>{spinning ? 'La fortuna sta scegliendo…' : 'Scegli tu. O tenta la fortuna.'}</h2><p>Trascina la ruota con il dito o il mouse. Puoi anche toccare un Polpodev.</p>{/if}
     </div>
-    <button class="spin-button" disabled={spinning || !available.length} onclick={spin}><span aria-hidden="true">↻</span> <span>Gira la ruota</span></button>
-    <button class="confirm-button" bind:this={confirmButton} disabled={selected === null || spinning} onclick={() => { if (selected !== null) onchoose(selected); }}>Conferma personaggio</button>
+    <button class="spin-button" disabled={spinning || dragging || !available.length} onclick={spin}><span aria-hidden="true">↻</span> <span>Gira la ruota</span></button>
+    <button class="confirm-button" bind:this={confirmButton} disabled={selected === null || spinning || dragging} onclick={() => { if (selected !== null) onchoose(selected); }}>Conferma personaggio</button>
   </div>
 </div>
 
 <style>
   .selection-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, 1fr); align-items: center; gap: 40px; margin: 24px 0; }
-  .wheel { position: relative; width: 100%; max-width: 580px; aspect-ratio: 1; margin: auto; isolation: isolate; }
+  .wheel { position: relative; width: 100%; max-width: 580px; aspect-ratio: 1; margin: auto; isolation: isolate; touch-action: none; user-select: none; cursor: grab; }
   .orbit { position: absolute; inset: 0; border: 2px solid var(--comic-border); border-radius: 50%; background: var(--comic-panel); transform: rotate(var(--rotation)); transition: transform 450ms ease-out; }
   .orbit::before { pointer-events: none; content: ''; position: absolute; inset: 18%; border: 1px dashed var(--comic-border); border-radius: 50%; }
   .pointer { pointer-events: none; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); color: var(--comic-orange); font-size: 30px; z-index: 3; line-height: 1; }
@@ -143,6 +242,8 @@
   .confirm-button:disabled { background: var(--comic-panel); color: var(--arcade-muted); opacity: 1; }
   .spin-button:hover:not(:disabled) { background: var(--comic-teal); }
   .confirm-button:hover:not(:disabled) { background: #ffb48b; }
+  .dragging, .dragging :global(button) { cursor: grabbing; }
+  .dragging .orbit, .dragging .mb-character { transition: none; }
   .spinning .orbit, .spinning .mb-character { transition: transform 2200ms cubic-bezier(.12,.65,.12,1); }
   @media(max-width: 700px) {
     .selection-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 28px; }

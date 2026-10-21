@@ -1,3 +1,15 @@
+# Aggiornamento: ruota trascinabile — 21 ottobre 2026
+
+La ruota segue il dito o il mouse in entrambi i sensi, anche quando il gesto parte sopra un personaggio. Il ruolo più vicino alla freccia si colora durante il movimento; al rilascio la ruota si allinea al personaggio disponibile più vicino. Il ruolo già preso da Player 1 viene escluso. Un trascinamento non genera una selezione accidentale al rilascio; il semplice tocco continua a funzionare.
+
+Restano il sorteggio, la conferma esplicita e i comandi da tastiera. Durante il trascinamento conferma e sorteggio sono disabilitati. L’annullamento del gesto ripristina la scelta precedente, anche interrompendo un’animazione. Nessuna modifica a regole, punteggi o modalità; il multiplayer rimane locale come confermato dall’utente.
+
+Verifiche: `npm run check` senza errori o avvisi; 18 test di Merge Battle passati, inclusi continuità degli angoli e aggancio al ruolo disponibile; build completata. Restano gli avvisi di bundle/chunk del riconoscimento e tracing Vercel già presenti. `scripts/test-merge-wheel-drag.mjs` verifica trascinamento mouse e touch, entrambi i versi, selezione durante il gesto, rilascio, esclusione dei ruoli occupati e annullamento anche durante un’animazione. Touch verificato tramite emulazione Chrome, non su un telefono fisico. La revisione ha individuato e corretto il ripristino dell’angolo dopo l’annullamento.
+
+Per ripetere il test con server locale: `TEST_ORIGIN=http://127.0.0.1:5187 node scripts/test-merge-wheel-drag.mjs`, impostando `PLAYWRIGHT_MODULE` se Playwright è esterno al progetto.
+
+---
+
 # Aggiornamento: tema condiviso, navigazione e ruota — 20 ottobre 2026
 
 Merge Battle ora usa gli stessi token scuri del Game Center: sfondo `--arcade-bg`, pannelli `--arcade-panel`, testo `--arcade-text` e accento `--arcade-orange`. Il precedente sfondo crema era una scelta specifica del redesign a fumetti; è stato rimosso sia dalla cornice del router sia da ingresso, carte, scenario, arena e risultato. Le illustrazioni Polpodev e i contrasti dei riquadri gialli rimangono riconoscibili.
