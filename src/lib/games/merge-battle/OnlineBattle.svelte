@@ -1,5 +1,7 @@
 <script lang="ts">
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
+  import MergeTutorial from "./MergeTutorial.svelte";
+  import { DEFAULT_CONFIG } from "./config";
   import { onMount } from "svelte";
   import { characters, trials, resolve, roleCards } from "./engine";
   import type { RoomCommand, RoomView } from "./online";
@@ -9,6 +11,7 @@
   import ReviewWeights from "./ReviewWeights.svelte";
 
   type View = RoomView & { code: string };
+  let tutorialOpen = $state(false);
   let view = $state<View | null>(null);
   let code = $state("");
   let invite = $state("");
@@ -123,7 +126,9 @@
 <svelte:head><title>Merge Battle online · BacaroTech</title></svelte:head>
 <main class="online-battle">
   <a href="/merge-battle">← Modalità di gioco</a>
+  {#if tutorialOpen}<MergeTutorial config={session?.config ?? DEFAULT_CONFIG} onclose={() => tutorialOpen = false} />{/if}
   <h1>Merge Battle · Online</h1>
+  <button onclick={() => tutorialOpen = true}>Come si gioca · Prova il tutorial</button>
   <p>Due dispositivi, una carta a testa. Nessuna registrazione.</p>
   {#if failure}<p role="alert">{failure}</p>{/if}
   {#if expired}
@@ -236,7 +241,7 @@
             ? "Pareggio!"
             : result.winner === view.actor
               ? "Hai vinto!"
-              : "Ha vinto l’altro giocatore!"}
+              : "Hai perso!"}
         </h2>
         <ScoreComparison
           cards={session.moves.map((id) =>

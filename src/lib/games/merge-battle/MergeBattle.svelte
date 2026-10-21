@@ -7,10 +7,11 @@
   import ReviewWeights from './ReviewWeights.svelte';
   import ScoreComparison from './ScoreComparison.svelte';
   import { characters, trials, createSession, input, resolve, roleCards, type Session, type Input, type Mode } from './engine';
-  import { AXES } from './cards';
+  import MergeTutorial from './MergeTutorial.svelte';
   import { DEFAULT_CONFIG, type MergeConfig } from './config';
 
   let { config = DEFAULT_CONFIG }: { config?: MergeConfig } = $props();
+  let tutorialOpen = $state(false);
   let session = $state<Session | null>(null);
   let stage = $state(0);
   let heading = $state<HTMLHeadingElement>();
@@ -21,7 +22,7 @@
   let cast = $derived(characters.filter(character => (session?.allowedCharacters ?? config.characters).includes(character.id)));
   let resultTitle = $derived.by(() => {
     if (!session || !result || result.winner === null) return 'Pareggio!';
-    if (session.mode === 'solo') return result.winner === 0 ? 'Hai vinto!' : 'Vince il rivale!';
+    if (session.mode === 'solo') return result.winner === 0 ? 'Hai vinto!' : 'Hai perso!';
     return `Vince Player ${result.winner + 1}!`;
   });
 
@@ -71,8 +72,10 @@
 </svelte:head>
 
 <main class="mb-shell" data-phase={session?.phase ?? 'intro'}>
+  {#if tutorialOpen}<MergeTutorial {config} onclose={() => tutorialOpen = false} />{/if}
   <nav class="mb-navigation" aria-label="Navigazione Merge Battle">
     <a href="/">← Torna al Game Center</a>
+    {#if session}<button onclick={() => tutorialOpen = true}>Come si gioca</button>{/if}
     {#if session}<button onclick={reset}>← Cambia modalità</button>{/if}
     {#if session?.phase === 'result'}
       <button class="rematch" onclick={() => send({ type: 'rematch' })}>Rivincita!</button>
@@ -108,18 +111,8 @@
             <span><strong>Gioca da solo</strong><small>Sfida il computer</small></span>
           </button>
         </div>
-        <details class="mb-how">
-          <summary>Come si gioca</summary>
-          <ol>
-            <li>Scegli un ruolo e leggi lo scenario.</li>
-            <li>Gioca una delle tre carte, in segreto.</li>
-            <li>Vince chi totalizza più punti. Poi fate il merge!</li>
-          </ol>
-          <p>Ogni attributo viene moltiplicato per il peso del maintainer. Si sommano i risultati dei parametri attivi; a pari punti è pareggio.</p>
-          <p><b>Esempio:</b> {AXES[config.activeAxes[0]]} 4 × peso 3 = 12 punti.</p>
-          <p>{#each config.activeAxes as axis}{AXES[axis]}: {['agire subito', 'reggere gli errori', 'verifiche e dati', 'gestire i cambiamenti'][axis]}. {/each}</p>
-          <p>In due, chi non sceglie guarda altrove. Nessun limite di tempo.</p>
-        </details>
+        <p>Gioca la carta più adatta allo scenario: vince chi totalizza più punti.</p>
+        <button class="mb-primary" onclick={() => tutorialOpen = true}>Come si gioca · Prova il tutorial</button>
       </section>
     </div>
   {:else if session.phase === 'character1' || session.phase === 'character2'}
@@ -272,11 +265,7 @@
   .mode-icon > span { display: inline-block; font-size: 14px; transform: rotate(-10deg); margin: 0 3px; }
   .mode-button strong { display: block; font: 900 23px/1.15 var(--comic-display); }
   .mode-button small { display: block; margin-top: 6px; font-size: 12px; font-weight: 500; }
-  .mb-how { margin-top: 26px; font-size: 14px; }
-  .mb-how summary, .result-details summary { min-height: 48px; align-content: center; cursor: pointer; font-weight: 750; }
-  .mb-how ol { padding-left: 22px; }
-  .mb-how li { margin-bottom: 8px; }
-  .mb-how p { font-size: 13px; }
+  .result-details summary { min-height: 48px; align-content: center; cursor: pointer; font-weight: 750; }
   .screen-heading { display: flex; gap: 20px; align-items: center; justify-content: space-between; margin: 32px 0 12px; }
   .turn-label { font-size: 13px; margin: 0 0 8px; font-weight: 700; }
   .instruction { font-size: 14px; line-height: 1.5; margin: 12px 0 24px; }
@@ -342,7 +331,6 @@
     .start-panel > .balloon { display: none; }
     .mode-button { gap: 18px; padding: 16px; }
     .mode-button strong { font-size: 22px; }
-    .mb-how { margin-top: 20px; }
     .screen-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-top: 24px; }
     .mb-versus { gap: 36px; padding: 10px 12px 20px; }
     .mb-versus strong { font-size: 12px; }

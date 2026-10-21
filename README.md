@@ -206,6 +206,8 @@ Non risultano polling Firestore o listener realtime nel client di BacaroGame. Le
 
 La revisione grafica e le verifiche del 20 ottobre 2026 sono documentate in [REPORT_UX_UI_GAMECENTER.md](REPORT_UX_UI_GAMECENTER.md).
 
+“Come si gioca · Prova il tutorial” apre una dimostrazione interattiva di Merge Battle: scopo, personaggi, scenario, pesi, scelta di una carta e calcolo reale dei punti. Disponibile dalla selezione modalità, durante la partita locale e nella pagina online; la prova non modifica la partita.
+
 ## Merge Battle online senza registrazione
 
 Da Merge Battle scegliere **Gioca online · Due dispositivi**, oppure aprire
