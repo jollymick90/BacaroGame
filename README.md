@@ -189,3 +189,33 @@ Su Vercel la memoria resta per singola istanza: riavvii, scadenze e versioni nuo
 Non risultano polling Firestore o listener realtime nel client di BacaroGame. Le letture partono dall’ingresso nei giochi/pannelli, dalle scansioni e dalle azioni dell’utente. Test cache: `node --experimental-strip-types --test src/lib/server/ttl-cache.test.ts src/lib/server/versioned-cache.test.ts`. Test API e revoche: `npm run test:superadmins`.
 
 La revisione grafica e le verifiche del 20 ottobre 2026 sono documentate in [REPORT_UX_UI_GAMECENTER.md](REPORT_UX_UI_GAMECENTER.md).
+
+## Merge Battle online senza registrazione
+
+Da Merge Battle scegliere **Gioca online · Due dispositivi**, oppure aprire
+`/merge-battle/online`. Creare una stanza e condividere link o codice. Ogni browser
+conserva il posto in un cookie anonimo HttpOnly: il refresh recupera la partita.
+Cancellare i cookie o cambiare browser perde l'identità; il link da solo non permette
+di prendere il posto di un giocatore già entrato.
+
+- Attesa massima: 3 minuti dalla creazione.
+- Partita: altri 3 minuti dall'ingresso del secondo giocatore.
+- Refresh, mosse e risultato non prolungano il timer. Un round per stanza.
+- Stato e validazione mosse sul server, carte avversarie nascoste fino al risultato.
+- Catalogo fissato alla creazione. Le modalità singolo e stesso dispositivo restano.
+- Polling ogni 3 secondi a pagina visibile, una lettura stanza per richiesta; circa
+  120 letture complessive per due giocatori in 3 minuti, oltre a mosse/ingressi.
+  Nessun listener Firebase browser o verifica account Google per queste API.
+- Massimo 8 creazioni al minuto per indirizzo visto dal server (anche condiviso NAT).
+
+Richiede Firebase Admin/Firestore configurato. Il registro
+`COLLEZIONI_FIREBASE.md` descrive la nuova collezione e l'attivazione della policy TTL
+su `expiresAt`. La stanza diventa inutilizzabile alla scadenza; l'eliminazione fisica
+è opportunistica o tramite TTL asincrono. Per cleanup delle stanze abbandonate la
+policy TTL va attivata prima della pubblicazione: non è stata configurata dal codice.
+
+Test dominio: `npm run test:merge-battle`; integrazione con due browser:
+`node scripts/test-merge-online.mjs`, soltanto con `FIRESTORE_EMULATOR_HOST=127.0.0.1:<porta>`
+su un emulatore dedicato al progetto `demo-bacaro-online`, porta app 5198 libera e
+`PLAYWRIGHT_MODULE` impostato al modulo Playwright installato. Il test modifica
+solo stanze create nel progetto demo e non legge `.env` per ottenere credenziali.

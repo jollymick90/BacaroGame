@@ -6,6 +6,9 @@ service cloud.firestore {
     match /bacaroGameConfigurations/{document=**} {
       allow read, write: if false;
     }
+    match /bacaroGameMergeRooms/{document=**} {
+      allow read, write: if false;
+    }
     match /bacarodexMembers/{document=**} {
       allow read, write: if false;
     }

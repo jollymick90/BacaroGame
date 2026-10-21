@@ -6,7 +6,7 @@ export const RESERVED_COLLECTIONS = Object.freeze([
 ] as const);
 
 /** Explicit allowlist. Add new names only after checking the shared database. */
-export const GAME_COLLECTIONS = Object.freeze({ members: 'bacarodexMembers', configurations: 'bacaroGameConfigurations' } as const);
+export const GAME_COLLECTIONS = Object.freeze({ members: 'bacarodexMembers', configurations: 'bacaroGameConfigurations', mergeRooms: 'bacaroGameMergeRooms' } as const);
 
 export function approvedCollectionName(name: string): string {
   if ((RESERVED_COLLECTIONS as readonly string[]).includes(name)) {

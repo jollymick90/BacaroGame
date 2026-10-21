@@ -65,3 +65,21 @@ Il documento `bacaroGameConfigurations/members-version` contiene una versione op
 ### Configurazioni condivise del Game Center (20 ottobre 2026)
 
 `GET /api/game-center/config` legge soltanto i documenti `merge-battle` e `bug-hunter` attraverso gli stessi gateway approvati. Restituisce le impostazioni pubbliche e il flag di disponibilità della configurazione Bacarodex, senza UID degli editor, sessioni, membri o descrittori. Nessun nuovo documento o collezione. Le cache server durano 60 secondi per istanza e vengono aggiornate dal rispettivo PUT; non vi sono scritture durante la lettura. Il layout SvelteKit conserva la risposta durante la navigazione tra giochi. Le cache dei membri e i controlli del consenso non cambiano.
+
+### Merge Battle online (21 ottobre 2026)
+
+Nuovo namespace proposto `bacaroGameMergeRooms`, aperto solo tramite il gateway
+`mergeRoomDocument`. Prima del deploy verificare che non sia già utilizzato nel
+progetto cloud condiviso: questo controllo remoto non è stato eseguito.
+
+- `room-<codice casuale>`: digest dei due identificatori anonimi, stato del motore,
+  copia del catalogo, revisione e scadenza assoluta. Nessuna email o account Auth.
+- `rate-<digest indirizzo>`: contatore creazioni per minuto; non conserva IP in chiaro.
+- `expiresAt`: Timestamp per la policy Firestore TTL da configurare su questa
+  collezione. Integrare il blocco deny browser del ruleset locale senza sostituire
+  le regole delle altre applicazioni. L'Admin SDK valida cookie, turni e revisioni.
+
+La scadenza è applicata dal server anche prima della pulizia fisica. La prima
+richiesta dopo la scadenza cancella la stanza; per quelle abbandonate da entrambi
+serve la policy TTL. Firestore TTL è asincrono: non promette eliminazione fisica
+esattamente al secondo 180. Nessuna policy o regola cloud è stata pubblicata.

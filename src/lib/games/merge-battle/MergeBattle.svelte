@@ -97,6 +97,7 @@
       </section>
       <section class="start-panel" aria-label="Modalità di gioco">
         <p class="balloon">Una carta a testa.<br />Il maintainer decide!</p>
+        <a href="/merge-battle/online">Gioca online · Due dispositivi</a>
         <div class="mb-mode">
           <button class="mode-button" onclick={() => start('local')}>
             <span class="mode-icon" aria-hidden="true">1<span>vs</span>1</span>

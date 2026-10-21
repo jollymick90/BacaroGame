@@ -15,3 +15,11 @@ export function gameDocument(name: string, id: 'merge-battle' | 'bug-hunter' | '
   }
   return gameCollection(name).doc(id);
 }
+
+/** Server-generated room codes and hashed rate-limit keys only. */
+export function mergeRoomDocument(id: string) {
+  if (!/^(room-[a-f0-9]{16}|rate-[a-f0-9]{64})$/.test(id)) {
+    throw new Error('Identificatore stanza non valido.');
+  }
+  return gameCollection('bacaroGameMergeRooms').doc(id);
+}
