@@ -28,20 +28,20 @@
 
 <style>
   .move { min-width: 0; display: flex; flex-direction: column; }
-  .mb-card { display: flex; flex: 1; flex-direction: column; width: 100%; min-width: 0; border: 3px solid var(--comic-ink); border-radius: 8px; padding: 16px; background: var(--comic-paper); color: var(--comic-ink); text-align: left; box-shadow: 4px 5px 0 var(--comic-ink); transition: transform 150ms, box-shadow 150ms; }
-  .mb-card:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); background: #fffdf8; box-shadow: 5px 9px 0 var(--comic-ink); }
-  .mb-card:active:not(:disabled) { transform: translate(3px, 4px); box-shadow: 1px 1px 0 var(--comic-ink); }
+  .mb-card { display: flex; flex: 1; flex-direction: column; width: 100%; min-width: 0; border: 3px solid var(--comic-border); border-radius: 8px; padding: 16px; background: var(--comic-panel); color: var(--comic-ink); text-align: left; box-shadow: 4px 5px 0 var(--comic-shadow); transition: transform 150ms, box-shadow 150ms; }
+  .mb-card:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); background: var(--comic-raised); box-shadow: 5px 9px 0 var(--comic-shadow); }
+  .mb-card:active:not(:disabled) { transform: translate(3px, 4px); box-shadow: 1px 1px 0 var(--comic-shadow); }
   .card-top { display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 12px; }
-  .card-top b { display: grid; place-items: center; border: 2px solid; border-radius: 50%; width: 38px; height: 38px; background: var(--comic-yellow); font-size: 25px; line-height: 1; }
+  .card-top b { display: grid; place-items: center; border: 2px solid; border-radius: 50%; width: 38px; height: 38px; background: var(--comic-yellow); color: var(--comic-on-accent); font-size: 25px; line-height: 1; }
   .card-name { display: block; padding: 16px 0 22px; font: 800 22px/1.15 var(--comic-display); overflow-wrap: anywhere; }
   .card-values { display: grid; gap: 8px; width: 100%; margin-top: auto; padding-bottom: 16px; }
   .card-values > span { display: flex; gap: 8px; align-items: center; font-size: 12px; }
   .card-values > span > span:first-child { width: 80px; flex-shrink: 0; font-weight: 500; }
   .meter { display: flex; flex: 1; gap: 3px; }
   .meter i { height: 10px; flex: 1; border: 1px solid #92a7a3; border-radius: 1px; }
-  .meter .filled { background: var(--comic-teal); border-color: var(--comic-teal); }
+  .meter .filled { background: var(--comic-orange); border-color: var(--comic-orange); }
   .card-values b { font-size: 16px; width: 12px; text-align: right; }
-  .card-bottom { border-top: 2px solid var(--comic-ink); display: flex; width: 100%; justify-content: space-between; padding-top: 12px; font-size: 14px; }
+  .card-bottom { border-top: 2px solid var(--comic-border); display: flex; width: 100%; justify-content: space-between; padding-top: 12px; font-size: 14px; }
   details { margin: 12px 4px 0; font-size: 13px; }
   summary { cursor: pointer; min-height: 44px; align-content: center; }
   p { overflow-wrap: anywhere; margin-top: 0; }

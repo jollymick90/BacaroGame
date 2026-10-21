@@ -1,4 +1,4 @@
-import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
+import { mockGameConfiguration, openGame, chooseCharacter } from './game-center-browser-helpers.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
@@ -64,9 +64,10 @@ try {
       const first = page.getByRole('button', { name: 'Frontend Developer', exact: true });
       await first.focus();
       await page.keyboard.press('Enter');
+      await page.getByRole('button', { name: 'Conferma personaggio', exact: true }).click();
       if (mode === 'local') {
         assert.equal(await first.isDisabled(), true);
-        await page.getByRole('button', { name: 'Backend Developer', exact: true }).click();
+        await chooseCharacter(page, 'Backend Developer');
       }
       for (let round = 0; round < 8; round++) {
         await checkScreen(page, 'brief', round === 0 ? `${device}-${mode}-brief` : '');
@@ -116,7 +117,7 @@ try {
     await openGame(page, origin, '/merge-battle');
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
     assert.equal(await page.locator('.mb-character').count(), 2);
-    await page.getByRole('button', { name: 'Platform Engineer', exact: true }).click();
+    await chooseCharacter(page, 'Platform Engineer');
     await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
     await page.getByText('Dettagli della mossa', { exact: true }).click();
     await checkScreen(page, 'move1', `${device}-custom`, false);
@@ -131,7 +132,7 @@ try {
     await checkScreen(page, 'intro', `${device}-320-intro`);
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
     await checkScreen(page, 'character1', `${device}-320-cast`);
-    await page.getByRole('button', { name: 'Platform Engineer', exact: true }).click();
+    await chooseCharacter(page, 'Platform Engineer');
     await checkScreen(page, 'brief', `${device}-320-brief`);
     await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
     await checkScreen(page, 'move1', `${device}-320-moves`);
@@ -149,7 +150,7 @@ try {
   await mockGameConfiguration(page);
   await openGame(page, origin, '/merge-battle');
   await page.getByRole('button', { name: /Gioca da solo/ }).click();
-  await page.getByRole('button', { name: 'Security Engineer', exact: true }).click();
+  await chooseCharacter(page, 'Security Engineer');
   await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
   await page.locator('.mb-card').first().click();
   await page.locator('.mb-count').waitFor();

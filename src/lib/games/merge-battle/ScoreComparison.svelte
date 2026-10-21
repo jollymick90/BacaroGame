@@ -60,7 +60,7 @@
   .move-name { display: block; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; margin-top: 6px; }
   td span { white-space: nowrap; }
   td small { display: block; font-size: 11px; font-weight: 750; }
-  .advantage { background: #ffda66; }
+  .advantage { background: #ffda66; color: #15151b; }
   tfoot th, tfoot td { border-bottom: 0; border-top: 2px solid; }
   tfoot strong { font-size: 26px; }
   .outcome { margin: 10px 0 0; font-size: 12px; }

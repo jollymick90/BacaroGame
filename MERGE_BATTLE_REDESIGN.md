@@ -1,3 +1,33 @@
+# Aggiornamento: tema condiviso, navigazione e ruota — 20 ottobre 2026
+
+Merge Battle ora usa gli stessi token scuri del Game Center: sfondo `--arcade-bg`, pannelli `--arcade-panel`, testo `--arcade-text` e accento `--arcade-orange`. Il precedente sfondo crema era una scelta specifica del redesign a fumetti; è stato rimosso sia dalla cornice del router sia da ingresso, carte, scenario, arena e risultato. Le illustrazioni Polpodev e i contrasti dei riquadri gialli rimangono riconoscibili.
+
+La navigazione del gioco ha una sola sede: barra superiore sticky con ritorno al Game Center e cambio modalità. Nel risultato compaiono nella stessa barra Rivincita e Cambia personaggi. Le azioni della partita (conferma personaggio, scelta della carta, passaggio di turno e reveal) rimangono accanto al contenuto su cui agiscono. Rimosso il duplicato del ritorno dalla cornice esterna; la pagina di errore configurazione conserva il proprio collegamento alla home.
+
+`CharacterWheel.svelte` sostituisce la griglia: tutti i ruoli abilitati dall’admin sono disposti su una ruota, grigi finché non vengono scelti. Un personaggio selezionato ha colori originali, bordo e segno di spunta; un’anteprima centrale e il nome completo rendono leggibili i dettagli anche sul telefono. La scelta manuale o il pulsante Gira la ruota richiedono conferma. Il sorteggio esclude il personaggio già preso da Player 1. Durante i 2,2 secondi del giro le scelte sono bloccate; con movimento ridotto l’esito è immediato. Frecce/Home/End spostano il focus; Invio e Spazio usano i normali pulsanti. Il timer viene eliminato uscendo dal selettore.
+
+Corrette due interferenze del CSS globale: dimensione intrinseca delle miniature dentro i pulsanti e trasformazione `button:active` che spostava il bersaglio durante il clic. Motore, scenari, mosse, catalogo e punteggi non sono cambiati.
+
+## Multiplayer
+
+La modalità esistente resta 1 vs computer o 1 vs 1 sullo stesso telefono, indicata esplicitamente nella schermata iniziale. Due telefoni sono tecnicamente fattibili, ma richiedono stanze, inviti, credenziali dei giocatori, stato autorevole lato server, mosse segrete e gestione delle disconnessioni. È stata chiesta una scelta separata di ambito; questa modifica UI non introduce né presenta come disponibile il multiplayer online. Nessuna nuova collezione, API di partita o scrittura Firebase.
+
+## Verifica di questo aggiornamento
+
+- `npm run check`: zero errori e zero avvisi.
+- `npm run test:merge-battle`: 16 test passati.
+- `npm run build`: completata; restano i warning preesistenti di tracing Vercel (`metadataResolver`, `supports-color`).
+- Nuovo test `scripts/test-merge-wheel-browser.mjs`: tema, navigazione, selezione manuale/casuale, esclusione del ruolo occupato, conferma, scontro locale e larghezze 1280/390/320 px. Screenshot in `/tmp/merge-wheel-*.png`, controllati visivamente.
+- Test della ruota passato anche con animazione normale, navigazione da tastiera, uscita durante il giro e movimento ridotto. La revisione indipendente ha individuato il focus fuori schermo in orizzontale: corretto con scrollIntoView e margini per la barra sticky, verificato a 844×390.
+- Suite redesign mobile: 18 scontri completati, tutti gli otto scenari in solo/local, cataloghi ristretti, carte lunghe, 320 px, animazione e uscita durante lo scontro.
+- Suite parametri admin passata: salvataggio/ricaricamento, snapshot anteprima, simulatore e 8 ulteriori scontri solo/local con uno, due e quattro parametri.
+- Test del router: SSR, idratazione, configurazione condivisa, cronologia, refresh, link legacy e recupero dagli errori passati.
+- I test browser esistenti sono stati adattati alla conferma esplicita del personaggio. Le prove non scrivono configurazioni di produzione. Il vecchio script admin che modifica gli emulatori è stato aggiornato ma non eseguito; la suite parametri usa fixture pubbliche e sessione locale protetta dal controllo emulatori.
+
+Il report seguente descrive il redesign precedente; i riferimenti al tema crema e alla selezione a griglia sono storici.
+
+---
+
 # Merge Battle — Fumetto da Bacaro
 
 ## Aggiornamento: parametri selezionabili e confronto dei punti

@@ -1,4 +1,4 @@
-import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
+import { mockGameConfiguration, openGame, chooseCharacter } from './game-center-browser-helpers.mjs';
 import assert from 'node:assert/strict';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
 import { AXES } from '../src/lib/games/merge-battle/cards.ts';
@@ -27,8 +27,8 @@ await page.addInitScript(() => { Math.random = () => 0; });
 
 async function openHand(game, mode = 'solo') {
   await game.getByRole('button', { name: mode === 'solo' ? /Gioca da solo/ : /Gioca in due/ }).click();
-  await game.getByRole('button', { name: 'Frontend Developer', exact: true }).click();
-  if (mode === 'local') await game.getByRole('button', { name: 'Backend Developer', exact: true }).click();
+  await chooseCharacter(game, 'Frontend Developer');
+  if (mode === 'local') await chooseCharacter(game, 'Backend Developer');
   await game.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
 }
 

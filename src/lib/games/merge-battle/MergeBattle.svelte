@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import MoveCard from './MoveCard.svelte';
   import Fighter from './Fighter.svelte';
+  import CharacterWheel from './CharacterWheel.svelte';
   import BattleArena from './BattleArena.svelte';
   import ReviewWeights from './ReviewWeights.svelte';
   import ScoreComparison from './ScoreComparison.svelte';
@@ -70,6 +71,14 @@
 </svelte:head>
 
 <main class="mb-shell" data-phase={session?.phase ?? 'intro'}>
+  <nav class="mb-navigation" aria-label="Navigazione Merge Battle">
+    <a href="/">← Torna al Game Center</a>
+    {#if session}<button onclick={reset}>← Cambia modalità</button>{/if}
+    {#if session?.phase === 'result'}
+      <button class="rematch" onclick={() => send({ type: 'rematch' })}>Rivincita!</button>
+      <button onclick={() => start(session!.mode)}>Cambia personaggi</button>
+    {/if}
+  </nav>
   <div class="mb-mast">
     <span>Merge Battle <b>by BacaroTech</b></span>
     {#if session}<span>{session.mode === 'solo' ? 'Singolo' : '1 vs 1'} · Round {session.round + 1}</span>{:else}<span>Il gioco dei Polpodev</span>{/if}
@@ -118,21 +127,9 @@
         <h1 bind:this={heading} tabindex="-1">Scegli il tuo Polpodev.</h1></div>
       {#if actor === 1}<span class="picked-label">P1: {characters[session.ids[0]!].short} ✓</span>{/if}
     </div>
-    <p class="instruction">{session.mode === 'solo' ? 'Tocca un ruolo. Il computer ne sceglierà un altro.' : 'Tocca un ruolo per entrare in partita.'}</p>
-    <div class="mb-cast">
-      {#each cast as character}
-        <button
-          class="mb-character"
-          disabled={session.ids.includes(character.id)}
-          onclick={() => send({ type: 'character', actor: actor as 0 | 1, value: character.id })}
-          aria-label={character.name}
-        >
-          <Fighter id={character.id} size="small" />
-          <strong>{character.short}</strong>
-          {#if session.ids.includes(character.id)}<span class="chosen">Player 1 ✓</span>{/if}
-        </button>
-      {/each}
-    </div>
+    {#key actor}
+      <CharacterWheel {cast} taken={session.ids.filter((id): id is number => id !== null)} onchoose={id => send({ type: 'character', actor: actor as 0 | 1, value: id })} />
+    {/key}
   {:else if session.phase === 'brief'}
     <div class="screen-heading"><div><p class="turn-label">Lo scenario</p><h1 bind:this={heading} tabindex="-1">La sfida è servita.</h1></div></div>
     <div class="brief-panel">
@@ -221,45 +218,54 @@
       />
       {#if session.mode === 'solo'}<p>{session.botLine}</p>{/if}
     </details>
-    <div class="result-actions"><button class="mb-primary" onclick={() => send({ type: 'rematch' })}>Rivincita!</button><button class="mb-secondary" onclick={() => start(session!.mode)}>Cambia personaggi</button></div>
+
   {/if}
 
-  {#if session}<button class="mb-exit" onclick={reset}>← Cambia modalità</button>{/if}
+
 </main>
 
 <style>
   .mb-shell {
-    --comic-paper: #fff6e5;
-    --comic-ink: #102f36;
+    --comic-paper: var(--arcade-bg);
+    --comic-panel: var(--arcade-panel);
+    --comic-raised: var(--arcade-raised);
+    --comic-ink: var(--arcade-text);
+    --comic-border: var(--arcade-border);
+    --comic-shadow: #0c0c10;
+    --comic-on-accent: #15151b;
     --comic-teal: #164e58;
-    --comic-orange: #ff901c;
+    --comic-orange: var(--arcade-orange);
     --comic-yellow: #ffda66;
-    --comic-blue: #d8edf0;
+    --comic-blue: var(--arcade-panel);
     --comic-display: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif;
     max-width: 1120px; margin: 0 auto; padding: 22px 32px 40px; background: var(--comic-paper); color: var(--comic-ink); min-height: calc(100svh - 70px); font-family: ui-sans-serif, system-ui, sans-serif;
   }
-  .mb-shell :global(button:focus-visible), .mb-shell :global(summary:focus-visible) { outline: 3px solid #006c86; outline-offset: 5px; }
-  .mb-shell h1 { font: 900 clamp(28px, 4vw, 44px)/1.08 var(--comic-display); letter-spacing: -1.3px; margin: 0; scroll-margin-top: 20px; }
+  .mb-shell :global(button:focus-visible), .mb-shell :global(summary:focus-visible) { outline: 3px solid var(--comic-orange); outline-offset: 5px; }
+  .mb-shell h1 { font: 900 clamp(28px, 4vw, 44px)/1.08 var(--comic-display); letter-spacing: -1.3px; margin: 0; scroll-margin-top: 150px; }
   .mb-shell h1:focus { outline: none; }
   .mb-shell h2 { font-family: var(--comic-display); }
+  .mb-navigation { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: -22px -32px 24px; padding: 10px 32px; border: 0; border-bottom: 1px solid var(--comic-border); background: var(--comic-paper); }
+  .mb-navigation a, .mb-navigation button { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 6px 0; background: none; border: 0; color: var(--comic-ink); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+  .mb-navigation button:hover { color: var(--comic-orange); background: none; }
+  .mb-navigation .rematch { color: var(--comic-orange); }
   .mb-mast { display: flex; justify-content: space-between; gap: 16px; padding: 0 0 14px; margin-bottom: 24px; border-bottom: 2px solid; font-size: 13px; font-weight: 800; }
   .mb-mast b { font-size: 11px; font-weight: 500; margin-left: 8px; }
   .mb-mast > span:last-child { font-size: 12px; font-weight: 500; }
   .intro-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: center; }
-  .cover-panel { position: relative; min-width: 0; border: 3px solid; border-radius: 9px 9px 35px 9px; background: var(--comic-blue); padding: 26px 16px 20px; box-shadow: 6px 7px 0 var(--comic-ink); }
+  .cover-panel { position: relative; min-width: 0; border: 3px solid var(--comic-border); border-radius: 9px 9px 35px 9px; background: var(--comic-blue); padding: 26px 16px 20px; box-shadow: 6px 7px 0 var(--comic-shadow); }
   .cover-panel h1 { position: relative; z-index: 2; font-size: clamp(52px, 7vw, 84px); line-height: .88; text-align: center; transform: rotate(-6deg); letter-spacing: -4px; }
-  .cover-panel h1 span { color: #a04400; }
+  .cover-panel h1 span { color: var(--comic-orange); }
   .cover-cast { position: relative; display: flex; align-items: flex-end; margin: 16px -10px 0; }
   .cover-left, .cover-right { width: 53%; }
   .cover-right { margin-left: -6%; transform: translateY(14px); }
-  .cover-vs { position: absolute; z-index: 2; top: 48%; left: 46%; background: var(--comic-yellow); border: 2px solid; border-radius: 50%; padding: 8px 5px; font: italic 900 24px/1 var(--comic-display); transform: rotate(-10deg); }
-  .cover-caption { background: var(--comic-paper); border: 2px solid; padding: 9px 16px; margin: 18px 8px 0; width: fit-content; font-size: 16px; line-height: 1.35; transform: rotate(-2deg); }
+  .cover-vs { position: absolute; z-index: 2; top: 48%; left: 46%; background: var(--comic-yellow); color: var(--comic-on-accent); border: 2px solid var(--comic-border); border-radius: 50%; padding: 8px 5px; font: italic 900 24px/1 var(--comic-display); transform: rotate(-10deg); }
+  .cover-caption { background: var(--comic-paper); border: 2px solid var(--comic-border); padding: 9px 16px; margin: 18px 8px 0; width: fit-content; font-size: 16px; line-height: 1.35; transform: rotate(-2deg); }
   .start-panel { min-width: 0; padding: 8px 4px; }
-  .balloon { border: 2px solid; border-radius: 50% 50% 50% 8px; padding: 22px 24px; font: 800 23px/1.25 var(--comic-display); text-align: center; background: #fffdf8; margin: 0 0 28px; }
+  .balloon { border: 2px solid var(--comic-border); border-radius: 50% 50% 50% 8px; padding: 22px 24px; font: 800 23px/1.25 var(--comic-display); text-align: center; background: var(--comic-panel); margin: 0 0 28px; }
   .mb-mode { display: grid; gap: 16px; }
-  .mode-button { display: flex; align-items: center; gap: 20px; text-align: left; border: 3px solid var(--comic-ink); border-radius: 8px; padding: 20px; background: var(--comic-orange); color: var(--comic-ink); box-shadow: 4px 5px 0 var(--comic-ink); }
+  .mode-button { display: flex; align-items: center; gap: 20px; text-align: left; border: 3px solid var(--comic-border); border-radius: 8px; padding: 20px; background: var(--comic-orange); color: var(--comic-on-accent); box-shadow: 4px 5px 0 var(--comic-shadow); }
   .mode-button:hover:not(:disabled) { background: #ffa73e; transform: rotate(-1deg); }
-  .mode-button.solo { background: var(--comic-teal); color: var(--comic-paper); }
+  .mode-button.solo { background: var(--comic-teal); color: var(--comic-ink); }
   .mode-button.solo:hover:not(:disabled) { background: #216575; }
   .mode-icon { font: 900 30px/1 var(--comic-display); white-space: nowrap; min-width: 66px; }
   .mode-icon > span { display: inline-block; font-size: 14px; transform: rotate(-10deg); margin: 0 3px; }
@@ -273,16 +279,8 @@
   .screen-heading { display: flex; gap: 20px; align-items: center; justify-content: space-between; margin: 32px 0 12px; }
   .turn-label { font-size: 13px; margin: 0 0 8px; font-weight: 700; }
   .instruction { font-size: 14px; line-height: 1.5; margin: 12px 0 24px; }
-  .picked-label, .scene-tag { display: inline-block; background: var(--comic-yellow); border: 2px solid; padding: 6px 10px; font-size: 12px; font-weight: 800; }
-  .mb-cast { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px 12px; margin: 28px 0; }
-  .mb-character { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 6px 12px; border: 2px solid; border-radius: 8px; color: var(--comic-ink); background: #fffdf8; box-shadow: 3px 4px 0 var(--comic-ink); transition: transform 150ms, background 150ms; min-width: 0; }
-  .mb-character:nth-child(3n + 2) { background: #e4f1ed; }
-  .mb-character:nth-child(3n) { background: #ffedc0; }
-  .mb-character:hover:not(:disabled) { background: var(--comic-yellow); transform: translateY(-5px) rotate(-2deg); }
-  .mb-character strong { font: 800 16px/1.1 var(--comic-display); }
-  .mb-character:disabled { opacity: .65; box-shadow: none; border-style: dashed; }
-  .chosen { position: absolute; top: 40%; background: var(--comic-ink); color: var(--comic-paper); border: 2px solid var(--comic-paper); padding: 6px; font-size: 12px; transform: rotate(-8deg); }
-  .brief-panel { margin-top: 24px; border: 3px solid; border-radius: 8px; background: var(--comic-blue); overflow: hidden; }
+  .picked-label, .scene-tag { display: inline-block; background: var(--comic-yellow); color: var(--comic-on-accent); border: 2px solid var(--comic-border); padding: 6px 10px; font-size: 12px; font-weight: 800; }
+  .brief-panel { margin-top: 24px; border: 3px solid var(--comic-border); border-radius: 8px; background: var(--comic-blue); overflow: hidden; }
   .scenario { padding: 22px 24px 0; }
   .scene-tag { font-size: 10px; }
   .scenario h2 { font-size: clamp(23px, 3.5vw, 34px); line-height: 1.15; max-width: 30ch; margin: 14px 0 12px; }
@@ -295,10 +293,8 @@
   .criteria { margin: 24px 0; }
   .criteria h2 { font-size: 16px; margin-bottom: 12px; }
   .criteria p { font-size: 12px; margin-bottom: 0; }
-  .mb-primary, .mb-secondary { min-height: 52px; border: 2px solid var(--comic-ink); border-radius: 6px; padding: 14px 24px; background: var(--comic-orange); color: var(--comic-ink); font-weight: 850; box-shadow: 3px 4px 0 var(--comic-ink); }
+  .mb-primary { min-height: 52px; border: 2px solid var(--comic-border); border-radius: 6px; padding: 14px 24px; background: var(--comic-orange); color: var(--comic-on-accent); font-weight: 850; box-shadow: 3px 4px 0 var(--comic-shadow); }
   .mb-primary:hover:not(:disabled) { background: #ffa73e; }
-  .mb-secondary { background: var(--comic-paper); }
-  .mb-secondary:hover:not(:disabled) { background: var(--comic-blue); }
   .move-heading { display: flex; align-items: center; gap: 24px; }
   .move-heading .instruction { margin-bottom: 0; }
   .move-scenario { border-top: 2px solid; padding-top: 14px; margin: 12px 0 24px; }
@@ -306,34 +302,33 @@
   .move-scenario > .scoring-hint { font-size: 12px; font-weight: 500; margin: 12px 0 0; }
   .mb-hand { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 28px 0; }
   .mb-handoff { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 560px; text-align: center; }
-  .handoff-icon { display: grid; place-items: center; background: var(--comic-yellow); border: 3px solid; border-radius: 14px; font-size: 90px; line-height: 1; width: 150px; height: 140px; transform: rotate(-8deg); margin-bottom: 28px; box-shadow: 5px 5px 0; }
+  .handoff-icon { display: grid; place-items: center; background: var(--comic-yellow); color: var(--comic-on-accent); border: 3px solid var(--comic-border); border-radius: 14px; font-size: 90px; line-height: 1; width: 150px; height: 140px; transform: rotate(-8deg); margin-bottom: 28px; box-shadow: 5px 5px 0; }
   .mb-handoff .balloon { font-size: 20px; margin: 24px 0 8px; padding: 15px 28px; }
   .mb-handoff > p:not(.balloon) { font-size: 14px; margin-bottom: 24px; }
   .battle-feedback { text-align: center; min-height: 110px; }
   .battle-feedback p { font-weight: 700; font-size: 15px; }
-  .result-panel { border: 3px solid; border-radius: 9px; background: var(--comic-yellow); padding: 24px; text-align: center; box-shadow: 5px 6px 0 var(--comic-ink); }
-  .result-stamp { display: inline-block; padding: 4px 14px; border: 2px solid; background: var(--comic-paper); transform: rotate(-4deg); margin: 0 0 18px; font-size: 12px; font-weight: 800; }
+  .result-panel { border: 3px solid var(--comic-border); border-radius: 9px; background: var(--comic-panel); padding: 24px; text-align: center; box-shadow: 5px 6px 0 var(--comic-shadow); }
+  .result-stamp { display: inline-block; padding: 4px 14px; border: 2px solid var(--comic-border); background: var(--comic-paper); transform: rotate(-4deg); margin: 0 0 18px; font-size: 12px; font-weight: 800; }
   .result-panel h1 { font-size: clamp(34px, 5.5vw, 58px); }
   .mb-scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 520px; margin: 24px auto 0; }
-  .mb-scoreboard > div { display: flex; flex-direction: column; background: var(--comic-paper); border: 2px solid; padding: 10px 12px; border-radius: 5px; }
-  .mb-scoreboard > .winner { background: var(--comic-teal); color: var(--comic-paper); border-color: var(--comic-ink); }
+  .mb-scoreboard > div { display: flex; flex-direction: column; background: var(--comic-paper); border: 2px solid var(--comic-border); padding: 10px 12px; border-radius: 5px; }
+  .mb-scoreboard > .winner { background: var(--comic-teal); color: var(--comic-ink); border-color: var(--comic-ink); }
   .mb-scoreboard span { font-size: 12px; }
   .mb-scoreboard b { font: 900 36px/1.2 var(--comic-display); }
   .mb-scoreboard small { font: 500 12px system-ui, sans-serif; }
   .mb-scoreboard strong { font-size: 13px; }
   .result-summary { max-width: 52ch; margin: 16px auto 0; font-size: 13px; }
   .mb-merge { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-  .merge-label { background: var(--comic-ink); color: var(--comic-paper); padding: 4px 12px; font-weight: 800; font-size: 12px; transform: rotate(-3deg); }
+  .merge-label { background: var(--comic-orange); color: var(--comic-on-accent); padding: 4px 12px; font-weight: 800; font-size: 12px; transform: rotate(-3deg); }
   .mb-merge h2 { font-size: clamp(23px, 4vw, 34px); line-height: 1.1; overflow-wrap: anywhere; margin: 16px 0 8px; }
   .mb-merge p { font-size: 13px; margin: 0; }
   .result-details { margin: 24px 0; border-bottom: 2px solid; padding-bottom: 8px; }
   .result-details > p { font-size: 14px; }
-  .result-actions { display: flex; gap: 16px; }
-  .mb-exit { display: block; background: none; color: var(--comic-ink); border: 0; text-decoration: underline; text-underline-offset: 4px; font-size: 13px; padding: 14px 0; margin-top: 24px; }
-  .mb-exit:hover:not(:disabled) { background: none; }
-  @media (max-width: 950px) { .mb-cast { grid-template-columns: repeat(4, minmax(0, 1fr)); } .intro-layout { gap: 24px; } .mode-button { padding: 16px 12px; gap: 12px; } }
+  @media (max-width: 950px) { .intro-layout { gap: 24px; } .mode-button { padding: 16px 12px; gap: 12px; } }
   @media (max-width: 700px) {
     .mb-shell { padding: 16px 18px 30px; }
+    .mb-navigation { margin: -16px -18px 20px; padding: 6px 18px; gap: 0 16px; }
+    .mb-navigation a, .mb-navigation button { font-size: 12px; }
     .mb-mast { margin-bottom: 20px; font-size: 12px; }
     .mb-mast b { display: none; }
     .mb-mast > span:last-child { font-size: 11px; }
@@ -348,9 +343,6 @@
     .mode-button strong { font-size: 22px; }
     .mb-how { margin-top: 20px; }
     .screen-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-top: 24px; }
-    .mb-cast { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
-    .mb-character { padding: 6px 8px 12px; }
-    .mb-character strong { font-size: 16px; }
     .mb-versus { gap: 36px; padding: 10px 12px 20px; }
     .mb-versus strong { font-size: 12px; }
     .vs-label { font-size: 27px; }
@@ -365,8 +357,7 @@
     .result-panel { padding: 20px 12px; }
     .mb-scoreboard { gap: 8px; }
     .mb-scoreboard b { font-size: 32px; }
-    .result-actions { flex-direction: column; gap: 12px; }
-    .mb-primary, .mb-secondary { width: 100%; }
+    .mb-primary { width: 100%; }
   }
-  @media (prefers-reduced-motion: reduce) { .mode-button, .mb-character { transition: none; } .mode-button:hover:not(:disabled), .mb-character:hover:not(:disabled) { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .mode-button { transition: none; } .mode-button:hover:not(:disabled) { transform: none; } }
 </style>

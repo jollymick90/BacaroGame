@@ -7,7 +7,9 @@ try {
   await page.goto(`${origin}/#/merge-battle`);
   await page.getByRole('button', { name: /Gioca in due/ }).click();
   await page.locator('.mb-character').first().click();
+  await page.getByRole('button', { name: 'Conferma personaggio' }).click();
   await page.locator('.mb-character:not(:disabled)').first().click();
+  await page.getByRole('button', { name: 'Conferma personaggio' }).click();
   await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
   await page.locator('.mb-card').first().click();
   await page.getByRole('button', { name: 'Sono Player 2', exact: true }).click();

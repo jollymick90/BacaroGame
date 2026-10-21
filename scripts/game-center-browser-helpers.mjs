@@ -20,3 +20,8 @@ export async function openGame(page, origin, path) {
   await page.locator(`a.play-link[href="${path}"]`).click();
   await page.waitForURL(`${origin}${path}`);
 }
+
+export async function chooseCharacter(surface, name) {
+  await surface.getByRole('button', { name, exact: true }).click();
+  await surface.getByRole('button', { name: 'Conferma personaggio', exact: true }).click();
+}
