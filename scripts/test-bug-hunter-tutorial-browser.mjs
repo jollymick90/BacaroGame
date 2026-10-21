@@ -22,6 +22,7 @@ try {
     assert.match(await guide.innerText(), /lo scopo della tua vita non è fare feature ma catturare bug/);
     await page.screenshot({path:`/tmp/bug-tutorial-welcome-${viewport.width}.png`});
     await page.getByRole('button',{name:'Fammi vedere',exact:true}).click();
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('.tutorial-guide')).opacity === '0');
     await page.keyboard.press('d'); // Inputs cannot derail a scripted demonstration.
     await page.getByText('Bug scappato: da 3 a 2 vite.',{exact:true}).waitFor();
     await page.getByLabel('2 possibilità rimaste').waitFor();
@@ -38,6 +39,9 @@ try {
     await dialog.getByRole('button',{name:'Questa',exact:true}).click();
     await dialog.waitFor({state:'detached',timeout:5000});
     await page.getByLabel('2 possibilità rimaste').waitFor();
+    await page.getByText('Corri corri che puoi trasformarti in qualcosa…',{exact:true}).waitFor();
+    await page.getByRole('img',{name:'Sagoma misteriosa di un polpo'}).waitFor();
+    await page.screenshot({path:`/tmp/bug-tutorial-mystery-${viewport.width}.png`});
     await page.getByRole('button',{name:'Gioca',exact:true}).click();
     await page.getByLabel('3 possibilità rimaste').waitFor();
     assert.equal(await page.getByTestId('bug-count').innerText(),'0');

@@ -19,16 +19,21 @@
   const stepId = $derived(state.step);
   const index = $derived(TUTORIAL_STEPS.findIndex(step => step.id === stepId));
   const step = $derived(TUTORIAL_STEPS[index]);
+  const demonstrating = $derived(!state.complete && (phase === 'running' || phase === 'question'));
   const quizFailed = $derived(stepId === 'heart' && state.correct === false);
 
   $effect(() => {
     stepId;
+    if (demonstrating) return;
     if (panel) panel.scrollTop = 0;
     heading?.focus({ preventScroll: true });
   });
 </script>
 
-<section bind:this={panel} class="tutorial-guide" aria-labelledby="tutorial-title">
+{#if demonstrating}
+  <button class="demo-exit" onclick={onexit}>Esci dal tutorial</button>
+{/if}
+<section bind:this={panel} class="tutorial-guide" class:demonstrating inert={demonstrating} aria-hidden={demonstrating} aria-labelledby="tutorial-title">
   <div class="tutorial-heading">
     <span>Come si gioca · {index + 1}/{TUTORIAL_STEPS.length}</span>
     <button class="exit" onclick={onexit}>Esci dal tutorial</button>
@@ -37,7 +42,7 @@
   <h2 id="tutorial-title" bind:this={heading} tabindex="-1">{step.title}</h2>
   <p>{step.text}</p>
   {#if stepId === 'welcome'}
-    <p>Parti come developer. A {runSettings.distanceGoal} metri attraversi la barriera premio con il polipo: occupa tutte le corsie e non si può saltare. Diventi il polipo Bacaro, poi catturi altri {runSettings.bugGoal} bug e arrivi alla review finale.</p>
+    <p>Parti come developer. Raggiungi {runSettings.distanceGoal} metri, poi cattura altri {runSettings.bugGoal} bug per arrivare alla review finale. Lungo il percorso ti aspetta una sorpresa…</p>
     <p class="hint">La velocità aumenta gradualmente. Hai tre vite: ogni bug mancato o urto costa una vita.</p>
     <details><summary>Abilità automatiche</summary><p class="hint">5 Heisenbug: scudo per 8 s. 3 Regression: una vita in più. 3 Production: rallentamento per 6 s. 4 Feature: punti doppi per 10 s.</p></details>
     <p class="hint">Qui guardi e impari. In partita: ← → / A D per cambiare corsia, ↑ / W / spazio per saltare. Su telefono, scorri o usa i pulsanti.</p>
@@ -54,6 +59,14 @@
     </p>
   {:else if stepId !== 'welcome'}
     <p class="hint" role="status">{phase === 'paused' ? 'Dimostrazione in pausa. Premi Rivedi per ripartire.' : 'Guarda la dimostrazione nella scena…'}</p>
+  {/if}
+  {#if stepId === 'heart' && state.complete && state.correct}
+    <div class="mystery">
+      <svg viewBox="0 0 160 120" role="img" aria-label="Sagoma misteriosa di un polpo">
+        <path d="M44 60C27 18 48 5 80 5S133 18 116 60C127 65 132 91 143 88Q155 76 158 87Q157 109 137 110Q119 111 111 85Q115 113 100 116Q87 117 87 88Q85 120 73 118Q59 115 66 86Q53 117 36 112Q17 108 17 92Q19 81 28 91Q39 100 44 75Q26 95 9 83Q0 74 5 65Q12 61 17 71Q28 80 44 60Z" />
+      </svg>
+      <p>Corri corri che puoi trasformarti in qualcosa…</p>
+    </div>
   {/if}
   <div class="actions">
     {#if stepId !== 'welcome'}
@@ -84,6 +97,15 @@
     background: #23232ef5;
     color: #f6f3ea;
     touch-action: pan-y;
+    transition: opacity 180ms ease;
+  }
+  .tutorial-guide.demonstrating { opacity: 0; pointer-events: none; }
+  .demo-exit { position: absolute; top: 122px; left: 12px; background: #23232e99; }
+  .mystery { text-align: center; color: #6fffd4; }
+  .mystery svg { display: block; width: 100px; height: 75px; margin: 12px auto; fill: #101016; filter: drop-shadow(0 0 2px #b9a1fb); }
+  .mystery p { font-weight: 800; }
+  @media (prefers-reduced-motion: reduce) {
+    .tutorial-guide { transition: none; }
   }
   .tutorial-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .tutorial-heading > span { color: #ff9abd; font-size: 12px; font-weight: 800; }
