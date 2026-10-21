@@ -78,3 +78,18 @@ test("turns, stale requests and card secrecy survive the entire round", () => {
   assert.equal(roomView(room, "two", 207).session.moves[0], card);
   assert.equal(room.expires, 200 + ROOM_DURATION);
 });
+
+test('room codes support three words, spaces and legacy links without accepting paths', async () => {
+  const { normalizeRoomCode, isRoomCode } = await import('./room-code.ts');
+  const { generateRoomCode } = await import('../../server/merge-room-code.ts');
+  assert.equal(normalizeRoomCode(' POLPO Laguna Caffe '), 'polpo-laguna-caffe');
+  assert.equal(normalizeRoomCode('be79cfde00ee9218'), 'be79cfde00ee9218');
+  for (const invalid of ['../room', 'polpo-laguna', 'a-b-c', 'polpo/laguna/caffe', null, 'polpo-laguna-caffe-extra']) {
+    assert.equal(normalizeRoomCode(invalid), null);
+  }
+  for (let index = 0; index < 100; index++) {
+    const code = generateRoomCode();
+    assert.equal(isRoomCode(code), true);
+    assert.equal(code.split('-').length, 3);
+  }
+});

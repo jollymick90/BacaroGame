@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
   import { onMount } from "svelte";
   import { characters, trials, resolve, roleCards } from "./engine";
   import type { RoomCommand, RoomView } from "./online";
@@ -48,7 +49,7 @@
     if (command) busy = true;
     else refreshing = true;
     try {
-      const targetCode = code.trim().toLowerCase();
+      const targetCode = normalizeRoomCode(code) ?? code.trim().toLowerCase();
       const response = await fetch(
         "/api/merge-battle/rooms" +
           (command ? "" : `?code=${encodeURIComponent(targetCode)}`),
@@ -149,7 +150,8 @@
           id="room-code"
           bind:value={code}
           required
-          maxlength="16"
+          maxlength={ROOM_CODE_MAX_LENGTH}
+          placeholder="polpo-laguna-caffe"
           autocomplete="off"
           autocapitalize="none"
         />

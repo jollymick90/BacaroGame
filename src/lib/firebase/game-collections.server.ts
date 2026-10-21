@@ -1,3 +1,4 @@
+import { isRoomCode } from '../games/merge-battle/room-code';
 import { firebaseAdmin } from './firebase-admin.server';
 import { approvedCollectionName } from './collections';
 
@@ -18,7 +19,9 @@ export function gameDocument(name: string, id: 'merge-battle' | 'bug-hunter' | '
 
 /** Server-generated room codes and hashed rate-limit keys only. */
 export function mergeRoomDocument(id: string) {
-  if (!/^(room-[a-f0-9]{16}|rate-[a-f0-9]{64})$/.test(id)) {
+  const roomId = id.startsWith('room-') && isRoomCode(id.slice(5));
+  const rateId = /^rate-[a-f0-9]{64}$/.test(id);
+  if (!roomId && !rateId) {
     throw new Error('Identificatore stanza non valido.');
   }
   return gameCollection('bacaroGameMergeRooms').doc(id);

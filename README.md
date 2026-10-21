@@ -209,7 +209,7 @@ La revisione grafica e le verifiche del 20 ottobre 2026 sono documentate in [REP
 ## Merge Battle online senza registrazione
 
 Da Merge Battle scegliere **Gioca online · Due dispositivi**, oppure aprire
-`/merge-battle/online`. Creare una stanza e condividere link o codice. Ogni browser
+`/merge-battle/online`. Creare una stanza e condividere link o codice di tre parole, per esempio `polpo-laguna-caffe`. Sono accettati anche spazi e maiuscole; i vecchi codici esadecimali restano validi. Le collisioni sono gestite in transazione senza sovrascrivere stanze. Ogni browser
 conserva il posto in un cookie anonimo HttpOnly: il refresh recupera la partita.
 Cancellare i cookie o cambiare browser perde l'identità; il link da solo non permette
 di prendere il posto di un giocatore già entrato.

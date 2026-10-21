@@ -14,6 +14,9 @@ import {
 } from "$lib/games/merge-battle/online";
 import type { RequestHandler } from "./$types";
 
+import { normalizeRoomCode } from "$lib/games/merge-battle/room-code";
+import { generateRoomCode } from "$lib/server/merge-room-code";
+
 const COOKIE = "bacaro_merge_player";
 function hash(value: string) {
   return createHash("sha256").update(value).digest("hex");
@@ -36,9 +39,9 @@ function identity(event: RequestEvent, create: boolean) {
   return hash(token);
 }
 function codeFrom(value: unknown) {
-  if (typeof value !== "string" || !/^[a-f0-9]{16}$/.test(value))
-    error(400, "Codice stanza non valido.");
-  return value;
+  const code = normalizeRoomCode(value);
+  if (!code) error(400, "Codice stanza non valido.");
+  return code;
 }
 function parseCommand(payload: Record<string, unknown>): RoomCommand {
   if (payload.type === "join" || payload.type === "ready")
@@ -121,19 +124,27 @@ export const POST: RequestHandler = async (event) => {
       );
     }
     const { config } = await getMergeConfiguration();
-    const code = randomBytes(8).toString("hex");
-    const reference = mergeRoomDocument("room-" + code);
     // Shared across server instances. Never retain the raw client address.
     const rateReference = mergeRoomDocument(
       "rate-" + hash(event.getClientAddress()),
     );
-    const room = await firebaseAdmin().db.runTransaction(
+    const reserved = await firebaseAdmin().db.runTransaction(
       async (transaction) => {
         const rate = (await transaction.get(rateReference)).data();
         const now = Date.now();
         const count = rate && rate.expires > now ? Number(rate.count) : 0;
         if (count >= 8)
           error(429, "Troppe stanze create. Attendi un minuto e riprova.");
+        // Reserve a free code atomically; never replace an existing room.
+        let code = generateRoomCode();
+        let reference = mergeRoomDocument("room-" + code);
+        for (let attempt = 0; ; attempt++) {
+          const candidate = await transaction.get(reference);
+          if (!candidate.exists) break;
+          if (attempt >= 7) error(503, "Nessun codice disponibile. Riprova.");
+          code = generateRoomCode();
+          reference = mergeRoomDocument("room-" + code);
+        }
         const expires =
           rate && rate.expires > now ? Number(rate.expires) : now + 60_000;
         const judge =
@@ -148,10 +159,10 @@ export const POST: RequestHandler = async (event) => {
           ...created,
           expiresAt: new Date(created.expires),
         });
-        return created;
+        return { code, room: created };
       },
     );
-    return privateJson({ code, ...roomView(room, player, Date.now()) }, 201);
+    return privateJson({ code: reserved.code, ...roomView(reserved.room, player, Date.now()) }, 201);
   } catch (cause) {
     fail(cause);
   }

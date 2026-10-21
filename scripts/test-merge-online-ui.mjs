@@ -10,7 +10,7 @@ try {
   let holdPoll = false;
   let pollStarted;
   const pendingPoll = new Promise(resolve => { pollStarted = resolve; });
-  const code = 'abcdef0123456789';
+  const code = 'polpo-laguna-caffe';
   const pages = [];
   for (const [index, width] of [1280, 390].entries()) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });

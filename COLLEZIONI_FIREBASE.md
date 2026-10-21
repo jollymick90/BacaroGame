@@ -72,7 +72,7 @@ Nuovo namespace proposto `bacaroGameMergeRooms`, aperto solo tramite il gateway
 `mergeRoomDocument`. Prima del deploy verificare che non sia già utilizzato nel
 progetto cloud condiviso: questo controllo remoto non è stato eseguito.
 
-- `room-<codice casuale>`: digest dei due identificatori anonimi, stato del motore,
+- `room-<tre-parole-casuali>` (compatibile anche con i precedenti codici esadecimali): digest dei due identificatori anonimi, stato del motore,
   copia del catalogo, revisione e scadenza assoluta. Nessuna email o account Auth.
 - `rate-<digest indirizzo>`: contatore creazioni per minuto; non conserva IP in chiaro.
 - `expiresAt`: Timestamp per la policy Firestore TTL da configurare su questa
