@@ -17,6 +17,8 @@
   let clock = $state(Date.now());
   let deadline = $state(0);
   let active = true;
+  let refreshing = false;
+  let latestRequest = 0;
   let mounted = $state(false);
   const remaining = $derived(Math.max(0, Math.ceil((deadline - clock) / 1000)));
   const session = $derived(view?.session);
@@ -41,8 +43,10 @@
   );
 
   async function request(command?: RoomCommand | { type: "create" }) {
-    if (busy || !active) return;
-    busy = true;
+    if (busy || !active || (!command && refreshing)) return;
+    const requestId = ++latestRequest;
+    if (command) busy = true;
+    else refreshing = true;
     try {
       const targetCode = code.trim().toLowerCase();
       const response = await fetch(
@@ -61,7 +65,7 @@
         },
       );
       const data = await response.json();
-      if (!active) return;
+      if (!active || requestId !== latestRequest) return;
       if (!response.ok) {
         if (response.status === 410) expired = true;
         if (response.status === 403 && !command && !view) return;
@@ -80,10 +84,12 @@
       invite = url.href;
       failure = "";
     } catch (cause) {
+      if (!active || requestId !== latestRequest) return;
       failure =
         cause instanceof Error ? cause.message : "Connessione non disponibile.";
     } finally {
-      busy = false;
+      if (command) busy = false;
+      else refreshing = false;
     }
   }
   async function copyInvite() {
@@ -100,10 +106,10 @@
     if (code) void request();
     const tick = window.setInterval(() => {
       clock = Date.now();
-      if (view && remaining === 0 && !expired) void request();
+      if (view && session?.phase !== "result" && remaining === 0 && !expired && !document.hidden) void request();
     }, 1000);
     const poll = window.setInterval(() => {
-      if (view && !expired && !document.hidden) void request();
+      if (view && session?.phase !== "result" && !expired && !document.hidden) void request();
     }, 3000);
     return () => {
       active = false;
@@ -253,23 +259,27 @@
 <style>
   .online-battle {
     --comic-paper: #fff;
+    --comic-panel: #fff;
+    --comic-shadow: #0005;
     --comic-border: #172334;
     --comic-ink: #172334;
     --comic-yellow: #ffe252;
     --comic-on-accent: #172334;
     max-width: 1000px;
     margin: auto;
+    min-width: 0;
     padding: 24px;
-    color: #172334;
+    color: #f6f3ea;
   }
   section,
   .status {
     padding: 20px;
     border: 1px solid #bac8d7;
     border-radius: 12px;
-    background: #fff;
+    background: #23232e;
   }
   .status {
+    position: static;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;

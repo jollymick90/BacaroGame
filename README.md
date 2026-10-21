@@ -219,9 +219,9 @@ di prendere il posto di un giocatore già entrato.
 - Refresh, mosse e risultato non prolungano il timer. Un round per stanza.
 - Stato e validazione mosse sul server, carte avversarie nascoste fino al risultato.
 - Catalogo fissato alla creazione. Le modalità singolo e stesso dispositivo restano.
-- Polling ogni 3 secondi a pagina visibile, una lettura stanza per richiesta; circa
+- Polling ogni 3 secondi a pagina visibile e fino al risultato, una lettura stanza per richiesta; circa
   120 letture complessive per due giocatori in 3 minuti, oltre a mosse/ingressi.
-  Nessun listener Firebase browser o verifica account Google per queste API.
+  Gli aggiornamenti in background non disabilitano i comandi; una risposta precedente a una mossa viene ignorata. Nessun listener Firebase browser o verifica account Google per queste API.
 - Massimo 8 creazioni al minuto per indirizzo visto dal server (anche condiviso NAT).
 
 Richiede Firebase Admin/Firestore configurato. Il registro
