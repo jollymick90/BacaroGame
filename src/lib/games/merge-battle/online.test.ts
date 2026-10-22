@@ -76,7 +76,7 @@ test("turns, stale requests and card secrecy survive the entire round", () => {
   );
   assert.equal(roomView(room, "two", 207).session.phase, "result");
   assert.equal(roomView(room, "two", 207).session.moves[0], card);
-  assert.equal(room.expires, 200 + ROOM_DURATION);
+  assert.equal(room.expires, 206 + ROOM_DURATION);
 });
 
 test('room codes support three words, spaces and legacy links without accepting paths', async () => {
@@ -92,4 +92,41 @@ test('room codes support three words, spaces and legacy links without accepting 
     assert.equal(isRoomCode(code), true);
     assert.equal(code.split('-').length, 3);
   }
+});
+
+test('both players can agree to a rematch in the same room without stale votes restarting later rounds', () => {
+  let room = initial();
+  room = updateRoom(room, 'two', { type: 'join' }, room.revision, 200);
+  const ids = room.session.allowedCharacters.slice(0, 2);
+  room = updateRoom(room, 'one', { type: 'character', value: ids[0] }, room.revision, 201);
+  room = updateRoom(room, 'two', { type: 'character', value: ids[1] }, room.revision, 202);
+  assert.throws(() => updateRoom(room, 'one', { type: 'rematch', round: 0 }, room.revision, 203));
+  room = updateRoom(room, 'one', { type: 'ready' }, room.revision, 203);
+  room = updateRoom(room, 'one', { type: 'move', value: room.session.config.assignments[ids[0]][0] }, room.revision, 204);
+  room = updateRoom(room, 'two', { type: 'move', value: room.session.config.assignments[ids[1]][0] }, room.revision, 205);
+  assert.equal(room.expires, 205 + ROOM_DURATION);
+  const finished = room;
+  const revision = room.revision;
+  assert.throws(() => updateRoom(room, 'outsider', { type: 'rematch', round: 0 }, revision, 206));
+  room = updateRoom(room, 'one', { type: 'rematch', round: 0 }, revision, 206);
+  assert.deepEqual(roomView(room, 'two', 206).rematchReady, [0]);
+  assert.equal(room.session.phase, 'result');
+  assert.equal(updateRoom(room, 'one', { type: 'rematch', round: 0 }, revision, 207), room);
+  assert.equal(room.expires, finished.expires);
+  room = updateRoom(room, 'two', { type: 'rematch', round: 0 }, revision, 208);
+  assert.equal(room.session.phase, 'brief');
+  assert.equal(room.session.round, 1);
+  assert.deepEqual(room.players, finished.players);
+  assert.deepEqual(room.session.ids, ids);
+  assert.deepEqual(room.session.moves, [null, null]);
+  assert.deepEqual(roomView(room, 'one', 209).rematchReady, []);
+  assert.equal(room.expires, 208 + ROOM_DURATION);
+  assert.throws(() => updateRoom(room, 'one', { type: 'rematch', round: 0 }, room.revision, 209));
+  assert.throws(() => updateRoom(finished, 'one', { type: 'rematch', round: 0 }, revision, finished.expires));
+  room = updateRoom(room, 'one', { type: 'ready' }, room.revision, 210);
+  room = updateRoom(room, 'one', { type: 'move', value: room.session.config.assignments[ids[0]][0] }, room.revision, 211);
+  room = updateRoom(room, 'two', { type: 'move', value: room.session.config.assignments[ids[1]][0] }, room.revision, 212);
+  assert.equal(room.session.phase, 'result');
+  assert.throws(() => updateRoom(room, 'one', { type: 'rematch', round: 0 }, revision, 213));
+
 });

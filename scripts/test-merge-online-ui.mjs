@@ -49,6 +49,11 @@ try {
   await first.getByRole('button', { name: 'Conferma personaggio', exact: true }).click();
   releasePoll();
   await first.getByRole('heading', { name: 'L’altro giocatore sta scegliendo il personaggio' }).waitFor();
+  const waiting = first.locator('.waiting-banner');
+  await waiting.waitFor();
+  assert.equal(await waiting.evaluate(element => Boolean(element.compareDocumentPosition(document.querySelector('.maintainer-brief')) & Node.DOCUMENT_POSITION_FOLLOWING)), true);
+  await first.waitForFunction(() => document.querySelector('.waiting-banner')?.getBoundingClientRect().top < innerHeight / 2);
+  await first.screenshot({ path: '/tmp/online-waiting-notice.png' });
   await second.getByRole('heading', { name: 'Scegli il tuo Polpodev', exact: true }).waitFor();
   await second.getByRole('button', { name: 'Frontend Developer', exact: true }).isDisabled().then(disabled => assert.equal(disabled, true));
   await second.getByRole('button', { name: 'Backend Developer', exact: true }).click();
@@ -59,12 +64,29 @@ try {
   await second.locator('.cards button').first().click();
   await first.getByRole('button', { name: 'Crea un’altra stanza' }).waitFor();
   await second.getByRole('button', { name: 'Crea un’altra stanza' }).waitFor();
+  const inviteBefore = new URL(first.url()).searchParams.get('room');
+  await first.getByRole('button', { name: 'Gioca di nuovo', exact: true }).click();
+  await first.getByRole('heading', { name: 'Rivincita: in attesa dell’altro giocatore', exact: true }).waitFor();
+  assert.equal(await first.getByRole('button', { name: 'Rivincita richiesta', exact: true }).isDisabled(), true);
+  await second.getByRole('button', { name: 'Gioca di nuovo', exact: true }).click();
+  await first.getByRole('button', { name: 'Inizia il round' }).waitFor();
+  assert.equal(room.session.round, 1);
+  assert.deepEqual(room.session.moves, [null, null]);
+  assert.equal(new URL(first.url()).searchParams.get('room'), inviteBefore);
+  assert.equal(new URL(second.url()).searchParams.get('room'), inviteBefore);
+  assert.ok(room.expires - Date.now() > 170000);
+  await first.getByRole('button', { name: 'Inizia il round' }).click();
+  await first.locator('.cards button').first().click();
+  await second.getByRole('heading', { name: 'Scegli la tua carta', exact: true }).waitFor();
+  await second.locator('.cards button').nth(1).click();
+  await first.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
+  await second.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
   for (const [index, page] of pages.entries()) {
     assert.equal(await page.locator('.status').evaluate(e => getComputedStyle(e).position), 'static');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: `/tmp/merge-online-ui-${index}.png`, fullPage: true });
   }
-  console.log('PASS: two players, slow polling, stale response, characters, cards, result and responsive status');
+  console.log('PASS: two players, slow polling, stale response, characters, cards, result, two-player rematch in the same room and responsive status');
 } finally {
   releasePoll?.();
   await browser.close();

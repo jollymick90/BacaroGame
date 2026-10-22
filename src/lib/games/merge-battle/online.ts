@@ -8,12 +8,14 @@ export type Room = {
   session: Session;
   expires: number;
   revision: number;
+  rematchReady?: Player[];
 };
 export type RoomCommand =
   | { type: "join" }
   | { type: "character"; value: number }
   | { type: "move"; value: string }
-  | { type: "ready" };
+  | { type: "ready" }
+  | { type: "rematch"; round: number };
 export class RoomError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -66,6 +68,24 @@ export function updateRoom(
   const actor = playerIndex(room, player);
   if (room.players.length !== 2)
     throw new RoomError(409, "Attendi il secondo giocatore.");
+  if (command.type === "rematch") {
+    if (room.session.phase !== "result" || command.round !== room.session.round) {
+      throw new RoomError(409, "La partita è cambiata. Aggiorna e riprova.");
+    }
+    const confirmed = room.rematchReady ?? [];
+    if (confirmed.includes(actor)) return room;
+    const rematchReady = [...confirmed, actor];
+    if (rematchReady.length < 2) {
+      return { ...room, rematchReady, revision: room.revision + 1 };
+    }
+    return {
+      ...room,
+      session: input(room.session, { type: "rematch" }),
+      rematchReady: [],
+      expires: now + ROOM_DURATION,
+      revision: room.revision + 1,
+    };
+  }
   if (revision !== room.revision)
     throw new RoomError(
       409,
@@ -89,7 +109,8 @@ export function updateRoom(
       cause instanceof Error ? cause.message : "Mossa non valida.",
     );
   }
-  return { ...room, session, revision: room.revision + 1 };
+  const expires = session.phase === "result" ? now + ROOM_DURATION : room.expires;
+  return { ...room, session, expires, revision: room.revision + 1 };
 }
 export function roomView(room: Room, player: string, now: number) {
   assertLive(room, now);
@@ -98,6 +119,7 @@ export function roomView(room: Room, player: string, now: number) {
   if (session.phase !== "result") session.moves[1 - actor] = null;
   return {
     actor,
+    rematchReady: room.rematchReady ?? [],
     waiting: room.players.length === 1,
     expires: room.expires,
     serverNow: now,

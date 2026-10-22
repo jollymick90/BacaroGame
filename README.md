@@ -220,10 +220,10 @@ di prendere il posto di un giocatore già entrato.
 
 - Attesa massima: 3 minuti dalla creazione.
 - Partita: altri 3 minuti dall'ingresso del secondo giocatore.
-- Refresh, mosse e risultato non prolungano il timer. Un round per stanza.
+- Refresh e mosse non prolungano il timer. Il risultato apre una finestra di 3 minuti per la rivincita: entrambi premono “Gioca di nuovo”, restano nella stessa stanza con gli stessi personaggi, si passa al prossimo scenario e ripartono 3 minuti. Conferme ripetute non prolungano la scadenza.
 - Stato e validazione mosse sul server, carte avversarie nascoste fino al risultato.
 - Catalogo fissato alla creazione. Le modalità singolo e stesso dispositivo restano.
-- Polling ogni 3 secondi a pagina visibile e fino al risultato, una lettura stanza per richiesta; circa
+- Polling ogni 3 secondi a pagina visibile durante la partita e mentre si attende la conferma della rivincita, una lettura stanza per richiesta; circa
   120 letture complessive per due giocatori in 3 minuti, oltre a mosse/ingressi.
   Gli aggiornamenti in background non disabilitano i comandi; una risposta precedente a una mossa viene ignorata. Nessun listener Firebase browser o verifica account Google per queste API.
 - Massimo 8 creazioni al minuto per indirizzo visto dal server (anche condiviso NAT).

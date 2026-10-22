@@ -44,6 +44,8 @@ function codeFrom(value: unknown) {
   return code;
 }
 function parseCommand(payload: Record<string, unknown>): RoomCommand {
+  if (payload.type === "rematch" && Number.isSafeInteger(payload.round) && (payload.round as number) >= 0)
+    return { type: "rematch", round: payload.round as number };
   if (payload.type === "join" || payload.type === "ready")
     return { type: payload.type };
   if (payload.type === "character" && Number.isInteger(payload.value))
@@ -106,7 +108,7 @@ export const POST: RequestHandler = async (event) => {
   const payload = await body(event, 2048);
   if (
     Object.keys(payload).some(
-      (key) => !["type", "code", "value", "revision"].includes(key),
+      (key) => !["type", "code", "value", "revision", "round"].includes(key),
     )
   )
     error(400, "Richiesta non valida.");

@@ -75,6 +75,7 @@ progetto cloud condiviso: questo controllo remoto non è stato eseguito.
 - `room-<tre-parole-casuali>` (compatibile anche con i precedenti codici esadecimali): digest dei due identificatori anonimi, stato del motore,
   copia del catalogo, revisione e scadenza assoluta. Nessuna email o account Auth.
 - `rate-<digest indirizzo>`: contatore creazioni per minuto; non conserva IP in chiaro.
+- `rematchReady`: indici dei giocatori che chiedono la rivincita (opzionale nei documenti precedenti). Entrambe le conferme aprono un nuovo round nella stessa stanza, mantenendo personaggi/configurazione; la revisione e il numero round impediscono il riuso di richieste vecchie. Il risultato e l’avvio della rivincita fissano ciascuno una nuova scadenza di tre minuti.
 - `expiresAt`: Timestamp per la policy Firestore TTL da configurare su questa
   collezione. Integrare il blocco deny browser del ruleset locale senza sostituire
   le regole delle altre applicazioni. L'Admin SDK valida cookie, turni e revisioni.

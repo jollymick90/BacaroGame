@@ -166,7 +166,7 @@ try {
     })
     .waitFor();
   assert.equal((await state(first)).session.phase, "result");
-  assert.equal((await state(second)).expires, deadline);
+  assert.ok((await state(second)).expires >= deadline);
   assert.ok(
     await b.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth + 1,

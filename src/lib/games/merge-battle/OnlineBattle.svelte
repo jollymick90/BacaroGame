@@ -4,7 +4,7 @@
   import MaintainerBrief from "./MaintainerBrief.svelte";
   import MergeTutorial from "./MergeTutorial.svelte";
   import { DEFAULT_CONFIG } from "./config";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { characters, trials, resolve, roleCards } from "./engine";
   import type { RoomCommand, RoomView } from "./online";
   import MoveCard from "./MoveCard.svelte";
@@ -25,6 +25,7 @@
   let refreshing = false;
   let latestRequest = 0;
   let mounted = $state(false);
+  const rematchRequested = $derived(Boolean(view?.rematchReady?.includes(view.actor)));
   const remaining = $derived(Math.max(0, Math.ceil((deadline - clock) / 1000)));
   const session = $derived(view?.session);
   const myTurn = $derived(
@@ -36,6 +37,24 @@
         session?.phase === `move${view.actor + 1}`),
     ),
   );
+  let waitingBanner = $state<HTMLDivElement>();
+  const waitingMessage = $derived.by(() => {
+    if (!view || !session || expired) return null;
+    if (view.waiting) return "Aspettiamo il secondo giocatore";
+    if (session.phase === "result" && rematchRequested) return "Rivincita: in attesa dell’altro giocatore";
+    if (session.phase === "brief" && view.actor === 1) return "Player 1 avvia il round.";
+    if (!myTurn && (session.phase === "character1" || session.phase === "character2")) {
+      return "L’altro giocatore sta scegliendo il personaggio";
+    }
+    if (!myTurn && (session.phase === "move1" || session.phase === "move2")) {
+      return "Attendi la carta dell’altro giocatore";
+    }
+    return null;
+  });
+  $effect(() => {
+    if (!waitingMessage) return;
+    void tick().then(() => waitingBanner?.scrollIntoView({ block: "start", behavior: "instant" }));
+  });
   const result = $derived(
     session?.phase === "result"
       ? resolve(
@@ -111,10 +130,10 @@
     if (code) void request();
     const tick = window.setInterval(() => {
       clock = Date.now();
-      if (view && session?.phase !== "result" && remaining === 0 && !expired && !document.hidden) void request();
+      if (view && remaining === 0 && !expired && !document.hidden) void request();
     }, 1000);
     const poll = window.setInterval(() => {
-      if (view && session?.phase !== "result" && !expired && !document.hidden) void request();
+      if (view && (session?.phase !== "result" || rematchRequested) && !expired && !document.hidden) void request();
     }, 3000);
     return () => {
       active = false;
@@ -174,11 +193,17 @@
     <div class="status">
       <strong>Sei Player {view.actor + 1}</strong>
       <span
-        >{view.waiting ? "Attesa" : "Partita"}: {Math.floor(
+        >{view.waiting ? "Attesa" : session.phase === "result" ? "Rivincita" : "Partita"}: {Math.floor(
           remaining / 60,
         )}:{String(remaining % 60).padStart(2, "0")}</span
       >
     </div>
+    {#if waitingMessage}
+      <div class="waiting-banner" bind:this={waitingBanner} role="status" aria-live="polite" aria-atomic="true">
+        <span class="waiting-icon" aria-hidden="true">⏳</span>
+        <div><p>{session.phase === "result" ? "Gioca di nuovo" : "Attendi il tuo turno"}</p><h2>{waitingMessage}</h2><span>La pagina si aggiorna automaticamente.</span></div>
+      </div>
+    {/if}
     {#if view.waiting}
       <h2>Invita il secondo giocatore</h2>
       <label for="invite">Link invito</label>
@@ -198,11 +223,7 @@
         activeAxes={session.config.activeAxes}
       />
       {#if session.phase === "character1" || session.phase === "character2"}
-        <h2>
-          {myTurn
-            ? "Scegli il tuo Polpodev"
-            : "L’altro giocatore sta scegliendo il personaggio"}
-        </h2>
+        {#if myTurn}<h2>Scegli il tuo Polpodev</h2>{/if}
         {#if myTurn}
           <fieldset class="online-selection" disabled={busy || !mounted}>
             <legend class="selection-label">Selezione del Polpodev</legend>
@@ -220,13 +241,9 @@
             disabled={busy || !mounted}
             onclick={() => request({ type: "ready" })}>Inizia il round</button
           >
-        {:else}<p>Player 1 avvia il round.</p>{/if}
+        {/if}
       {:else if session.phase === "move1" || session.phase === "move2"}
-        <h2>
-          {myTurn
-            ? "Scegli la tua carta"
-            : "Attendi la carta dell’altro giocatore"}
-        </h2>
+        {#if myTurn}<h2>Scegli la tua carta</h2>{/if}
         <p>La carta avversaria resta nascosta fino al risultato.</p>
         {#if myTurn}<fieldset disabled={busy || !mounted} class="cards">
             <legend>Le tue carte</legend>
@@ -257,6 +274,11 @@
         />
         <p>{result.reason}</p>
         <p>Merge: {result.hybrid}</p>
+        <p>Stessa stanza, stessi Polpodev, nuovo scenario. La rivincita parte quando confermate entrambi.</p>
+        <button disabled={busy || !mounted || rematchRequested}
+          onclick={() => request({ type: "rematch", round: session.round })}>
+          {rematchRequested ? "Rivincita richiesta" : "Gioca di nuovo"}
+        </button>
         <button
           disabled={busy || !mounted}
           onclick={() => request({ type: "create" })}
@@ -296,6 +318,12 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+  .waiting-banner { display: flex; align-items: center; gap: 16px; margin: 16px 0 24px; padding: 20px; border: 3px solid #ffda66; border-radius: 14px; background: #352f20; color: #fff5d3; scroll-margin-top: 16px; }
+  .waiting-icon { font-size: 36px; flex-shrink: 0; }
+  .waiting-banner p { margin: 0 0 6px; color: #ffda66; font-size: 14px; font-weight: 850; text-transform: uppercase; }
+  .waiting-banner h2 { margin: 0 0 8px; font-size: clamp(22px, 4vw, 28px); line-height: 1.25; }
+  .waiting-banner div > span { font-size: 14px; }
+  @media (max-width: 500px) { .waiting-banner { align-items: flex-start; padding: 16px; gap: 12px; } .waiting-icon { font-size: 28px; } }
   form {
     margin-top: 24px;
   }
