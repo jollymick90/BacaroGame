@@ -7,6 +7,7 @@
   import ReviewWeights from './ReviewWeights.svelte';
   import ScoreComparison from './ScoreComparison.svelte';
   import { characters, trials, createSession, input, resolve, roleCards, type Session, type Input, type Mode } from './engine';
+  import MaintainerBrief from './MaintainerBrief.svelte';
   import MergeTutorial from './MergeTutorial.svelte';
   import { DEFAULT_CONFIG, type MergeConfig } from './config';
 
@@ -125,12 +126,12 @@
       <CharacterWheel {cast} taken={session.ids.filter((id): id is number => id !== null)} onchoose={id => send({ type: 'character', actor: actor as 0 | 1, value: id })} />
     {/key}
   {:else if session.phase === 'brief'}
-    <div class="screen-heading"><div><p class="turn-label">Lo scenario</p><h1 bind:this={heading} tabindex="-1">La sfida è servita.</h1></div></div>
+    <div class="screen-heading"><div><p class="turn-label">Il lavoro da consegnare</p><h1 bind:this={heading} tabindex="-1">Convinci il maintainer.</h1></div></div>
     <div class="brief-panel">
       <div class="scenario">
         <span class="scene-tag">{trials[session.trial].place}</span>
         <h2>{trials[session.trial].title}</h2>
-        <p class="judge">Decide: {trials[session.trial].jury}</p>
+        <MaintainerBrief name={trials[session.trial].jury} priority={trials[session.trial].intro} />
       </div>
       <div class="mb-versus">
         {#each session.ids as id, index}
@@ -139,7 +140,7 @@
         <b class="vs-label" aria-hidden="true">VS</b>
       </div>
     </div>
-    <div class="criteria"><h2>Cosa conta in questa sfida</h2><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p>Valore della carta × peso. Vince la somma più alta.</p></div>
+    <div class="criteria"><h2>Cosa conta per il maintainer</h2><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p>Valore della carta × peso. Vince la somma più alta.</p></div>
     <p class="instruction">{session.mode === 'local' ? 'Player 2, guarda altrove: Player 1 sceglie per primo.' : 'Il computer sceglie prima di vedere la tua carta.'}</p>
     <button class="mb-primary" onclick={() => send({ type: 'ready' })}>Scegli la mossa</button>
   {:else if session.phase === 'move1' || session.phase === 'move2'}
@@ -274,14 +275,13 @@
   .scenario { padding: 22px 24px 0; }
   .scene-tag { font-size: 10px; }
   .scenario h2 { font-size: clamp(23px, 3.5vw, 34px); line-height: 1.15; max-width: 30ch; margin: 14px 0 12px; }
-  .judge { font-size: 12px; margin: 0; }
   .mb-versus { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 0 30px 22px; }
   .mb-versus > div { display: flex; flex-direction: column; align-items: center; min-width: 0; text-align: center; }
   .mb-versus span { font-size: 12px; }
   .mb-versus strong { font-size: 14px; margin-top: 4px; }
   .vs-label { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-9deg); font: italic 900 38px var(--comic-display); }
   .criteria { margin: 24px 0; }
-  .criteria h2 { font-size: 16px; margin-bottom: 12px; }
+  .criteria h2 { font-size: 20px; margin-bottom: 12px; }
   .criteria p { font-size: 12px; margin-bottom: 0; }
   .mb-primary { min-height: 52px; border: 2px solid var(--comic-border); border-radius: 6px; padding: 14px 24px; background: var(--comic-orange); color: var(--comic-on-accent); font-weight: 850; box-shadow: 3px 4px 0 var(--comic-shadow); }
   .mb-primary:hover:not(:disabled) { background: #ffa73e; }

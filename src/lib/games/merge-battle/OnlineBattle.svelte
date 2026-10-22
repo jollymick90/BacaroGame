@@ -1,5 +1,6 @@
 <script lang="ts">
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
+  import MaintainerBrief from "./MaintainerBrief.svelte";
   import MergeTutorial from "./MergeTutorial.svelte";
   import { DEFAULT_CONFIG } from "./config";
   import { onMount } from "svelte";
@@ -189,7 +190,9 @@
         browser.
       </p>
     {:else}
-      <p>Scenario: <strong>{trials[session.trial].title}</strong></p>
+      <p>Il problema da risolvere: <strong>{trials[session.trial].title}</strong></p>
+      <MaintainerBrief name={trials[session.trial].jury} priority={trials[session.trial].intro} />
+      <h2>Cosa conta per il maintainer</h2>
       <ReviewWeights
         weights={session.config.weights[session.trial]}
         activeAxes={session.config.activeAxes}

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mockGameConfiguration, openGame } from './game-center-browser-helpers.mjs';
+import { mockGameConfiguration, openGame, chooseCharacter } from './game-center-browser-helpers.mjs';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const browser = await chromium.launch({ channel: 'chrome' });
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:5173';
@@ -23,6 +23,13 @@ try {
     await dialog.getByRole('button', { name: /^Gioca:/ }).last().click();
     await dialog.getByRole('button', { name: 'Ho capito, giochiamo!' }).click();
     await page.getByRole('button', { name: /Gioca da solo/ }).waitFor();
+    await page.getByRole('button', { name: /Gioca da solo/ }).click();
+    await chooseCharacter(page, 'Frontend Developer');
+    const maintainer = page.getByRole('region', { name: 'Il maintainer che valuta il tuo lavoro' });
+    await maintainer.getByText('Il tuo capo · Il maintainer', { exact: true }).waitFor();
+    await maintainer.getByRole('heading').waitFor();
+    await page.screenshot({ path: `/tmp/merge-maintainer-${width}.png`, fullPage: true });
+    await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
     await page.getByRole('link', { name: 'Gioca online · Due dispositivi' }).click();
     await page.getByRole('button', { name: 'Come si gioca · Prova il tutorial', exact: true }).click();
     await dialog.getByRole('heading', { name: 'Qual è lo scopo?' }).waitFor();

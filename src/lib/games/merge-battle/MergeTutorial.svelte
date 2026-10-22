@@ -42,7 +42,6 @@
     <p>Attento: c’è un altro collega che ha un’idea diversa dalla tua ed è pronto a consegnare!</p>
     <p><strong>Quale soluzione verrà scelta?</strong></p>
     <div class="duel"><Fighter id={ids[0]} size="small" /><b>VS</b><Fighter id={ids[1]} size="small" /></div>
-    <p>Facciamo un round di prova: non modifica la tua partita.</p>
   {:else if step === 1}
     <div class="duel"><Fighter id={ids[0]} size="small" /><Fighter id={ids[1]} size="small" /></div>
     <p>Il personaggio determina le carte che puoi giocare. In questa prova sei <strong>{characters[ids[0]].name}</strong>; il rivale è {characters[ids[1]].name}.</p>
