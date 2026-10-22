@@ -123,7 +123,7 @@
       {#if actor === 1}<span class="picked-label">P1: {characters[session.ids[0]!].short} ✓</span>{/if}
     </div>
     {#key actor}
-      <CharacterWheel {cast} taken={session.ids.filter((id): id is number => id !== null)} onchoose={id => send({ type: 'character', actor: actor as 0 | 1, value: id })} />
+      <CharacterWheel config={session.config} {cast} taken={session.ids.filter((id): id is number => id !== null)} onchoose={id => send({ type: 'character', actor: actor as 0 | 1, value: id })} />
     {/key}
   {:else if session.phase === 'brief'}
     <div class="screen-heading"><div><p class="turn-label">Il lavoro da consegnare</p><h1 bind:this={heading} tabindex="-1">Convinci il maintainer.</h1></div></div>

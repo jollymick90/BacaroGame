@@ -24,6 +24,12 @@ try {
     await dialog.getByRole('button', { name: 'Ho capito, giochiamo!' }).click();
     await page.getByRole('button', { name: /Gioca da solo/ }).waitFor();
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
+    await page.getByRole('button', { name: 'Frontend Developer', exact: true }).click();
+    const preview = page.locator('.selection-controls .character-moves');
+    assert.equal(await preview.locator('li').count(), 3);
+    await preview.getByText('Disattivo la feature con un flag', { exact: false }).waitFor();
+    await page.getByRole('button', { name: 'Backend Developer', exact: true }).click();
+    await preview.getByText('Faccio rollback del servizio', { exact: false }).waitFor();
     await chooseCharacter(page, 'Frontend Developer');
     const maintainer = page.getByRole('region', { name: 'Il maintainer che valuta il tuo lavoro' });
     await maintainer.getByText('Il tuo capo · Il maintainer', { exact: true }).waitFor();

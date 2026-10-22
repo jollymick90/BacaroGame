@@ -1,5 +1,6 @@
 <script lang="ts">
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
+  import CharacterMoves from "./CharacterMoves.svelte";
   import MaintainerBrief from "./MaintainerBrief.svelte";
   import MergeTutorial from "./MergeTutorial.svelte";
   import { DEFAULT_CONFIG } from "./config";
@@ -205,12 +206,15 @@
         </h2>
         {#if myTurn}<div class="characters">
             {#each session.allowedCharacters.filter((id) => !session.ids.includes(id)) as id}
+              <div class="character-option">
               <button
                 disabled={busy || !mounted}
                 onclick={() => request({ type: "character", value: id })}
               >
                 <Fighter {id} /><span>{characters[id].name}</span>
               </button>
+              <CharacterMoves {id} config={session.config} />
+              </div>
             {/each}
           </div>{/if}
       {:else if session.phase === "brief"}
@@ -325,6 +329,8 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
   }
+  .character-option { min-width: 0; }
+  .character-option > button { width: 100%; }
   .characters button {
     display: flex;
     flex-direction: column;

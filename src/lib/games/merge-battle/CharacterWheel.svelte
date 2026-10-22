@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
+  import CharacterMoves from './CharacterMoves.svelte';
+  import type { MergeConfig } from './config';
   import Fighter from './Fighter.svelte';
   import { characters } from './catalog';
   import { nearestCharacter, rotationDelta } from './wheel';
 
-  let { cast, taken, onchoose }: {
+  let { cast, taken, onchoose, config }: {
+    config: MergeConfig;
     cast: typeof characters;
     taken: number[];
     onchoose: (id: number) => void;
@@ -205,6 +208,7 @@
       {#if chosen}<h2>{chosen.name}</h2><p>Il tuo Polpodev è pronto.</p>
       {:else}<h2>{spinning ? 'La fortuna sta scegliendo…' : 'Scegli tu. O tenta la fortuna.'}</h2><p>Trascina la ruota con il dito o il mouse. Puoi anche toccare un Polpodev.</p>{/if}
     </div>
+    {#if chosen}<CharacterMoves id={chosen.id} {config} expanded />{/if}
     <button class="spin-button" disabled={spinning || dragging || !available.length} onclick={spin}><span aria-hidden="true">↻</span> <span>Gira la ruota</span></button>
     <button class="confirm-button" bind:this={confirmButton} disabled={selected === null || spinning || dragging} onclick={() => { if (selected !== null) onchoose(selected); }}>Conferma personaggio</button>
   </div>

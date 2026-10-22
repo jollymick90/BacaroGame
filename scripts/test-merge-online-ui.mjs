@@ -40,6 +40,10 @@ try {
   await first.getByRole('heading', { name: 'Scegli il tuo Polpodev', exact: true }).waitFor();
   holdPoll = true;
   await pendingPoll;
+  const moves = first.locator('.character-option').first().locator('.character-moves');
+  await moves.locator('summary').click();
+  assert.equal(await moves.locator('li').count(), 3);
+  await moves.getByText('Disattivo la feature con un flag', { exact: false }).waitFor();
   const choice = first.locator('.characters button').first();
   assert.equal(await choice.isEnabled(), true, 'A pending background refresh must not disable play');
   await choice.click();
