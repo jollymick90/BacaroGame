@@ -208,6 +208,8 @@ La revisione grafica e le verifiche del 20 ottobre 2026 sono documentate in [REP
 
 “Come si gioca · Prova il tutorial” apre una dimostrazione interattiva di Merge Battle: scopo, personaggi, scenario, pesi, scelta di una carta e calcolo reale dei punti. Disponibile dalla selezione modalità, durante la partita locale e nella pagina online; la prova non modifica la partita.
 
+Gli otto maintainer hanno ritratti distinti con sfondo trasparente, in `public/images/merge-battle/maintainers/`, ricavati dalla tavola in `docs/Gemini_Generated_Image_k37o99k37o99k37o.jpeg`. L’associazione agli scenari è in `maintainer-art.ts`; i ritratti compaiono nella presentazione, durante la scelta della carta, nel tutorial e online. Verifica asset e layout: `node scripts/test-merge-maintainer-art.mjs` con `PLAYWRIGHT_MODULE` configurato.
+
 ## Merge Battle online senza registrazione
 
 Da Merge Battle scegliere **Gioca online · Due dispositivi**, oppure aprire

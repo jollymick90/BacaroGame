@@ -131,7 +131,7 @@
       <div class="scenario">
         <span class="scene-tag">{trials[session.trial].place}</span>
         <h2>{trials[session.trial].title}</h2>
-        <MaintainerBrief name={trials[session.trial].jury} priority={trials[session.trial].intro} />
+        <MaintainerBrief trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
       </div>
       <div class="mb-versus">
         {#each session.ids as id, index}
@@ -148,7 +148,7 @@
       <Fighter id={session.ids[actor]!} size="small" eager />
       <div><p class="turn-label">{playerName(actor)} · {characters[session.ids[actor]!].short}</p><h1 bind:this={heading} tabindex="-1">La tua mossa?</h1><p class="instruction">Tocca una carta. La scelta è segreta.</p></div>
     </div>
-    <div class="move-scenario"><p>{trials[session.trial].title}</p><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p class="scoring-hint">Ogni valore della carta si moltiplica per il peso qui sopra. Vince il totale più alto.</p></div>
+    <div class="move-scenario"><p>{trials[session.trial].title}</p><ReviewWeights maintainer={session.trial} weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p class="scoring-hint">Ogni valore della carta si moltiplica per il peso qui sopra. Vince il totale più alto.</p></div>
     <div class="mb-hand">
       {#each roleCards(session.config, session.ids[actor]!) as card, index}
         <MoveCard {card} {index} activeAxes={session.config.activeAxes} onplay={() => send({ type: 'move', actor: actor as 0 | 1, value: card.id })} />

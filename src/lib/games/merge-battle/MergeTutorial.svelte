@@ -48,12 +48,12 @@
     <p>In partita scegli tu il Polpodev. Non si può scegliere il personaggio già preso dall’avversario.</p>
   {:else if step === 2}
     <p class="scenario">{trials[trial].title}</p>
-    <ReviewWeights weights={config.weights[trial]} activeAxes={config.activeAxes} />
+    <ReviewWeights maintainer={trial} weights={config.weights[trial]} activeAxes={config.activeAxes} />
     <p>Questi sono i pesi del maintainer: un parametro con peso ×3 vale tre volte il valore scritto sulla carta. <strong>Per ogni parametro: valore × peso. Poi sommi tutto.</strong></p>
     <p>Si contano soltanto i parametri mostrati. Il maintainer non sceglie a caso: vince il totale più alto, a parità è pareggio.</p>
   {:else if step === 3}
     <p class="scenario">{trials[trial].title}</p>
-    <ReviewWeights weights={config.weights[trial]} activeAxes={config.activeAxes} />
+    <ReviewWeights maintainer={trial} weights={config.weights[trial]} activeAxes={config.activeAxes} />
     <p>Scegli una carta qui sotto. Il rivale ha già fissato la sua: in partita la scelta avversaria resta segreta fino al confronto.</p>
     <div class="tutorial-hand">{#each hand as card, index}<MoveCard {card} {index} activeAxes={config.activeAxes} onplay={() => play(card.id)} />{/each}</div>
   {:else if result && selected}

@@ -191,7 +191,7 @@
       </p>
     {:else}
       <p>Il problema da risolvere: <strong>{trials[session.trial].title}</strong></p>
-      <MaintainerBrief name={trials[session.trial].jury} priority={trials[session.trial].intro} />
+      <MaintainerBrief trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
       <h2>Cosa conta per il maintainer</h2>
       <ReviewWeights
         weights={session.config.weights[session.trial]}
