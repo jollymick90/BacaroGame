@@ -131,11 +131,13 @@ try {
   await a
     .getByRole("heading", { name: "Scegli il tuo Polpodev", exact: true })
     .waitFor();
-  await a.locator(".characters button").first().click();
+  await a.getByRole("button", { name: "Frontend Developer", exact: true }).click();
+  await a.getByRole("button", { name: "Conferma personaggio", exact: true }).click();
   await b
     .getByRole("heading", { name: "Scegli il tuo Polpodev", exact: true })
     .waitFor();
-  await b.locator(".characters button").first().click();
+  await b.getByRole("button", { name: "Backend Developer", exact: true }).click();
+  await b.getByRole("button", { name: "Conferma personaggio", exact: true }).click();
   await a.getByRole("button", { name: "Inizia il round" }).click();
   await a
     .getByRole("heading", { name: "Scegli la tua carta", exact: true })

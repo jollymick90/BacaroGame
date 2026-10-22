@@ -1,13 +1,12 @@
 <script lang="ts">
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
-  import CharacterMoves from "./CharacterMoves.svelte";
+  import CharacterWheel from "./CharacterWheel.svelte";
   import MaintainerBrief from "./MaintainerBrief.svelte";
   import MergeTutorial from "./MergeTutorial.svelte";
   import { DEFAULT_CONFIG } from "./config";
   import { onMount } from "svelte";
   import { characters, trials, resolve, roleCards } from "./engine";
   import type { RoomCommand, RoomView } from "./online";
-  import Fighter from "./Fighter.svelte";
   import MoveCard from "./MoveCard.svelte";
   import ScoreComparison from "./ScoreComparison.svelte";
   import ReviewWeights from "./ReviewWeights.svelte";
@@ -204,19 +203,17 @@
             ? "Scegli il tuo Polpodev"
             : "L’altro giocatore sta scegliendo il personaggio"}
         </h2>
-        {#if myTurn}<div class="characters">
-            {#each session.allowedCharacters.filter((id) => !session.ids.includes(id)) as id}
-              <div class="character-option">
-              <button
-                disabled={busy || !mounted}
-                onclick={() => request({ type: "character", value: id })}
-              >
-                <Fighter {id} /><span>{characters[id].name}</span>
-              </button>
-              <CharacterMoves {id} config={session.config} />
-              </div>
-            {/each}
-          </div>{/if}
+        {#if myTurn}
+          <fieldset class="online-selection" disabled={busy || !mounted}>
+            <legend class="selection-label">Selezione del Polpodev</legend>
+            <CharacterWheel
+              cast={characters.filter(character => session.allowedCharacters.includes(character.id))}
+              taken={session.ids.filter((id): id is number => id !== null)}
+              config={session.config}
+              onchoose={id => request({ type: "character", value: id })}
+            />
+          </fieldset>
+        {/if}
       {:else if session.phase === "brief"}
         <h2>Leggete lo scenario e preparate le carte</h2>
         {#if view.actor === 0}<button
@@ -323,19 +320,21 @@
     opacity: 0.6;
     cursor: wait;
   }
-  .characters,
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+  .online-selection {
+    --comic-paper: #17171f;
+    --comic-panel: #23232e;
+    --comic-raised: #353544;
+    --comic-border: #77758c;
+    --comic-ink: #f6f3ea;
+    --comic-orange: #ff9d63;
+    --comic-display: 'Trebuchet MS', ui-sans-serif, system-ui, sans-serif;
+    --comic-teal: #164e58;
+    border: 0;
+    padding: 0;
+    min-width: 0;
   }
-  .character-option { min-width: 0; }
-  .character-option > button { width: 100%; }
-  .characters button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+  .selection-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
   .cards {
     border: 0;
     padding: 0;
