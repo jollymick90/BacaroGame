@@ -169,5 +169,5 @@ Eseguire check/build e test browser in sequenza: `svelte-kit sync` e la build ag
 - Verifica mobile con viewport Chrome simulati, non su dispositivi fisici iOS/Android.
 - Struttura accessibile, focus, descrizioni e movimento ridotto verificati; nessuna sessione manuale con VoiceOver/NVDA.
 - La build conserva gli avvisi preesistenti di tracing Vercel per `google-gax/metadataResolver` e `supports-color`; nessun errore di build.
-- Durata percepita, divertimento e comprensione al Codemotion richiedono un playtest con persone.
+- Durata percepita, divertimento e comprensione al Dev Fest richiedono un playtest con persone.
 - Modifiche locali: nessun deploy o commit eseguito.

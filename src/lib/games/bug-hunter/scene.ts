@@ -328,7 +328,7 @@ export function mountRunner(
       if (transformed) {
         capture = 1;
         messageTone = 'positive';
-        message = `${runSettings.distanceGoal} metri! Sei diventato il polipo Bacaro! Ora cattura altri ${runSettings.bugGoal} bug.`;
+        message = `${runSettings.distanceGoal} metri! Hai catturato il polpo! Sei diventato il polipo Bacaro! Ora cattura altri ${runSettings.bugGoal} bug.`;
         messageUntil = engine.time + 4;
       }
     }

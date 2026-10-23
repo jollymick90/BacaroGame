@@ -66,7 +66,7 @@ Risultati finali delle verifiche riportati a completamento dell'esecuzione.
 
 ## Limiti
 
-- Browser desktop Chrome e viewport touch/emulati: non sostituiscono una prova fisica su iPhone/Android o un playtest con partecipanti al Codemotion.
+- Browser desktop Chrome e viewport touch/emulati: non sostituiscono una prova fisica su iPhone/Android o un playtest con partecipanti al Dev Fest.
 - Bacarodex locale senza membri reali: scansione, quiz e cattura sono verificati con fixture sintetiche nel browser, senza registrare persone nel database. Nessuna nuova verifica di accuratezza biometrica, fotocamera fisica o login Google cloud.
 - La condivisione del sistema operativo viene verificata tramite API simulata per successo, errore e annullamento; non viene inviato alcun messaggio ad altre persone.
 - Nessuna pubblicazione: la versione online non viene modificata da questo lavoro.

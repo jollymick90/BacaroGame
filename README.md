@@ -2,9 +2,16 @@
 
 Una raccolta di piccoli giochi nello stesso progetto SvelteKit + TypeScript + Vite. Home e giochi pubblici non richiedono account.
 
-- **`/` — Game Center**: scegli Bug Hunter, Merge Battle, Bacarodex o Are You an AI?. Bacarodex mostra la disponibilità dei membri registrati; gli altri giochi non richiedono la registrazione. La radice `/` apre la home.
-- **`/bacarodex` — Bacarodex pubblico**: riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
-- **`/are-you-an-ai` — Are You an AI?**: parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
+## Configurazione evento
+
+Il nome pubblico è `PUBLIC_EVENT_NAME`, con valore predefinito **Dev Fest**. Impostarlo nell’ambiente di deploy per cambiare evento. Bacarodex e Are You an AI? sono attualmente **Coming soon**: copertine con filigrana, nessun link di gioco e pagina di attesa anche sulle route dirette. L’area admin resta disponibile.
+
+Le copertine mostrano i due Polpodev di Merge Battle e il polpo 3D che corre a Venezia per Bug Hunter. La scena si ferma fuori schermo o in background e rispetta movimento ridotto. In Merge Battle una vittoria mostra il premio polpo 3D (solo al vincitore online); un pareggio o una sconfitta in singolo non assegnano il premio. Nel gioco locale il premio celebra il giocatore vincente. Nessuna nuova scrittura Firebase per il premio.
+
+
+- **`/` — Game Center**: scegli Bug Hunter o Merge Battle; Bacarodex e Are You an AI? sono in Coming soon. La radice `/` apre la home.
+- **`/bacarodex` — Bacarodex pubblico** (attualmente Coming soon): riconosci un membro consenziente e indovina il Pokémon. Le catture sono salvate sul dispositivo. Registrazione membri e confronto richiedono Firebase.
+- **`/are-you-an-ai` — Are You an AI?** (attualmente Coming soon): parodia dei CAPTCHA con intro, tre rompicapi e certificato finale. Testi prefissati e stato in memoria: nessuna AI reale, API, fotocamera o persistenza del gioco. Funziona anche senza configurare Firebase.
 - **`/merge-battle` — Merge Battle**: battaglie illustrate single player o 1 vs 1 sullo stesso telefono. Tema scuro condiviso, navigazione in alto e scelta del Polpodev su ruota: trascina la ruota con dito o mouse, tocca un personaggio o sorteggialo, poi conferma. Di default contano solo Rapidità e Solidità. In Admin → Merge Battle → Parametri dello scontro puoi attivare da uno a quattro parametri; quelli esclusi sono nascosti e non danno punti. Il confronto mostra valore × peso e totale delle due carte.
 - **`/bug-hunter` — Bug Hunter**: runner Three.js con quattro specie di insetti, ostacoli, retino e cuori con quiz. Giocabile senza account; domande configurabili in admin.
 - **`/admin` — area membri Bacarodex**: solo gli account Google della lista autorizzata possono registrare se stessi, scegliere il Pokémon e ritirare la propria partecipazione. Include il QR scaricabile diretto a Bacarodex.

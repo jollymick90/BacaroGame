@@ -198,7 +198,7 @@
       <div class="bh-intro">
 
         <h1 tabindex="-1">Bug Hunter</h1>
-        <p>Corri, salta e riprendi i bug scappati.</p>
+        <p>Corri, cattura i bug e cattura il polpo!</p>
         <button class="bh-go" disabled={!ready} onclick={start}
           >{ready ? 'Inizia' : 'Prepariamo il retino…'}</button
         >
@@ -226,7 +226,7 @@
       </div>
       {#if hud.progress && !hud.tutorial && hud.phase !== 'over'}
         <div class="bh-objective" aria-label="Obiettivo della corsa">
-          {#if hud.progress.stage === 'distance'}1/2 · Polipo a {hud.progress.distanceGoal} m · {Math.min(hud.distance, hud.progress.distanceGoal)}/{hud.progress.distanceGoal} m
+          {#if hud.progress.stage === 'distance'}1/2 · Cattura il polpo a {hud.progress.distanceGoal} m · {Math.min(hud.distance, hud.progress.distanceGoal)}/{hud.progress.distanceGoal} m
           {:else}2/2 · {hud.progress.bugsInFinalStage}/{hud.progress.bugGoal} bug{/if}
         </div>
       {/if}

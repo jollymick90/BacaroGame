@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
+  import OctopusPrize from '$lib/mascot/OctopusPrize.svelte';
   import MoveCard from './MoveCard.svelte';
   import Fighter from './Fighter.svelte';
   import CharacterWheel from './CharacterWheel.svelte';
@@ -101,8 +102,9 @@
       </section>
       <section class="start-panel" aria-label="Modalità di gioco">
         <p class="balloon">Una carta a testa.<br />Il maintainer decide!</p>
-        <a href="/merge-battle/online">Gioca online · Due dispositivi</a>
+        <p class="prize-goal">Cerca di vincere e di prendere il polpo.</p>
         <div class="mb-mode">
+          <a class="mode-button online" href="/merge-battle/online"><span class="mode-icon" aria-hidden="true">2P</span><span><strong>Gioca online · Due dispositivi</strong><small>Condividi la stanza e sfida un collega</small></span></a>
           <button class="mode-button" onclick={() => start('local')}>
             <span class="mode-icon" aria-hidden="true">1<span>vs</span>1</span>
             <span><strong>Gioca in due</strong><small>Passatevi il telefono</small></span>
@@ -119,7 +121,7 @@
   {:else if session.phase === 'character1' || session.phase === 'character2'}
     <div class="screen-heading">
       <div><p class="turn-label">{session.mode === 'solo' ? 'Il tuo personaggio' : `Tocca a Player ${actor + 1}`}</p>
-        <h1 bind:this={heading} tabindex="-1">Scegli il tuo Polpodev.</h1></div>
+        <h1 bind:this={heading} tabindex="-1">Scegli il tuo Polpodev.</h1><p>Cerca di vincere e di prendere il polpo.</p></div>
       {#if actor === 1}<span class="picked-label">P1: {characters[session.ids[0]!].short} ✓</span>{/if}
     </div>
     {#key actor}
@@ -191,6 +193,7 @@
           </div>
         {/each}
       </div>
+      {#if result.winner !== null && (session.mode === 'local' || result.winner === 0)}<OctopusPrize />{/if}
       <p class="result-summary">{result.winner === null
         ? 'Stessi punti. Il merge si fa comunque!'
         : `La carta di ${playerName(result.winner)} vale ${Math.abs(result.scores[0] - result.scores[1])} punti in più con i pesi di questo scenario.`}</p>
@@ -259,6 +262,9 @@
   .balloon { border: 2px solid var(--comic-border); border-radius: 50% 50% 50% 8px; padding: 22px 24px; font: 800 23px/1.25 var(--comic-display); text-align: center; background: var(--comic-panel); margin: 0 0 28px; }
   .mb-mode { display: grid; gap: 16px; }
   .mode-button { display: flex; align-items: center; gap: 20px; text-align: left; border: 3px solid var(--comic-border); border-radius: 8px; padding: 20px; background: var(--comic-orange); color: var(--comic-on-accent); box-shadow: 4px 5px 0 var(--comic-shadow); }
+  .mode-button.online { background: #b9a1fb; text-decoration: none; }
+  .mode-button.online:hover { background: #cbb9ff; }
+  .prize-goal { font-weight: 800; font-size: 18px; }
   .mode-button:hover:not(:disabled) { background: #ffa73e; transform: rotate(-1deg); }
   .mode-button.solo { background: var(--comic-teal); color: var(--comic-ink); }
   .mode-button.solo:hover:not(:disabled) { background: #216575; }

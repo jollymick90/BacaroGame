@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRoom, updateRoom, roomView } from '../src/lib/games/merge-battle/online.ts';
+import { resolve } from '../src/lib/games/merge-battle/engine.ts';
 import { DEFAULT_CONFIG } from '../src/lib/games/merge-battle/config.ts';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const origin = process.env.TEST_ORIGIN || 'http://127.0.0.1:5173';
@@ -81,6 +82,11 @@ try {
   await second.locator('.cards button').nth(1).click();
   await first.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
   await second.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
+  const winner = resolve(room.session.ids, room.session.moves, room.session.trial, room.session.config).winner;
+  for (const [index, page] of pages.entries()) {
+    const prize = page.getByRole('region', { name: 'Polpo conquistato' });
+    assert.equal(await prize.count(), winner === index ? 1 : 0);
+  }
   for (const [index, page] of pages.entries()) {
     assert.equal(await page.locator('.status').evaluate(e => getComputedStyle(e).position), 'static');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

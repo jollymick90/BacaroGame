@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AreYouAnAI from '$lib/games/are-you-an-ai/AreYouAnAI.svelte';
+  import ComingSoon from '$lib/game-center/ComingSoon.svelte';
 </script>
 
-<AreYouAnAI />
+<ComingSoon name="Are You an AI?" />

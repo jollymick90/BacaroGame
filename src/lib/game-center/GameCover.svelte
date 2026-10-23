@@ -1,32 +1,17 @@
 <script lang="ts">
+  import OctopusShowcase from '$lib/mascot/OctopusShowcase.svelte';
   let { game }: { game: 'hunter' | 'merge' | 'dex' | 'ai' } = $props();
 </script>
 
 <!-- Artwork adapted from the first arcade proposal; labels live in the card body. -->
 <div class="cover" class:mint={game === 'hunter'} class:amber={game === 'merge'} class:sage={game === 'dex'} class:lilac={game === 'ai'} aria-hidden="true">
+  {#if game === 'hunter'}
+    <OctopusShowcase venice />
+  {:else if game === 'merge'}
+    <div class="polpo-duel"><img src="/images/merge-battle/frontend.webp" alt="" width="640" height="640" /><b>VS</b><img src="/images/merge-battle/backend.webp" alt="" width="640" height="640" /></div>
+  {:else}
   <svg viewBox="0 0 480 180" fill="none" focusable="false">
-    {#if game === 'hunter'}
-      <g stroke="#15151b" stroke-width="4" stroke-linecap="round">
-        <path d="m125 62 91 86" stroke-width="10" />
-        <ellipse cx="116" cy="55" rx="39" ry="30" transform="rotate(-28 116 55)" fill="#b6ffe4" />
-        <path d="m89 47 40 27m-30-41 40 27m-37 15 18-43m-4 48 18-39" stroke-width="2" />
-        <path d="m266 117-10 19h16m24-15-7 22h18m19-30 5 20h17" />
-        <path d="M248 101c17-29 36 24 57 10s34-10 35 4" stroke="#15151b" stroke-width="35" />
-        <path d="M248 101c17-29 36 24 57 10s34-10 35 4" stroke="#ffe600" stroke-width="27" />
-        <circle cx="244" cy="78" r="26" fill="#ffe600" />
-        <path d="m231 54-8-14m32 14 10-13m-37 43q12 13 24-1" />
-        <path d="m271 97-5 13m24-5-1 13m24-20 6 13" stroke-width="3" />
-      </g>
-      <circle cx="235" cy="73" r="4" fill="#15151b" /><circle cx="252" cy="71" r="4" fill="#15151b" />
-    {:else if game === 'merge'}
-      <g stroke="#15151b" stroke-width="4">
-        <rect x="104" y="32" width="105" height="122" rx="12" fill="#b9a1fb" transform="rotate(-12 156 93)" />
-        <rect x="275" y="32" width="105" height="122" rx="12" fill="#fff0c4" transform="rotate(12 327 93)" />
-      </g>
-      <text x="155" y="115" text-anchor="middle" fill="#15151b" font-size="66" font-family="system-ui">⌘</text>
-      <text x="326" y="115" text-anchor="middle" fill="#15151b" font-size="66" font-family="system-ui">∑</text>
-      <path d="m248 44-29 53h25l-14 40 37-58h-27z" fill="#15151b" />
-    {:else if game === 'dex'}
+    {#if game === 'dex'}
       <g stroke="#15151b" stroke-width="4">
         <circle cx="160" cy="89" r="53" fill="#a1e9bd" />
         <path d="M135 101q25 30 50-2" stroke-linecap="round" />
@@ -51,14 +36,18 @@
       <text x="170" y="76" text-anchor="middle" fill="#15151b" font-size="30" font-family="system-ui" font-weight="700">…?</text>
     {/if}
   </svg>
+  {/if}
 </div>
 
 <style>
-  .cover { height: 168px; background-image: radial-gradient(#15151b20 1px, transparent 1px); background-size: 14px 14px; overflow: hidden; border-bottom: 2px solid #111116; }
+  .cover { height: 220px; background-image: radial-gradient(#15151b20 1px, transparent 1px); background-size: 14px 14px; overflow: hidden; border-bottom: 2px solid #111116; }
+  .polpo-duel { height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .polpo-duel img { width: 43%; height: 100%; object-fit: contain; }
+  .polpo-duel b { color: #15151b; font-size: 30px; font-style: italic; }
   svg { width: 100%; height: 100%; }
   .mint { background-color: #00e5a3; }
   .amber { background-color: #f5b530; }
   .sage { background-color: #72d5a3; }
   .lilac { background-color: #b9a1fb; }
-  @media (max-width: 600px) { .cover { height: 120px; } }
+  @media (max-width: 600px) { .cover { height: 180px; } }
 </style>
