@@ -103,7 +103,7 @@ try {
       }
       await page.getByRole('button', { name: 'Cambia personaggi', exact: true }).click();
       await checkScreen(page, 'character1', '');
-      await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
+      await page.getByRole('button', { name: 'Cambia modalità', exact: true }).click();
       await checkScreen(page, 'intro', '');
       console.log(`${device} ${mode}: all 8 scenarios, scores, draws, rematch, hidden handoff, focus PASS`);
     }
@@ -128,7 +128,7 @@ try {
 
     // At 320px the same real UI remains usable.
     await page.setViewportSize({ width: 320, height: 720 });
-    await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
+    await page.getByRole('button', { name: 'Cambia modalità', exact: true }).click();
     await checkScreen(page, 'intro', `${device}-320-intro`);
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
     await checkScreen(page, 'character1', `${device}-320-cast`);
@@ -162,7 +162,7 @@ try {
   await page.getByRole('button', { name: 'Rivincita!', exact: true }).click();
   await page.getByRole('button', { name: 'Scegli la mossa', exact: true }).click();
   await page.locator('.mb-card').first().click();
-  await page.getByRole('link', { name: /Torna al Game Center/ }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.locator('.mb-arena').waitFor({ state: 'detached' });
   assert.equal(await page.locator('.mb-arena').count(), 0);
   await context.close();

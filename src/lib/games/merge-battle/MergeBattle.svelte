@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SiteHeader from '$lib/game-center/SiteHeader.svelte';
   import { tick } from 'svelte';
   import OctopusPrize from '$lib/mascot/OctopusPrize.svelte';
   import MoveCard from './MoveCard.svelte';
@@ -73,17 +74,14 @@
   <meta name="description" content="Scegli il tuo Polpodev, gioca una carta e sfida il maintainer. Da solo o in due." />
 </svelte:head>
 
+<SiteHeader sticky compactBrand label="Navigazione Merge Battle" navigationClass="mb-navigation">
+  {#snippet actions()}
+    <button onclick={() => tutorialOpen = true}>Come si gioca</button>
+    <button onclick={reset}>Cambia modalità</button>
+  {/snippet}
+</SiteHeader>
 <main class="mb-shell" data-phase={session?.phase ?? 'intro'}>
   {#if tutorialOpen}<MergeTutorial {config} onclose={() => tutorialOpen = false} />{/if}
-  <nav class="mb-navigation" aria-label="Navigazione Merge Battle">
-    <a href="/">← Torna al Game Center</a>
-    {#if session}<button onclick={() => tutorialOpen = true}>Come si gioca</button>{/if}
-    {#if session}<button onclick={reset}>← Cambia modalità</button>{/if}
-    {#if session?.phase === 'result'}
-      <button class="rematch" onclick={() => send({ type: 'rematch' })}>Rivincita!</button>
-      <button onclick={() => start(session!.mode)}>Cambia personaggi</button>
-    {/if}
-  </nav>
   <div class="mb-mast">
     <span>Merge Battle <b>by BacaroTech</b></span>
     {#if session}<span>{session.mode === 'solo' ? 'Singolo' : '1 vs 1'} · Round {session.round + 1}</span>{:else}<span>Il gioco dei Polpodev</span>{/if}
@@ -115,7 +113,6 @@
           </button>
         </div>
         <p>Gioca la carta più adatta allo scenario: vince chi totalizza più punti.</p>
-        <button class="mb-primary" onclick={() => tutorialOpen = true}>Come si gioca · Prova il tutorial</button>
       </section>
     </div>
   {:else if session.phase === 'character1' || session.phase === 'character2'}
@@ -203,6 +200,7 @@
         <p>Rivali nella review. Alleati nello stesso branch.</p>
       </div>
     </div>
+    <div class="result-actions"><button class="mb-primary" onclick={() => send({ type: 'rematch' })}>Rivincita!</button><button class="mb-primary" onclick={() => start(session!.mode)}>Cambia personaggi</button></div>
     <details class="result-details">
       <summary>Perché questo risultato?</summary>
       <p>{trials[session.trial].title}</p>
@@ -241,10 +239,7 @@
   .mb-shell h1 { font: 900 clamp(28px, 4vw, 44px)/1.08 var(--comic-display); letter-spacing: -1.3px; margin: 0; scroll-margin-top: 150px; }
   .mb-shell h1:focus { outline: none; }
   .mb-shell h2 { font-family: var(--comic-display); }
-  .mb-navigation { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: -22px -32px 24px; padding: 10px 32px; border: 0; border-bottom: 1px solid var(--comic-border); background: var(--comic-paper); }
-  .mb-navigation a, .mb-navigation button { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 6px 0; background: none; border: 0; color: var(--comic-ink); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
-  .mb-navigation button:hover { color: var(--comic-orange); background: none; }
-  .mb-navigation .rematch { color: var(--comic-orange); }
+  .result-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
   .mb-mast { display: flex; justify-content: space-between; gap: 16px; padding: 0 0 14px; margin-bottom: 24px; border-bottom: 2px solid; font-size: 13px; font-weight: 800; }
   .mb-mast b { font-size: 11px; font-weight: 500; margin-left: 8px; }
   .mb-mast > span:last-child { font-size: 12px; font-weight: 500; }
@@ -319,8 +314,6 @@
   @media (max-width: 950px) { .intro-layout { gap: 24px; } .mode-button { padding: 16px 12px; gap: 12px; } }
   @media (max-width: 700px) {
     .mb-shell { padding: 16px 18px 30px; }
-    .mb-navigation { margin: -16px -18px 20px; padding: 6px 18px; gap: 0 16px; }
-    .mb-navigation a, .mb-navigation button { font-size: 12px; }
     .mb-mast { margin-bottom: 20px; font-size: 12px; }
     .mb-mast b { display: none; }
     .mb-mast > span:last-child { font-size: 11px; }

@@ -17,7 +17,7 @@ try {
     config.cards.find(card => card.id === config.assignments[1][0]).stats = [2, 2, 4, 4];
     await mockGameConfiguration(page, () => ({ mergeBattle: config }));
     await openGame(page, origin, '/merge-battle');
-    await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+    await page.getByRole('link', { name: 'Home', exact: true }).click();
     await page.getByText('BacaroTech · Una pausa a Dev Fest', { exact: true }).waitFor();
     assert.equal((await page.locator('body').innerText()).includes('Codemotion'), false);
     assert.equal(await page.locator('.game-card.coming-soon').count(), 2);
@@ -63,7 +63,7 @@ try {
         await page.getByRole('heading', { name: 'Hai perso!', exact: true }).waitFor();
         assert.equal(await page.locator('.octopus-prize').count(), 0);
       }
-      await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
+      await page.getByRole('button', { name: 'Cambia modalità', exact: true }).click();
     }
     assert.deepEqual(errors, []);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

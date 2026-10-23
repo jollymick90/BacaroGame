@@ -10,7 +10,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await mockGameConfiguration(page);
     await openGame(page, origin, '/merge-battle');
-    await page.getByRole('button', { name: 'Come si gioca · Prova il tutorial', exact: true }).click();
+    await page.getByRole('button', { name: 'Come si gioca', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('heading', { name: 'Qual è lo scopo?' }).waitFor();
     for (let index = 0; index < 3; index++) await dialog.getByRole('button', { name: 'Avanti', exact: true }).click();
@@ -33,11 +33,11 @@ try {
     await chooseCharacter(page, 'Frontend Developer');
     const maintainer = page.getByRole('region', { name: 'Il reviewer che valuta il tuo lavoro' });
     await maintainer.getByText('Il tuo reviewer', { exact: true }).waitFor();
-    await maintainer.getByRole('heading').waitFor();
+    await maintainer.getByRole('heading', { level: 3 }).waitFor();
     await page.screenshot({ path: `/tmp/merge-maintainer-${width}.png`, fullPage: true });
-    await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
+    await page.getByRole('button', { name: 'Cambia modalità', exact: true }).click();
     await page.getByRole('link', { name: 'Gioca online · Due dispositivi' }).click();
-    await page.getByRole('button', { name: 'Come si gioca · Prova il tutorial', exact: true }).click();
+    await page.getByRole('button', { name: 'Come si gioca', exact: true }).click();
     await dialog.getByRole('heading', { name: 'Qual è lo scopo?' }).waitFor();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Crea stanza', exact: true }).waitFor();

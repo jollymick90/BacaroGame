@@ -6,7 +6,7 @@ const paths = ['/merge-battle', '/bug-hunter', '/are-you-an-ai', '/bacarodex'];
 for (const path of paths) {
   const response = await fetch(`${origin}${path}`);
   assert.equal(response.status, 200, `direct SSR entry: ${path}`);
-  assert.match(await response.text(), /Torna al Game Center/, path);
+  assert.match(await response.text(), /aria-label="Home"/, path);
 }
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 try {
@@ -26,7 +26,7 @@ try {
   await page.getByRole('link', { name: 'Gioca a Merge Battle', exact: true }).click();
   await page.waitForURL('**/merge-battle');
   await page.locator('[data-phase="intro"]').waitFor();
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.getByRole('link', { name: 'Gioca a Are You an AI?', exact: true }).click();
   await page.waitForURL('**/are-you-an-ai');
   await page.goBack();
@@ -36,19 +36,19 @@ try {
   assert.equal(await page.evaluate(() => window.__routerTestDocument), originalDocument, 'navigation must preserve the document');
   assert.deepEqual(configRequests, [], 'SSR config reused during hydration and game navigation');
   await page.reload();
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).waitFor();
+  await page.getByRole('link', { name: 'Home', exact: true }).waitFor();
   for (const path of paths) {
     await page.goto(`${origin}/#${path}`);
     await page.waitForURL(`${origin}${path}`);
-    await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).waitFor();
+    await page.getByRole('link', { name: 'Home', exact: true }).waitFor();
   }
   await page.goto(`${origin}/qr`);
   await page.waitForLoadState('networkidle');
   configRequests.length = 0;
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.getByRole('link', { name: 'Gioca a Merge Battle', exact: true }).click();
   await page.locator('[data-phase="intro"]').waitFor();
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.getByRole('link', { name: 'Gioca a Are You an AI?', exact: true }).click();
   await page.waitForURL('**/are-you-an-ai');
   assert.equal(configRequests.length, 1, 'client entry makes one shared configuration request');
@@ -57,7 +57,7 @@ try {
   await page.goto(`${origin}/qr`);
   await page.waitForLoadState('networkidle');
   await page.route('**/api/game-center/config', route => route.fulfill({ status: 503, body: 'Unavailable' }));
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.getByRole('heading', { name: 'Il gioco si fa aspettare' }).waitFor();
   await page.unroute('**/api/game-center/config');
   await page.getByRole('link', { name: 'Riprova', exact: true }).click();

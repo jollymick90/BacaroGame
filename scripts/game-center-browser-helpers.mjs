@@ -19,7 +19,7 @@ export async function openGame(page, origin, path, { automaticTutorial = false }
   // requests are deliberately covered separately with the real backend.
   await page.goto(`${origin}/qr`);
   await page.waitForLoadState('networkidle');
-  await page.getByRole('link', { name: '← Torna al Game Center', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
   await page.locator(`a.play-link[href="${path}"]`).click();
   await page.waitForURL(`${origin}${path}`);
 }

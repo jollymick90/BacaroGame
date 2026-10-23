@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SiteHeader from "$lib/game-center/SiteHeader.svelte";
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
   import OnlineResult from "./OnlineResult.svelte";
   import CharacterWheel from "./CharacterWheel.svelte";
@@ -143,11 +144,15 @@
 </script>
 
 <svelte:head><title>Merge Battle online · BacaroTech</title></svelte:head>
+<SiteHeader sticky compactBrand label="Navigazione Merge Battle online">
+  {#snippet actions()}
+    <button onclick={() => tutorialOpen = true}>Come si gioca</button>
+    <a href="/merge-battle">Cambia modalità</a>
+  {/snippet}
+</SiteHeader>
 <main class="online-battle">
-  <a href="/merge-battle">← Modalità di gioco</a>
   {#if tutorialOpen}<MergeTutorial config={session?.config ?? DEFAULT_CONFIG} onclose={() => tutorialOpen = false} />{/if}
   <h1>Merge Battle · Online</h1>
-  <button onclick={() => tutorialOpen = true}>Come si gioca · Prova il tutorial</button>
   <p>Due dispositivi, una carta a testa. Nessuna registrazione.</p>
   <p>Cerca di vincere e di prendere il polpo.</p>
   {#if failure}<p role="alert">{failure}</p>{/if}

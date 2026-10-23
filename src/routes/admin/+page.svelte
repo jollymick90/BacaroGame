@@ -21,10 +21,6 @@
   }
 </script>
 
-<div class="public-navigation">
-  <a href="/">← Vai al Game Center</a>
-</div>
-
 {#if data.user}
   <div class="admin-games">
     {#if selected}<button class="back" onclick={() => open(null)}>← Tutti i giochi</button>{/if}
@@ -55,18 +51,6 @@
 {/if}
 
 <style>
-  .public-navigation {
-    max-width: 1000px;
-    margin: auto;
-    padding: 12px 16px 0;
-  }
-  .public-navigation a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-weight: 700;
-    text-underline-offset: 4px;
-  }
 
   .admin-games{max-width:1000px;margin:auto;padding:24px 16px;color:#193e35}.admin-games h1{font-size:28px;letter-spacing:-.8px}.admin-games h1:focus{outline:none}.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:28px 0}.game-tile{display:grid;justify-items:start;align-content:start;gap:14px;text-align:left;background:#fffef9;color:#193e35;border:2px solid #193e35;border-radius:16px;padding:24px;min-height:220px}.game-tile:hover{background:#e8ecdd}.game-tile strong{font-size:24px}.game-tile>span:not(.icon){font-size:14px;line-height:1.5}.game-tile small{font-weight:700;margin-top:auto}.icon{font-size:36px;color:#6742a6}.back{background:transparent;color:#193e35;border:0;padding:12px 0;text-decoration:underline;min-height:44px}.pending{padding:24px;background:#fffef9;border:1px solid #bbc8b1;border-radius:12px}.pending a{display:inline-flex;align-items:center;min-height:44px}.game-tile:focus-visible,.back:focus-visible{outline:3px solid #6742a6;outline-offset:4px}@media(max-width:560px){.game-grid{grid-template-columns:1fr;gap:14px}.game-tile{min-height:180px;padding:20px}}
 </style>

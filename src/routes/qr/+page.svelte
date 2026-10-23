@@ -63,7 +63,6 @@
 </svelte:head>
 <div class="arcade-shell">
   <main class="share-page">
-    <a class="back" href="/">← Torna al Game Center</a>
     <header>
       <img src="/bacarotech-logo.png" alt="BacaroTech" width="52" height="52" />
       <h1>Invita a giocare.</h1>
@@ -88,7 +87,6 @@
 
 <style>
   .share-page { max-width: 560px; margin: auto; padding: 12px 22px 28px; text-align: center; }
-  .back { display: flex; align-items: center; min-height: 44px; font-size: 14px; text-align: left; }
   header { display: flex; justify-content: center; gap: 16px; height: auto; border: 0; padding: 18px 0 0; }
   header img { object-fit: contain; flex-shrink: 0; }
   h1 { font-family: var(--arcade-display); font-size: clamp(28px, 5vw, 38px); line-height: 1.1; letter-spacing: -1px; margin: 0; }

@@ -13,13 +13,6 @@
 </script>
 
 <div class="center-home">
-  <header class="center-header">
-    <a class="center-brand" href="/" aria-label="BacaroTech Game Center">
-      <img src="/bacarotech-logo.png" alt="" width="44" height="44" />
-      <span>BacaroTech<small>Game Center · {EVENT_NAME}</small></span>
-    </a>
-    <a class="invite-link arcade-secondary" href="/qr">Invita</a>
-  </header>
   <main id="game-list">
     <h1 tabindex="-1">Scegli un gioco.</h1>
     <div class="playable">
@@ -46,10 +39,6 @@
 
 <style>
   .center-home { max-width: 1120px; margin: auto; padding: 0 28px; }
-  .center-header { min-height: 88px; height: auto; gap: 16px; border-color: var(--arcade-border); }
-  .center-brand { display: flex; gap: 12px; align-items: center; font-size: 22px; font-weight: 800; text-decoration: none; line-height: 1.2; }
-  .center-brand small { display: block; font-size: 14px; font-weight: 400; color: var(--arcade-muted); margin-top: 4px; }
-  .invite-link { padding: 10px 22px; }
   h1 { font-family: var(--arcade-display); font-size: clamp(32px, 4vw, 48px); line-height: 1.1; letter-spacing: -1.5px; margin: 38px 0 28px; }
   .playable { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
   .game-card { display: flex; flex-direction: column; border: 1px solid var(--arcade-border); border-radius: 16px; overflow: hidden; background: var(--arcade-panel); box-shadow: 0 5px 0 #0c0c10; }
@@ -69,10 +58,6 @@
   .center-footer a { display: inline-flex; align-items: center; min-height: 44px; }
   @media (max-width: 600px) {
     .center-home { padding: 0 16px; }
-    .center-header { min-height: 76px; }
-    .center-brand { font-size: 19px; gap: 8px; }
-    .center-brand img { width: 36px; height: 36px; }
-    .invite-link { padding: 10px 16px; }
     h1 { margin: 26px 0 22px; }
     .playable { grid-template-columns: 1fr; gap: 22px; }
     .card-copy { padding: 20px; }
