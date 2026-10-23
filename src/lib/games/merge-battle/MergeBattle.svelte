@@ -133,7 +133,7 @@
       <div class="scenario">
         <span class="scene-tag">{trials[session.trial].place}</span>
         <h2>{trials[session.trial].title}</h2>
-        <MaintainerBrief trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
+        <MaintainerBrief weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
       </div>
       <div class="mb-versus">
         {#each session.ids as id, index}
@@ -142,7 +142,6 @@
         <b class="vs-label" aria-hidden="true">VS</b>
       </div>
     </div>
-    <div class="criteria"><h2>Cosa conta per il maintainer</h2><ReviewWeights weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} /><p>Valore della carta × peso. Vince la somma più alta.</p></div>
     <p class="instruction">{session.mode === 'local' ? 'Player 2, guarda altrove: Player 1 sceglie per primo.' : 'Il computer sceglie prima di vedere la tua carta.'}</p>
     <button class="mb-primary" onclick={() => send({ type: 'ready' })}>Scegli la mossa</button>
   {:else if session.phase === 'move1' || session.phase === 'move2'}
@@ -286,9 +285,6 @@
   .mb-versus span { font-size: 12px; }
   .mb-versus strong { font-size: 14px; margin-top: 4px; }
   .vs-label { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-9deg); font: italic 900 38px var(--comic-display); }
-  .criteria { margin: 24px 0; }
-  .criteria h2 { font-size: 20px; margin-bottom: 12px; }
-  .criteria p { font-size: 12px; margin-bottom: 0; }
   .mb-primary { min-height: 52px; border: 2px solid var(--comic-border); border-radius: 6px; padding: 14px 24px; background: var(--comic-orange); color: var(--comic-on-accent); font-weight: 850; box-shadow: 3px 4px 0 var(--comic-shadow); }
   .mb-primary:hover:not(:disabled) { background: #ffa73e; }
   .move-heading { display: flex; align-items: center; gap: 24px; }

@@ -52,7 +52,7 @@ try {
     await openGame(page, origin, '/merge-battle');
     await page.getByRole('button', { name: /Gioca da solo/ }).click();
     await chooseCharacter(page, 'Frontend Developer');
-    const portrait = page.getByRole('region', { name: 'Il maintainer che valuta il tuo lavoro' }).getByRole('img');
+    const portrait = page.getByRole('region', { name: 'Il reviewer che valuta il tuo lavoro' }).getByRole('img');
     assert.equal(await portrait.getAttribute('src'), maintainerArt(trial));
     await portrait.evaluate(image => image.decode());
     await page.screenshot({ path: `/tmp/maintainer-portrait-${width}.png`, fullPage: true });

@@ -6,7 +6,7 @@
 </script>
 
 {#if maintainer !== undefined}
-  <div class="maintainer-identity"><div class="portrait"><MaintainerPortrait trial={maintainer} /></div><p>Priorità del maintainer<strong>{trials[maintainer].jury}</strong></p></div>
+  <div class="maintainer-identity"><div class="portrait"><MaintainerPortrait trial={maintainer} /></div><p>Priorità del reviewer<strong>{trials[maintainer].jury}</strong></p></div>
 {/if}
 <div class="weights" style:--axis-count={activeAxes.length} aria-label="Pesi del maintainer">
   {#each activeAxes as index}

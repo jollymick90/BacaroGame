@@ -25,65 +25,27 @@
   }
 </script>
 
-<svelte:head><title>Bacarodex · Accedi</title></svelte:head>
-<div class="app-shell">
-  <header>
-    <div class="brand">
-      <span class="ball" aria-hidden="true"></span>Bacarodex.
-    </div>
-    <span class="badge">BACAROTECH</span>
-  </header>
-  <main class="login-panel panel">
-    <p class="eyebrow">LA COMPAGNIA TI ASPETTA</p>
-    <h1>Area membri<br />del Bacaro.</h1>
-    <p>
-      Accesso riservato ai membri autorizzati: registra il tuo Pokémon e
-      gestisci la tua partecipazione al gioco.
-    </p>
-    <p class="privacy-note">
-      Le foto vengono elaborate nel browser e scartate. Il descrittore facciale,
-      che non è anonimo, viene salvato su Firebase e usato sul server per
-      riconoscerti durante il gioco pubblico, accessibile senza login. Prima
-      della registrazione ti chiederemo un consenso esplicito.
-    </p>
-    <!-- Il modulo locale è disponibile solo quando il server segnala la modalità emulatori. -->
-    {#if configured}
-      {#if emulator}<p class="notice">
-          Emulatori locali: nessun collegamento al progetto Firebase cloud.
-        </p>
-        <label for="email">Email di sviluppo</label><input
-          id="email"
-          type="email"
-          bind:value={email}
-        /><label for="password">Password di sviluppo</label><input
-          id="password"
-          type="password"
-          bind:value={password}
-          minlength="6"
-        />{/if}
-      <button
-        disabled={busy || (emulator && (!email || password.length < 6))}
-        onclick={() => enter()}
-        >{busy
-          ? "Accesso…"
-          : emulator
-            ? "Accedi agli emulatori"
-            : "Accedi con Google"}</button
-      >
-      {#if emulator}<button
-          class="secondary"
-          disabled={busy || !email || password.length < 6}
-          onclick={() => enter(true)}>Crea account locale</button
-        >{/if}
-    {:else}<p class="notice">
-        L’accesso all’area membri non è al momento disponibile. Riprova più
-        tardi; nel frattempo puoi continuare a giocare senza registrarti.
-      </p>{/if}
-    {#if error}<p class="error" role="alert">{error}</p>{/if}
-    <p><a href="/">← Gioca senza registrarti</a></p>
-    <p class="hint">
-      Accesso riservato alla lista di amici configurata sul server. Nessuna
-      registrazione biometrica viene creata con il solo login.
-    </p>
-  </main>
-</div>
+<svelte:head><title>Bacaro membri · Accedi</title></svelte:head>
+<main class="login-panel panel">
+  <h1>Bacaro membri</h1>
+  {#if configured}
+    {#if emulator}
+      <label for="email">Email di sviluppo</label>
+      <input id="email" type="email" bind:value={email} autocomplete="username" />
+      <label for="password">Password di sviluppo</label>
+      <input id="password" type="password" bind:value={password} minlength="6" autocomplete="current-password" />
+    {/if}
+    <button disabled={busy || (emulator && (!email || password.length < 6))} onclick={() => enter()}>
+      {busy ? "Accesso…" : emulator ? "Accedi agli emulatori" : "Accedi con Google"}
+    </button>
+    {#if emulator}<button class="secondary" disabled={busy || !email || password.length < 6} onclick={() => enter(true)}>Crea account locale</button>{/if}
+  {:else}<p role="status">Accesso temporaneamente non disponibile.</p>{/if}
+  {#if error}<p class="error" role="alert">{error}</p>{/if}
+</main>
+
+<style>
+  .login-panel { max-width: 480px; margin: 64px auto; padding: 28px; }
+  h1 { font-size: 32px; margin: 0 0 24px; }
+  button { width: 100%; margin-top: 12px; }
+  @media(max-width: 520px) { .login-panel { margin: 32px 16px; } }
+</style>

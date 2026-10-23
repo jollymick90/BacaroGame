@@ -1,6 +1,6 @@
 <script lang="ts">
   import { normalizeRoomCode, ROOM_CODE_MAX_LENGTH } from "./room-code";
-  import OctopusPrize from "$lib/mascot/OctopusPrize.svelte";
+  import OnlineResult from "./OnlineResult.svelte";
   import CharacterWheel from "./CharacterWheel.svelte";
   import MaintainerBrief from "./MaintainerBrief.svelte";
   import MergeTutorial from "./MergeTutorial.svelte";
@@ -9,8 +9,6 @@
   import { characters, trials, resolve, roleCards } from "./engine";
   import type { RoomCommand, RoomView } from "./online";
   import MoveCard from "./MoveCard.svelte";
-  import ScoreComparison from "./ScoreComparison.svelte";
-  import ReviewWeights from "./ReviewWeights.svelte";
 
   type View = RoomView & { code: string };
   let tutorialOpen = $state(false);
@@ -218,12 +216,7 @@
       </p>
     {:else}
       <p>Il problema da risolvere: <strong>{trials[session.trial].title}</strong></p>
-      <MaintainerBrief trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
-      <h2>Cosa conta per il maintainer</h2>
-      <ReviewWeights
-        weights={session.config.weights[session.trial]}
-        activeAxes={session.config.activeAxes}
-      />
+      <MaintainerBrief weights={session.config.weights[session.trial]} activeAxes={session.config.activeAxes} trial={session.trial} name={trials[session.trial].jury} priority={trials[session.trial].intro} />
       {#if session.phase === "character1" || session.phase === "character2"}
         {#if myTurn}<h2>Scegli il tuo Polpodev</h2>{/if}
         {#if myTurn}
@@ -259,25 +252,10 @@
             {/each}
           </fieldset>{/if}
       {:else if result}
-        <h2>
-          {result.winner === null
-            ? "Pareggio!"
-            : result.winner === view.actor
-              ? "Hai vinto!"
-              : "Hai perso!"}
-        </h2>
-        <ScoreComparison
-          cards={session.moves.map((id) =>
-            session.config.cards.find((card) => card.id === id)!,
-          )}
-          weights={session.config.weights[session.trial]}
-          activeAxes={session.config.activeAxes}
-          labels={["Player 1", "Player 2"]}
-        />
-        {#if result.winner === view.actor}<OctopusPrize />{/if}
-        <p>{result.reason}</p>
-        <p>Merge: {result.hybrid}</p>
-        <p>Stessa stanza, stessi Polpodev, nuovo scenario. La rivincita parte quando confermate entrambi.</p>
+        <OnlineResult {session} actor={view.actor} />
+        <section class="rematch-panel" aria-label="Rivincita nella stessa stanza">
+          <h3>Un’altra sfida?</h3>
+          <p>Stessa stanza e stessi Polpodev. Confermate entrambi per iniziare un nuovo round.</p>
         <button disabled={busy || !mounted || rematchRequested}
           onclick={() => request({ type: "rematch", round: session.round })}>
           {rematchRequested ? "Rivincita richiesta" : "Gioca di nuovo"}
@@ -287,6 +265,7 @@
           onclick={() => request({ type: "create" })}
           >Crea un’altra stanza</button
         >
+        </section>
       {/if}
     {/if}
   {/if}
@@ -321,6 +300,9 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+  .rematch-panel { margin: 24px 0; }
+  .rematch-panel h3 { margin-top: 0; font-size: 24px; }
+  .rematch-panel button { margin: 8px 8px 0 0; }
   .waiting-banner { display: flex; align-items: center; gap: 16px; margin: 16px 0 24px; padding: 20px; border: 3px solid #ffda66; border-radius: 14px; background: #352f20; color: #fff5d3; scroll-margin-top: 16px; }
   .waiting-icon { font-size: 36px; flex-shrink: 0; }
   .waiting-banner p { margin: 0 0 6px; color: #ffda66; font-size: 14px; font-weight: 850; text-transform: uppercase; }

@@ -79,15 +79,23 @@ try {
   await first.getByRole('button', { name: 'Inizia il round' }).click();
   await first.locator('.cards button').first().click();
   await second.getByRole('heading', { name: 'Scegli la tua carta', exact: true }).waitFor();
-  await second.locator('.cards button').nth(1).click();
+  await second.locator('.cards button').nth(2).click();
   await first.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
   await second.getByRole('button', { name: 'Gioca di nuovo', exact: true }).waitFor();
   const winner = resolve(room.session.ids, room.session.moves, room.session.trial, room.session.config).winner;
+  assert.notEqual(winner, null, 'The rematch fixture must exercise a winning 3D prize');
   for (const [index, page] of pages.entries()) {
     const prize = page.getByRole('region', { name: 'Polpo conquistato' });
-    assert.equal(await prize.count(), winner === index ? 1 : 0);
+    if (winner === index) await prize.waitFor();
+    else assert.equal(await prize.count(), 0);
   }
   for (const [index, page] of pages.entries()) {
+    await page.locator('[data-result-ready="true"]').waitFor();
+    assert.equal(await page.locator('.mb-contender').count(), 2);
+    await page.locator('.merge-summary').waitFor();
+    assert.equal((await page.locator('.online-battle').innerText()).includes('Maggiore differenza su:'), false);
+    await page.locator('.score-details summary').click();
+    await page.getByRole('region', { name: 'Confronto dei punteggi' }).waitFor();
     assert.equal(await page.locator('.status').evaluate(e => getComputedStyle(e).position), 'static');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: `/tmp/merge-online-ui-${index}.png`, fullPage: true });

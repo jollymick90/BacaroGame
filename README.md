@@ -246,3 +246,5 @@ Test dominio: `npm run test:merge-battle`; integrazione con due browser:
 su un emulatore dedicato al progetto `demo-bacaro-online`, porta app 5198 libera e
 `PLAYWRIGHT_MODULE` impostato al modulo Playwright installato. Il test modifica
 solo stanze create nel progetto demo e non legge `.env` per ottenere credenziali.
+
+Il footer comune offre il sito BacaroTech e i canali WhatsApp, LinkedIn, GitHub, TikTok, Mastodon, YouTube, Instagram, Discord, Bluesky e il contatto email su tutte le pagine. Le icone usano la griglia fornita in `public/images/social-icons.png`, senza servizi o font esterni. L’accesso membri mostra solo il login; informazioni e consenso restano nel percorso di registrazione. In Merge Battle il riquadro del reviewer include le priorità della sfida. Il risultato online usa l’arena animata, il merge illustrato e i dettagli dei punti espandibili; il premio 3D è assegnato al vincitore.

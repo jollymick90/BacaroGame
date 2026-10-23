@@ -31,8 +31,8 @@ try {
     await page.getByRole('button', { name: 'Backend Developer', exact: true }).click();
     await preview.getByText('Faccio rollback del servizio', { exact: false }).waitFor();
     await chooseCharacter(page, 'Frontend Developer');
-    const maintainer = page.getByRole('region', { name: 'Il maintainer che valuta il tuo lavoro' });
-    await maintainer.getByText('Il tuo capo · Il maintainer', { exact: true }).waitFor();
+    const maintainer = page.getByRole('region', { name: 'Il reviewer che valuta il tuo lavoro' });
+    await maintainer.getByText('Il tuo reviewer', { exact: true }).waitFor();
     await maintainer.getByRole('heading').waitFor();
     await page.screenshot({ path: `/tmp/merge-maintainer-${width}.png`, fullPage: true });
     await page.getByRole('button', { name: '← Cambia modalità', exact: true }).click();
